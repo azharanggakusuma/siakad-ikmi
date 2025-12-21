@@ -7,7 +7,7 @@ export default function AppFooter() {
         
         {/* Copyright - Warna diperjelas (slate-500 & slate-800) */}
         <p className="text-[11px] text-slate-500 font-medium">
-          &copy; {new Date().getFullYear()} <span className="text-slate-800 font-bold">STMIK IKMI Cirebon</span>. All rights reserved.
+          &copy; {new Date().getFullYear()} <span className="text-slate-800 font-bold">Azharangga Kusuma</span>. All rights reserved.
         </p>
         
         {/* Tech Stack Credit - Warna diperjelas (slate-400 & slate-600) */}

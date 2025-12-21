@@ -17,9 +17,7 @@ export default function Header() {
 
   return (
     <div className="mb-0 font-sans bg-white">
-      {/* STRUKTUR CSS GRID UTAMA
-        Semua elemen header sekarang berada di dalam satu grid container ini.
-      */}
+      {/* STRUKTUR CSS GRID UTAMA */}
       <div className="grid grid-cols-[1fr_auto] gap-x-0 relative font-sans">
         
         {/* === KOLOM 1 BARIS 1: LOGO & JUDUL KAMPUS === */}
@@ -48,7 +46,7 @@ export default function Header() {
                 STMIK
               </span>
 
-              <div className="flex flex-col ml-2 mb-1">
+              <div className="flex flex-col ml-2 mb-[-1px]">
                 <span
                   className="text-[2.3rem] text-[#1B3F95]"
                   style={{ 
@@ -103,10 +101,6 @@ export default function Header() {
         </div>
 
         {/* === BARIS 3 (COL-SPAN-2): JUDUL HALAMAN TRANSKRIP === */}
-        {/* Posisi dipindahkan ke dalam grid, membentang 2 kolom.
-            Margin atas (mt-4) disesuaikan agar lebih rapat ke bar di atasnya.
-            Style teks (h2) TETAP SAMA PERSIS.
-        */}
         <div className="col-span-2 text-center mt-4 mb-2">
           <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-serif">
             TRANSKRIP NILAI

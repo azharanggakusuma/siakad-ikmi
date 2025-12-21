@@ -15,6 +15,12 @@ export default function Header() {
       "-0.5px -0.5px 0.5px rgba(255,255,255,0.8), 1px 1px 1px rgba(0,0,0,0.3)",
   };
 
+  // Style untuk memaksa warna keluar saat print
+  const forcePrintBackground = {
+    printColorAdjust: "exact" as const,
+    WebkitPrintColorAdjust: "exact" as const, // Khusus Chrome/Safari/Edge
+  };
+
   return (
     <div className="mb-0 bg-white">
       {/* Container Grid Kop Surat -> Tetap font-sans (Arial) */}
@@ -67,7 +73,11 @@ export default function Header() {
         </div>
 
         {/* === KOLOM 2 BARIS 1: ALAMAT === */}
-        <div className="border-l-2 border-[#EE3A43] pl-4 py-1 h-[78px] flex flex-col justify-center min-w-[250px]">
+        {/* Tambahkan style forcePrintBackground agar border merah tetap muncul */}
+        <div 
+          className="border-l-2 border-[#EE3A43] pl-4 py-1 h-[78px] flex flex-col justify-center min-w-[250px]"
+          style={forcePrintBackground}
+        >
           <div className="text-[10px] text-gray-800 leading-[1.25] font-sans">
             <p className="font-bold text-[11px] mb-[2px] text-black">
               Alamat Kampus :
@@ -84,21 +94,28 @@ export default function Header() {
         </div>
 
         {/* === KOLOM 1 BARIS 2: BAR ORANGE === */}
-        <div className="bg-[#F7941D] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden">
+        {/* PERBAIKAN DISINI: Menambahkan style untuk memaksa background print */}
+        <div 
+          className="bg-[#F7941D] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
+          style={forcePrintBackground}
+        >
           <span className="text-white text-[12px] font-bold tracking-[0.3em] leading-none whitespace-nowrap ml-[0.3em]">
             SK. MENRISTEKDIKTI NO. 1/KPT/I/2015
           </span>
         </div>
 
         {/* === KOLOM 2 BARIS 2: BAR HIJAU === */}
-        <div className="bg-[#009444] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden">
+        {/* PERBAIKAN DISINI: Menambahkan style untuk memaksa background print */}
+        <div 
+          className="bg-[#009444] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
+          style={forcePrintBackground}
+        >
           <span className="text-white text-[12px] font-bold uppercase tracking-[0.15em] leading-none whitespace-nowrap ml-[0.15em]">
             TERAKREDITASI BAN-PT
           </span>
         </div>
 
         {/* === BARIS 3: JUDUL TRANSKRIP === */}
-        {/* Override font menjadi Cambria */}
         <div className="col-span-2 text-center mt-4 mb-2">
           <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-['Cambria'] text-black">
             TRANSKRIP NILAI

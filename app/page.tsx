@@ -107,36 +107,35 @@ export default function TranskripPage() {
         </div>
 
         {/* === JUDUL TRANSKRIP === */}
-        <div className="text-center mt-2 mb-2">
-          <h2 className="font-bold underline text-[11px] uppercase tracking-wide">TRANSKRIP NILAI</h2>
+        <div className="text-center mt-4 mb-4">
+          <h2 className="font-bold underline text-[14px] uppercase tracking-wide">TRANSKRIP NILAI</h2>
         </div>
 
         {/* === DATA MAHASISWA === */}
-        <div className="mb-2 text-[9px] font-bold grid grid-cols-[100px_8px_1fr] gap-y-0.5 ml-1">
-          <div>Nama Mahasiswa</div> <div>:</div> <div className="uppercase">AZHARANGGA KUSUMA</div>
-          <div>NIM</div> <div>:</div> <div>41226142</div>
-          <div>Program Studi</div> <div>:</div> <div>Teknik Informatika (S1)</div>
-          <div>Semester</div> <div>:</div> <div>7</div>
+        {/* KEMBALI KE mb-4 */}
+        <div className="mb-4 text-[11px] font-bold grid grid-cols-[120px_10px_1fr] gap-y-1 ml-1">
+          <div className="font-bold">Nama Mahasiswa</div> <div className="font-bold">:</div> <div className="font-bold uppercase">AZHARANGGA KUSUMA</div>
+          <div className="font-bold">NIM</div> <div className="font-bold">:</div> <div className="font-normal">41226142</div>
+          <div className="font-bold">Program Studi</div> <div className="font-bold">:</div> <div className="font-normal">Teknik Informatika (S1)</div>
+          <div className="font-bold">Semester</div> <div className="font-bold">:</div> <div className="font-normal">7</div>
         </div>
 
         {/* === TABEL NILAI === */}
         <table className="w-full text-[9px] border-collapse border border-black mb-2">
           <thead>
             <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
-              {/* PERBAIKAN: Kolom No diperlebar (w-8) */}
-              <th className="border border-black w-8">No</th>
-              {/* PERBAIKAN: Kolom Kode MK diperlebar (w-32) */}
-              <th className="border border-black w-32">Kode MK</th>
+              <th className="border border-black w-6">No</th>
+              <th className="border border-black w-28">Kode MK</th>
               <th className="border border-black text-left pl-2">Mata Kuliah</th>
-              {/* PERBAIKAN: Kolom nilai diperlebar (w-10) */}
-              <th className="border border-black w-10">SMT</th>
-              <th className="border border-black w-10">SKS</th>
-              <th className="border border-black w-10">HM</th>
-              <th className="border border-black w-10">AM</th>
-              <th className="border border-black w-10">NM</th>
+              <th className="border border-black w-8">SMT</th>
+              <th className="border border-black w-8">SKS</th>
+              <th className="border border-black w-8">HM</th>
+              <th className="border border-black w-8">AM</th>
+              <th className="border border-black w-8">NM</th>
             </tr>
           </thead>
-          <tbody>
+          
+          <tbody className="font-normal">
             {transcriptData.map((row) => (
               <tr key={row.no} className="text-center leading-none h-[13px]">
                 <td className="border border-black">{row.no}</td>
@@ -149,7 +148,7 @@ export default function TranskripPage() {
                 <td className="border border-black">{row.nm}</td>
               </tr>
             ))}
-            {/* TOTAL ROWS */}
+            
             <tr className="font-bold bg-white h-4 border-t border-black">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah Beban SKS</td>
               <td colSpan={5} className="border border-black px-2 text-left">135</td>

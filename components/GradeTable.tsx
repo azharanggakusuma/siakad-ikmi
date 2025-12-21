@@ -7,17 +7,18 @@ interface GradeTableProps {
 
 export default function GradeTable({ data }: GradeTableProps) {
   return (
+    // Tetap menggunakan w-full
     <table className="w-full text-[9px] border-collapse border border-black mb-2">
       <thead>
         <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
           <th className="border border-black w-6">No</th>
-          <th className="border border-black w-28">Kode MK</th>
+          <th className="border border-black w-34">Kode MK</th>
           <th className="border border-black text-left pl-2">Mata Kuliah</th>
-          <th className="border border-black w-8">SMT</th>
-          <th className="border border-black w-8">SKS</th>
-          <th className="border border-black w-8">HM</th>
-          <th className="border border-black w-8">AM</th>
-          <th className="border border-black w-8">NM</th>
+          <th className="border border-black w-10">SMT</th>
+          <th className="border border-black w-10">SKS</th>
+          <th className="border border-black w-10">HM</th>
+          <th className="border border-black w-10">AM</th>
+          <th className="border border-black w-10">NM</th>
         </tr>
       </thead>
 
@@ -26,7 +27,7 @@ export default function GradeTable({ data }: GradeTableProps) {
           <tr key={row.no} className="text-center leading-none h-[13px]">
             <td className="border border-black">{row.no}</td>
             <td className="border border-black">{row.kode}</td>
-            <td className="border border-black text-left pl-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+            <td className="border border-black text-left pl-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] pl-2">
               {row.matkul}
             </td>
             <td className="border border-black">{row.smt}</td>

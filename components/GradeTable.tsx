@@ -6,7 +6,24 @@ interface GradeTableProps {
 }
 
 export default function GradeTable({ data }: GradeTableProps) {
+  // --- LOGIKA PERHITUNGAN OTOMATIS ---
+  
+  // 1. Hitung Jumlah Beban SKS
+  const totalSKS = data.reduce((acc, row) => acc + row.sks, 0);
+
+  // 2. Hitung Jumlah Nilai Mutu (NM)
+  const totalNM = data.reduce((acc, row) => acc + row.nm, 0);
+
+  // 3. Hitung IPK
+  // Rumus: Total NM / Total SKS
+  // toFixed(2) untuk ambil 2 angka belakang koma
+  // replace('.', ',') untuk mengubah format titik menjadi koma (Indonesia)
+  const ipk = totalSKS > 0 
+    ? (totalNM / totalSKS).toFixed(2).replace('.', ',') 
+    : "0,00";
+
   return (
+    // Tetap menggunakan font Cambria dan ukuran text 9px
     <table className="w-full text-[9px] border-collapse border border-black mb-2 font-['Cambria']">
       <thead>
         <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
@@ -37,12 +54,13 @@ export default function GradeTable({ data }: GradeTableProps) {
           </tr>
         ))}
 
+        {/* --- BARIS TOTAL (MENGGUNAKAN VARIABEL) --- */}
         <tr className="font-bold bg-white h-4 border-t border-black">
           <td colSpan={3} className="border border-black px-2 text-left">
             Jumlah Beban SKS
           </td>
           <td colSpan={5} className="border border-black px-2 text-left">
-            135
+            {totalSKS}
           </td>
         </tr>
         <tr className="font-bold bg-white h-4">
@@ -50,7 +68,7 @@ export default function GradeTable({ data }: GradeTableProps) {
             Jumlah Nilai Mutu
           </td>
           <td colSpan={5} className="border border-black px-2 text-left">
-            462
+            {totalNM}
           </td>
         </tr>
         <tr className="font-bold bg-white h-4">
@@ -58,7 +76,7 @@ export default function GradeTable({ data }: GradeTableProps) {
             Indeks Prestasi Kumulatif (IPK)
           </td>
           <td colSpan={5} className="border border-black px-2 text-left">
-            3,42
+            {ipk}
           </td>
         </tr>
       </tbody>

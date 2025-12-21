@@ -11,7 +11,6 @@ export default function Header() {
           
           {/* Logo */}
           <div className="w-24 h-24 flex-shrink-0 relative">
-            {/* PERBAIKAN: Menggunakan logo yang sudah disiapkan */}
             <img
               src="/img/logo-ikmi.png"
               alt="Logo STMIK IKMI"
@@ -45,9 +44,9 @@ export default function Header() {
 
               {/* IKMI & CIREBON - Stack di sebelah kanan STMIK */}
               <div className="flex flex-col ml-1.5 mb-[2px]">
-                {/* IKMI - Biru */}
+                {/* IKMI - Biru (Hapus italic) */}
                 <span
-                  className="text-[2.1rem] font-extrabold text-[#193583] tracking-tighter leading-[0.85] italic"
+                  className="text-[2.1rem] font-extrabold text-[#193583] tracking-tighter leading-[0.85]"
                   style={{ 
                     fontFamily: "Arial Black, sans-serif",
                     textShadow: "1px 1px 0 #fff, -1px -1px 0 #fff"

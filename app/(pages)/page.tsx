@@ -12,13 +12,6 @@ type StatCardProps = {
   icon: React.ReactNode;
 };
 
-type ActivityItemProps = {
-  name: string;
-  nim: string;
-  action: string;
-  time: string;
-};
-
 /* ================= DATA ================= */
 
 const STATS: StatCardProps[] = [
@@ -27,19 +20,6 @@ const STATS: StatCardProps[] = [
   { label: "Transkrip Terbit", value: "3,124", description: "+12% peningkatan", icon: <FileTextIcon /> },
   { label: "Rata-rata IPK", value: "3.42", description: "Skala 4.00", icon: <TrendingUpIcon /> },
 ];
-
-const ACTIVITIES: ActivityItemProps[] = [
-  { name: "Azharangga Kusuma", nim: "181253xx", action: "Mencetak Transkrip", time: "Baru saja" },
-  { name: "Budi Setiadi", nim: "181254xx", action: "Mencetak Transkrip", time: "2 menit lalu" },
-  { name: "Siti Halimah", nim: "191250xx", action: "Update Data", time: "1 jam lalu" },
-  { name: "Dedi Kurniawan", nim: "181251xx", action: "Mencetak Transkrip", time: "3 jam lalu" },
-];
-
-const QUICK_ACTIONS = [
-  { label: "Manajemen Mahasiswa", href: "/mahasiswa", dotClass: "bg-blue-500" },
-  { label: "Input Nilai Kolektif", href: "/transkrip", dotClass: "bg-emerald-500" },
-  { label: "Laporan Semester", href: "/pengaturan", dotClass: "bg-orange-500" },
-] as const;
 
 /* ================= PAGE ================= */
 
@@ -57,7 +37,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Tombol – diturunkan sedikit */}
         <div className="flex items-center gap-2 sm:mt-6 md:mt-0">
           <button
             type="button"
@@ -90,65 +69,42 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* ===== MAIN GRID ===== */}
+      {/* ===== GRAFIK GRID ===== */}
       <div className="grid gap-4 lg:grid-cols-7">
-        {/* Aktivitas */}
-        <section className="lg:col-span-4 rounded-xl border border-slate-200 bg-white shadow-sm">
-          <header className="p-6 pb-4">
-            <h3 className="font-semibold tracking-tight text-slate-900">
-              Aktivitas Terkini
+        
+        {/* GRAFIK 1: TREN PERFORMA (Bar Chart) - Menggantikan Aktivitas */}
+        <section className="lg:col-span-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
+          <header className="p-6 border-b border-slate-100">
+            <h3 className="font-semibold tracking-tight text-slate-900 flex items-center gap-2">
+              <TrendingUpIcon className="w-4 h-4 text-blue-600" />
+              Tren Rata-rata IPK Mahasiswa
             </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Daftar aktivitas terbaru oleh administrator.
+            <p className="mt-1 text-sm text-slate-500">
+              Performa akademik mahasiswa per semester tahun ini.
             </p>
           </header>
 
-          <div className="px-6 pb-6 divide-y divide-slate-100">
-            {ACTIVITIES.map((a, idx) => (
-              <div key={idx} className="py-4 first:pt-0 last:pb-0">
-                <ActivityItem {...a} />
-              </div>
-            ))}
+          <div className="p-6 flex-1 flex items-end justify-center">
+            {/* Custom Simple Bar Chart */}
+            <SemesterBarChart />
           </div>
         </section>
 
-        {/* Pintasan */}
-        <section className="lg:col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
-          <div className="p-6">
-            <h3 className="font-semibold tracking-tight text-slate-900">
-              Pintasan Sistem
+        {/* GRAFIK 2: DISTRIBUSI NILAI (Donut Chart) - Menggantikan Pintasan */}
+        <section className="lg:col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
+          <header className="p-6 border-b border-slate-100">
+            <h3 className="font-semibold tracking-tight text-slate-900 flex items-center gap-2">
+              <ChartPieIcon className="w-4 h-4 text-emerald-600" />
+              Distribusi Indeks Nilai
             </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Akses cepat ke fitur utama.
+            <p className="mt-1 text-sm text-slate-500">
+              Persentase perolehan nilai (A/B/C/D).
             </p>
+          </header>
 
-            <div className="mt-4 grid gap-2">
-              {QUICK_ACTIONS.map((q) => (
-                <Link
-                  key={q.label}
-                  href={q.href}
-                  className="flex items-center justify-between rounded-lg border border-slate-100
-                             p-3 text-sm font-medium text-slate-700
-                             hover:bg-slate-50 transition
-                             focus:outline-none focus:ring-2 focus:ring-slate-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`h-2 w-2 rounded-full ${q.dotClass}`} />
-                    {q.label}
-                  </div>
-                  <ChevronRightIcon className="h-4 w-4 text-slate-400" />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6 border-t border-slate-100 bg-slate-50/60 rounded-b-xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-700">
-                Status Server: Online
-              </span>
-            </div>
+          <div className="p-6 flex-1 flex flex-col items-center justify-center">
+            {/* Custom Simple Donut Chart */}
+            <GradeDonutChart />
           </div>
         </section>
       </div>
@@ -173,37 +129,97 @@ function StatCard({ label, value, description, icon }: StatCardProps) {
   );
 }
 
-function ActivityItem({ name, nim, action, time }: ActivityItemProps) {
-  const initial = name.charAt(0).toUpperCase();
+// --- CUSTOM BAR CHART COMPONENT ---
+function SemesterBarChart() {
+  // Data Dummy: Semester 1 s.d 6
+  const data = [
+    { label: "Smt 1", val: 3.1, height: "65%" },
+    { label: "Smt 2", val: 3.3, height: "72%" },
+    { label: "Smt 3", val: 3.4, height: "78%" },
+    { label: "Smt 4", val: 3.2, height: "70%" },
+    { label: "Smt 5", val: 3.6, height: "85%" },
+    { label: "Smt 6", val: 3.8, height: "92%" },
+  ];
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-4 min-w-0">
-        <div className="h-9 w-9 rounded-full bg-slate-100 border border-slate-200
-                        flex items-center justify-center text-xs font-bold text-[#1B3F95]">
-          {initial}
+    <div className="w-full h-64 flex items-end justify-between gap-2 sm:gap-4 px-2">
+      {data.map((item, idx) => (
+        <div key={idx} className="group relative flex-1 flex flex-col items-center justify-end h-full">
+          {/* Tooltip Hover */}
+          <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded mb-2">
+            IPK: {item.val}
+          </div>
+          
+          {/* Bar */}
+          <div 
+            className="w-full max-w-[40px] bg-blue-100 rounded-t-lg relative overflow-hidden group-hover:bg-blue-200 transition-colors"
+            style={{ height: item.height }}
+          >
+            {/* Inner Bar Fill animation or solid */}
+            <div className="absolute bottom-0 left-0 right-0 bg-[#1B3F95] w-full h-full opacity-80 group-hover:opacity-100 transition-opacity" />
+          </div>
+
+          {/* Label X-Axis */}
+          <div className="mt-3 text-[10px] sm:text-xs font-medium text-slate-500 text-center">
+            {item.label}
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-800 truncate">{name}</p>
-          <p className="mt-1 text-xs text-slate-500 truncate">
-            {nim} • {action}
-          </p>
+      ))}
+    </div>
+  );
+}
+
+// --- CUSTOM DONUT CHART COMPONENT ---
+function GradeDonutChart() {
+  // Data Persentase: A=45%, B=30%, C=15%, D/E=10%
+  // Conic Gradient Calculation:
+  // A (0% - 45%) -> #10B981
+  // B (45% - 75%) -> #3B82F6
+  // C (75% - 90%) -> #F59E0B
+  // D (90% - 100%) -> #EF4444
+
+  const gradient = `conic-gradient(
+    #10B981 0% 45%, 
+    #3B82F6 45% 75%, 
+    #F59E0B 75% 90%, 
+    #EF4444 90% 100%
+  )`;
+
+  const legend = [
+    { label: "Nilai A (Sangat Baik)", color: "bg-emerald-500", val: "45%" },
+    { label: "Nilai B (Baik)", color: "bg-blue-500", val: "30%" },
+    { label: "Nilai C (Cukup)", color: "bg-amber-500", val: "15%" },
+    { label: "Nilai D/E (Kurang)", color: "bg-red-500", val: "10%" },
+  ];
+
+  return (
+    <div className="flex flex-col items-center w-full">
+      {/* Chart Circle */}
+      <div className="relative w-48 h-48 rounded-full shadow-inner" style={{ background: gradient }}>
+        {/* Center Hole (Donut) */}
+        <div className="absolute inset-8 bg-white rounded-full flex items-center justify-center flex-col shadow-sm">
+          <span className="text-3xl font-bold text-slate-800">86</span>
+          <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">Total MK</span>
         </div>
       </div>
-      <span className="text-xs font-medium text-slate-400">{time}</span>
+
+      {/* Legend */}
+      <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-3 w-full px-4">
+        {legend.map((l, i) => (
+          <div key={i} className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${l.color}`} />
+              <span className="text-slate-600 font-medium text-xs sm:text-sm">{l.label}</span>
+            </div>
+            <span className="font-bold text-slate-800 text-xs sm:text-sm">{l.val}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 /* ================= ICONS ================= */
-
-function ChevronRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
-    </svg>
-  );
-}
 
 function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -246,10 +262,18 @@ function FileTextIcon() {
     </svg>
   );
 }
-function TrendingUpIcon() {
+function TrendingUpIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg {...props} className={props.className || "h-4 w-4"} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  );
+}
+function ChartPieIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
     </svg>
   );
 }

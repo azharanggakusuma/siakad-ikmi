@@ -2,32 +2,33 @@ import React from "react";
 
 export default function Navbar() {
   return (
-    <nav className="bg-[#1B3F95] text-white shadow-lg print:hidden sticky top-0 z-50 font-sans">
-      <div className="max-w-screen-xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        {/* Logo & Judul */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white rounded-full p-1.5 shadow-sm">
-            <img
-              src="/img/logo-ikmi.png"
-              alt="Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div className="leading-tight">
-            <h1 className="text-lg font-bold tracking-wide">
-              SIAKAD STMIK IKMI
-            </h1>
-            <p className="text-[10px] text-blue-100 font-light opacity-90">
-              Sistem Informasi Akademik
-            </p>
-          </div>
+    <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 sticky top-0 z-30 print:hidden">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
+        
+        {/* KIRI: Judul Halaman (Pengganti Logo) */}
+        <div className="flex flex-col">
+           <h1 className="text-xl font-bold text-gray-800">
+             Transkrip Nilai
+           </h1>
+           <span className="text-xs text-gray-500">
+             SIAKAD &gt; Akademik &gt; Transkrip
+           </span>
         </div>
 
-        {/* Versi Aplikasi */}
-        {/* Menggunakan font-mono agar angka terlihat teknis */}
-        <div className="text-xs font-mono font-medium text-blue-200 bg-blue-900/40 px-3 py-1.5 rounded-md hidden md:block border border-blue-700/50 tracking-wider">
-          v1.0.0
+        {/* KANAN: User Profile Kecil */}
+        <div className="flex items-center gap-4">
+           {/* Contoh Status User */}
+           <div className="hidden md:flex flex-col items-end">
+              <span className="text-sm font-semibold text-gray-700">Administrator</span>
+              <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Online</span>
+           </div>
+           
+           {/* Avatar Bulat */}
+           <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-gray-500 overflow-hidden">
+             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+           </div>
         </div>
+
       </div>
     </nav>
   );

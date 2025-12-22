@@ -8,7 +8,7 @@ export default function Navbar() {
 
   const getPageInfo = (path: string) => {
     switch (path) {
-      case "/": return { title: "Dashboard Overview", breadcrumb: "SIAKAD" };
+      case "/": return { title: "", breadcrumb: "" };
       case "/transkrip": return { title: "Transkrip Nilai", breadcrumb: "SIAKAD / Transkrip" };
       case "/mahasiswa": return { title: "Data Mahasiswa", breadcrumb: "SIAKAD / Mahasiswa" };
       case "/matakuliah": return { title: "Mata Kuliah", breadcrumb: "SIAKAD / Mata Kuliah" };

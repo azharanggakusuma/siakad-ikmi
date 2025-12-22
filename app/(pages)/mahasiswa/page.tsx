@@ -1,18 +1,14 @@
 "use client";
 import React from "react";
-import Navbar from "../../../components/Navbar";
 
 export default function MahasiswaPage() {
   return (
-    <div className="flex min-h-screen bg-slate-100 font-sans text-gray-800">
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <Navbar />
-        <main className="p-8">
-          {/* Area Kosong */}
-          <div className="border-2 border-dashed border-gray-300 rounded-xl h-96 flex items-center justify-center text-gray-400">
-            Halaman Data Mahasiswa (Segera Hadir)
-          </div>
-        </main>
+    <div className="flex flex-col gap-6">
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Data Mahasiswa</h2>
+        <div className="border-2 border-dashed border-gray-200 rounded-xl h-96 flex items-center justify-center text-gray-400">
+          Modul pengelolaan data mahasiswa sedang dikembangkan.
+        </div>
       </div>
     </div>
   );

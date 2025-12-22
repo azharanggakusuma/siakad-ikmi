@@ -1,5 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+import AppFooter from "../../components/AppFooter";
 
 export default function PagesLayout({
   children,
@@ -14,9 +16,22 @@ export default function PagesLayout({
         <Sidebar />
       </div>
 
-      {/* AREA KONTEN DINAMIS */}
+      {/* AREA KONTEN UTAMA */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto print:h-auto print:overflow-visible relative">
-        {children}
+        {/* NAVBAR GLOBAL (Sticky di atas) */}
+        <div className="sticky top-0 z-30 print:hidden">
+          <Navbar />
+        </div>
+
+        {/* ISI HALAMAN DINAMIS */}
+        <main className="flex-1 p-8 print:p-0">
+          {children}
+        </main>
+
+        {/* FOOTER APLIKASI GLOBAL */}
+        <div className="print:hidden">
+          <AppFooter />
+        </div>
       </div>
 
     </div>

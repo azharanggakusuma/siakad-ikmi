@@ -22,7 +22,8 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
           <Navbar onOpenSidebar={() => setSidebarOpen(true)} />
         </div>
 
-        <main className="flex-1 p-8 print:p-0">{children}</main>
+        {/* UPDATED: Padding responsif (p-4 di mobile, p-8 di desktop) */}
+        <main className="flex-1 p-4 md:p-8 print:p-0">{children}</main>
 
         <div className="print:hidden">
           <AppFooter />

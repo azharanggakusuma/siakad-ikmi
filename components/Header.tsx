@@ -1,7 +1,11 @@
 import React from "react";
 
-export default function Header() {
-  // Style khusus untuk efek 3D/Emboss
+interface HeaderProps {
+  title?: string; // Props untuk judul dinamis
+}
+
+export default function Header({ title = "TRANSKRIP NILAI" }: HeaderProps) {
+  // Style khusus untuk efek 3D/Emboss pada teks STMIK IKMI
   const embossedTextStyle = {
     fontFamily: "Arial Black, Arial, sans-serif",
     textShadow:
@@ -15,18 +19,18 @@ export default function Header() {
       "-0.5px -0.5px 0.5px rgba(255,255,255,0.8), 1px 1px 1px rgba(0,0,0,0.3)",
   };
 
-  // Style untuk memaksa warna keluar saat print
+  // Style untuk memaksa background color tercetak (browser support)
   const forcePrintBackground = {
     printColorAdjust: "exact" as const,
-    WebkitPrintColorAdjust: "exact" as const, // Khusus Chrome/Safari/Edge
+    WebkitPrintColorAdjust: "exact" as const,
   };
 
   return (
     <div className="mb-0 bg-white">
-      {/* Container Grid Kop Surat -> Tetap font-sans (Arial) */}
+      {/* Container Grid Kop Surat */}
       <div className="grid grid-cols-[1fr_auto] gap-x-0 relative font-sans">
         
-        {/* === KOLOM 1 BARIS 1: LOGO & JUDUL KAMPUS === */}
+        {/* === KOLOM 1 BARIS 1: LOGO & NAMA KAMPUS === */}
         <div className="flex items-center gap-3 pb-1 pt-1 pr-2">
           <div className="w-[80px] h-[80px] flex-shrink-0 relative ml-1">
             <img
@@ -73,7 +77,6 @@ export default function Header() {
         </div>
 
         {/* === KOLOM 2 BARIS 1: ALAMAT === */}
-        {/* Tambahkan style forcePrintBackground agar border merah tetap muncul */}
         <div 
           className="border-l-2 border-[#EE3A43] pl-4 py-1 h-[78px] flex flex-col justify-center min-w-[250px]"
           style={forcePrintBackground}
@@ -94,7 +97,6 @@ export default function Header() {
         </div>
 
         {/* === KOLOM 1 BARIS 2: BAR ORANGE === */}
-        {/* PERBAIKAN DISINI: Menambahkan style untuk memaksa background print */}
         <div 
           className="bg-[#F7941D] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
           style={forcePrintBackground}
@@ -105,7 +107,6 @@ export default function Header() {
         </div>
 
         {/* === KOLOM 2 BARIS 2: BAR HIJAU === */}
-        {/* PERBAIKAN DISINI: Menambahkan style untuk memaksa background print */}
         <div 
           className="bg-[#009444] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
           style={forcePrintBackground}
@@ -115,10 +116,10 @@ export default function Header() {
           </span>
         </div>
 
-        {/* === BARIS 3: JUDUL TRANSKRIP === */}
-        <div className="col-span-2 text-center mt-4 mb-2">
+        {/* === BARIS 3: JUDUL DOKUMEN (DINAMIS) === */}
+        <div className="col-span-2 text-center mt-4 mb-4">
           <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-['Cambria'] text-black">
-            TRANSKRIP NILAI
+            {title}
           </h2>
         </div>
 

@@ -24,25 +24,23 @@ const DEFAULT_PAGE: PageInfo = {
 export default function Navbar() {
   const pathname = usePathname() || "/";
 
-  const page = useMemo<PageInfo>(() => {
-    return ROUTES[pathname] ?? DEFAULT_PAGE;
-  }, [pathname]);
+  const page = useMemo(() => ROUTES[pathname] ?? DEFAULT_PAGE, [pathname]);
 
   return (
     <nav className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 print:hidden">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
         {/* LEFT */}
-        <div className="flex flex-col">
-          <h1 className="text-lg font-bold tracking-tight text-slate-800 leading-none">
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-800 leading-none truncate">
             {page.title}
           </h1>
 
-          <div className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <div className="mt-1 flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">
             {page.breadcrumb.map((item, idx) => (
               <React.Fragment key={item}>
-                <span>{item}</span>
+                <span className="truncate">{item}</span>
                 {idx < page.breadcrumb.length - 1 && (
-                  <span className="text-slate-300">/</span>
+                  <span className="text-slate-300 shrink-0">/</span>
                 )}
               </React.Fragment>
             ))}
@@ -50,9 +48,9 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center h-full">
-          {/* Search */}
-          <div className="px-5 hidden md:block">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Search (Desktop) */}
+          <div className="hidden md:block">
             <div className="relative group">
               <span className="absolute inset-y-0 left-3 flex items-center text-slate-400
                                transition-colors duration-200
@@ -65,45 +63,51 @@ export default function Navbar() {
                 placeholder="Cari data..."
                 className="w-52 lg:w-60 rounded-full bg-slate-100
                            py-2 pl-9 pr-4 text-xs text-slate-700
-                           border border-transparent
-                           outline-none transition-all duration-200
+                           border border-transparent outline-none
+                           transition-all duration-200
                            hover:bg-slate-100/70
                            focus:bg-white focus:border-slate-200 focus:ring-1 focus:ring-slate-200"
               />
             </div>
           </div>
 
+          {/* Search Icon (Mobile) */}
+          <button
+            type="button"
+            className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full
+                       text-slate-500 transition-colors
+                       hover:bg-slate-100/60
+                       focus:outline-none focus:ring-1 focus:ring-slate-200"
+            aria-label="Cari"
+          >
+            <SearchIcon />
+          </button>
+
           {/* Divider */}
-          <div className="h-7 w-px bg-slate-200 self-center" />
+          <div className="hidden sm:block h-6 w-px bg-slate-200 mx-1" />
 
           {/* User */}
-          <div className="pl-5">
-            <button
-              type="button"
-              className="flex items-center gap-3 rounded-full p-1.5 pl-2 pr-3
-                         transition-colors duration-200
-                         hover:bg-slate-100/60
-                         focus:outline-none focus:ring-1 focus:ring-slate-200 group"
-            >
-              <div className="hidden sm:flex flex-col text-right leading-tight">
-                <span className="text-xs font-bold text-slate-700
-                                 transition-colors duration-200
-                                 group-hover:text-slate-800">
-                  Azharangga Kusuma
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-tight text-slate-400">
-                  Administrator
-                </span>
-              </div>
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full p-1.5
+                       transition-colors duration-200
+                       hover:bg-slate-100/60
+                       focus:outline-none focus:ring-1 focus:ring-slate-200"
+          >
+            <div className="hidden sm:flex flex-col text-right leading-tight">
+              <span className="text-xs font-bold text-slate-700">
+                Azharangga Kusuma
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-tight text-slate-400">
+                Administrator
+              </span>
+            </div>
 
-              <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200
-                              flex items-center justify-center
-                              transition-colors duration-200
-                              group-hover:bg-white">
-                <UserIcon />
-              </div>
-            </button>
-          </div>
+            <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200
+                            flex items-center justify-center">
+              <UserIcon />
+            </div>
+          </button>
         </div>
       </div>
     </nav>

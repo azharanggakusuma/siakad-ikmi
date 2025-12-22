@@ -4,101 +4,116 @@ import React from "react";
 
 export default function DashboardPage() {
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Welcome Section dengan Gradient */}
-      <div className="relative overflow-hidden bg-white p-8 rounded-2xl border border-slate-200 shadow-sm group">
-        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-blue-50 rounded-full blur-3xl group-hover:bg-blue-100 transition-colors duration-500"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-            Selamat Datang Kembali, <span className="text-[#1B3F95]">Admin!</span> 👋
-          </h2>
-          <p className="text-slate-500 mt-2 max-w-2xl leading-relaxed">
-            Sistem Informasi Akademik siap membantu Anda mengelola data hari ini. 
-            Pantau statistik cepat atau cetak transkrip mahasiswa dengan mudah.
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h2>
+          <p className="text-muted-foreground text-slate-500">
+            Selamat datang kembali. Berikut adalah ringkasan sistem Anda hari ini.
           </p>
         </div>
-      </div>
-
-      {/* Stats Cards dengan Ikon & Hover Effect */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard 
-          label="Total Mahasiswa" 
-          value="120" 
-          icon={<UserGroupIcon />} 
-          color="bg-blue-500" 
-        />
-        <StatCard 
-          label="Mata Kuliah" 
-          value="45" 
-          icon={<BookOpenIcon />} 
-          color="bg-indigo-500" 
-        />
-        <StatCard 
-          label="Transkrip Dicetak" 
-          value="312" 
-          icon={<PrinterIcon />} 
-          color="bg-emerald-500" 
-        />
-      </div>
-
-      {/* Main Content Area: Recent Activity & Quick Action */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-[#1B3F95] rounded-full"></span>
-            Aktivitas Terbaru
-          </h3>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                  <ClockIcon />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">Transkrip Dicetak: Azharangga Kusuma</p>
-                  <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tighter">10 Menit yang lalu</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-[#1B3F95] p-8 rounded-2xl shadow-xl shadow-blue-900/10 flex flex-col justify-center text-white relative overflow-hidden">
-          <div className="absolute bottom-0 right-0 opacity-10 transform translate-x-1/4 translate-y-1/4">
-             <PrinterIcon size={200} />
-          </div>
-          <h3 className="text-xl font-bold mb-3 relative z-10">Butuh Cetak Cepat?</h3>
-          <p className="text-blue-100/80 text-sm mb-6 relative z-10 leading-relaxed">
-            Langsung menuju halaman transkrip untuk mencari mahasiswa dan mengunduh dokumen resmi.
-          </p>
-          <a href="/transkrip" className="bg-white text-[#1B3F95] px-6 py-3 rounded-xl font-bold text-sm self-start hover:bg-blue-50 transition-all shadow-lg active:scale-95 relative z-10">
-            Buka Transkrip Nilai
+        <div className="flex items-center gap-2">
+          <button className="hidden md:inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-slate-200 bg-white px-4 py-2 hover:bg-slate-50 shadow-sm">
+            Download Report
+          </button>
+          <a href="/transkrip" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-[#1B3F95] text-white px-4 py-2 hover:bg-blue-800 shadow-sm shadow-blue-900/10">
+            Cetak Nilai
           </a>
         </div>
       </div>
-    </div>
-  );
-}
 
-// Komponen Kecil untuk Kartu Statistik
-function StatCard({ label, value, icon, color }: any) {
-  return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 group">
-      <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</span>
-          <p className="text-4xl font-black text-slate-800 tracking-tighter group-hover:text-[#1B3F95] transition-colors">{value}</p>
+      {/* Grid Statistik */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <ShadcnStatCard label="Total Mahasiswa" value="1,284" description="+20 dari bulan lalu" icon={<UsersIcon />} />
+        <ShadcnStatCard label="Mata Kuliah" value="86" description="Kurikulum Aktif" icon={<BookIcon />} />
+        <ShadcnStatCard label="Transkrip Terbit" value="3,124" description="+12% peningkatan" icon={<FileTextIcon />} />
+        <ShadcnStatCard label="Rata-rata IPK" value="3.42" description="Skala 4.00" icon={<TrendingUpIcon />} />
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        {/* Recent Activity Table - Span 4 */}
+        <div className="md:col-span-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="p-6">
+            <h3 className="font-semibold leading-none tracking-tight">Aktivitas Terkini</h3>
+            <p className="text-sm text-slate-500 mt-2">Daftar pencetakan transkrip terbaru oleh administrator.</p>
+          </div>
+          <div className="p-6 pt-0">
+            <div className="space-y-8">
+              <ActivityItem name="Azharangga Kusuma" nim="181253xx" action="Mencetak Transkrip" time="Baru saja" />
+              <ActivityItem name="Budi Setiadi" nim="181254xx" action="Mencetak Transkrip" time="2 menit lalu" />
+              <ActivityItem name="Siti Halimah" nim="191250xx" action="Update Data" time="1 jam lalu" />
+              <ActivityItem name="Dedi Kurniawan" nim="181251xx" action="Mencetak Transkrip" time="3 jam lalu" />
+            </div>
+          </div>
         </div>
-        <div className={`p-3 rounded-xl ${color} text-white shadow-lg shadow-inherit`}>
-          {icon}
+
+        {/* Quick Action / Card - Span 3 */}
+        <div className="md:col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+          <div className="p-6">
+            <h3 className="font-semibold leading-none tracking-tight">Pintasan Sistem</h3>
+            <p className="text-sm text-slate-500 mt-2">Akses cepat ke fitur-fitur utama.</p>
+            <div className="grid gap-2 mt-4">
+              <button className="flex items-center gap-3 w-full rounded-lg border border-slate-100 p-3 text-sm font-medium hover:bg-slate-50 transition-all text-slate-700">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                Manajemen Mahasiswa
+              </button>
+              <button className="flex items-center gap-3 w-full rounded-lg border border-slate-100 p-3 text-sm font-medium hover:bg-slate-50 transition-all text-slate-700">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                Input Nilai Kolektif
+              </button>
+              <button className="flex items-center gap-3 w-full rounded-lg border border-slate-100 p-3 text-sm font-medium hover:bg-slate-50 transition-all text-slate-700">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                Laporan Semester
+              </button>
+            </div>
+          </div>
+          <div className="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-xl text-center">
+            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Status Server: Online</p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Ikon-ikon sederhana
-const UserGroupIcon = () => <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
-const BookOpenIcon = () => <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
-const PrinterIcon = ({ size = 24 }: { size?: number }) => <svg style={{ width: size, height: size }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>;
-const ClockIcon = () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+// Sub-komponen Stat Card ala shadcn
+function ShadcnStatCard({ label, value, description, icon }: any) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <h3 className="text-sm font-medium tracking-tight text-slate-600">{label}</h3>
+        <div className="text-slate-400">{icon}</div>
+      </div>
+      <div>
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
+        <p className="text-xs text-slate-500 font-medium mt-1">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// Sub-komponen Activity Item
+function ActivityItem({ name, nim, action, time }: any) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-[#1B3F95]">
+          {name.charAt(0)}
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium leading-none text-slate-800">{name}</p>
+          <p className="text-xs text-slate-500">{nim} • {action}</p>
+        </div>
+      </div>
+      <div className="text-xs font-medium text-slate-400">{time}</div>
+    </div>
+  );
+}
+
+// ICONS (Simple SVG)
+const UsersIcon = () => <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
+const BookIcon = () => <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
+const FileTextIcon = () => <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
+const TrendingUpIcon = () => <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;

@@ -1,19 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { students } from "@/lib/data";
 import Header from "@/components/Header";
 import StudentInfo from "@/components/StudentInfo";
 import GradeTable from "@/components/GradeTable";
 import Footer from "@/components/Footer";
+// Import Server Action
+import { getSignatureBase64 } from "@/app/actions/getSignature";
 
 export default function TranskripPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  
-  // 1. DEFAULT STATE: "none" (Tanpa Tanda Tangan)
   const [signatureType, setSignatureType] = useState<"basah" | "digital" | "none">("none");
   
+  // State baru untuk menyimpan data gambar aman (Base64)
+  const [secureImage, setSecureImage] = useState<string | null>(null);
+  
   const currentStudent = students[selectedIndex];
+
+  // Efek untuk memuat gambar aman saat tipe tanda tangan berubah
+  useEffect(() => {
+    const fetchSignature = async () => {
+      if (signatureType === "none") {
+        setSecureImage(null);
+        return;
+      }
+
+      // Panggil Server Action
+      const base64Data = await getSignatureBase64(signatureType);
+      setSecureImage(base64Data);
+    };
+
+    fetchSignature();
+  }, [signatureType]);
 
   const handlePrint = () => {
     window.print();
@@ -21,7 +40,7 @@ export default function TranskripPage() {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Control Panel */}
+      {/* TOOLBAR CONTROLS (Control Panel) */}
       <div className="w-full max-w-[210mm] bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         
         <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -65,7 +84,6 @@ export default function TranskripPage() {
                 onChange={(e) => setSignatureType(e.target.value as "basah" | "digital" | "none")}
                 className="bg-transparent font-bold text-gray-700 text-sm outline-none cursor-pointer p-0 w-full min-w-[120px]"
               >
-                {/* 2. Urutan Pilihan: None, Basah, Digital */}
                 <option value="none">Tanpa Tanda Tangan</option>
                 <option value="basah">Basah (Kaprodi)</option>
                 <option value="digital">Digital (QR)</option>
@@ -91,7 +109,8 @@ export default function TranskripPage() {
         <Header />
         <StudentInfo profile={currentStudent.profile} />
         <GradeTable data={currentStudent.transcript} />
-        <Footer signatureType={signatureType} />
+        {/* Pass data secureImage ke Footer */}
+        <Footer signatureType={signatureType} signatureBase64={secureImage} />
       </div>
     </div>
   );

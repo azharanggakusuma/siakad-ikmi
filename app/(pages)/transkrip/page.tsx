@@ -1,4 +1,3 @@
-// app/(pages)/transkrip/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -13,7 +12,7 @@ import { useSignature } from "@/hooks/useSignature";
 export default function TranskripPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // Gunakan Custom Hook
+  // Menggunakan Custom Hook
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
 
   const currentStudent = students[selectedIndex];
@@ -32,10 +31,15 @@ export default function TranskripPage() {
           
           <StudentInfo profile={currentStudent.profile} />
           
-          {/* Panggil GradeTable dengan mode default (transkrip) */}
-          <GradeTable data={currentStudent.transcript} />
+          {/* Mode default GradeTable adalah "transkrip" */}
+          <GradeTable data={currentStudent.transcript} mode="transkrip" />
 
-          <Footer signatureType={signatureType} signatureBase64={secureImage} />
+          {/* Mode transkrip menampilkan keterangan SMT */}
+          <Footer 
+            signatureType={signatureType} 
+            signatureBase64={secureImage} 
+            mode="transkrip"
+          />
         </div>
       </div>
 

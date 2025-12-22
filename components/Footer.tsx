@@ -56,7 +56,7 @@ export default function Footer({ signatureType, signatureBase64 }: FooterProps) 
               // pointer-events-none: Mencegah user klik/drag gambar
               // select-none: Mencegah user memblok/highlight gambar
               className={`absolute w-full h-full object-contain z-10 top-0 left-0 mix-blend-multiply translate-y-[-20px] pointer-events-none select-none ${
-                signatureType === "basah" ? "scale-[1.6]" : "scale-[1.0]"
+                signatureType === "basah" ? "scale-[1.6]" : "scale-[1.3]"
               }`} 
               // Tambahan: disable drag attribute HTML5
               draggable={false}

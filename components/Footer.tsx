@@ -4,13 +4,13 @@ import React, { useState, useEffect } from "react";
 interface FooterProps {
   signatureType: "basah" | "digital" | "none";
   signatureBase64: string | null;
-  mode?: "transkrip" | "khs"; // Tambahkan prop mode (default: transkrip)
+  mode?: "transkrip" | "khs" | "surat"; // Tambahkan mode "surat"
 }
 
 export default function Footer({ 
   signatureType, 
   signatureBase64, 
-  mode = "transkrip" // Default value jika tidak diisi
+  mode = "transkrip" 
 }: FooterProps) {
   const [tanggal, setTanggal] = useState("");
 
@@ -28,23 +28,29 @@ export default function Footer({
     <div className="flex justify-between items-start mt-6 text-[10px] w-full font-['Cambria']">
       
       {/* Keterangan Kiri */}
-      <div className="mt-0 pl-1">
-        <p className="font-bold underline mb-1">Keterangan</p>
-        <div className="grid grid-cols-[70px_10px_1fr] leading-tight">
-          
-          {/* HANYA TAMPILKAN SMT JIKA MODE ADALAH TRANSKRIP */}
-          {mode === "transkrip" && (
-            <>
-              <div>SMT</div> <div>:</div> <div>Semester</div>
-            </>
-          )}
+      {mode === "surat" ? (
+        // Jika mode surat, render div kosong agar layout tetap "justify-between" (Tanda tangan tetap di kanan)
+        <div></div>
+      ) : (
+        // Jika BUKAN mode surat (Transkrip/KHS), tampilkan Keterangan
+        <div className="mt-0 pl-1">
+          <p className="font-bold underline mb-1">Keterangan</p>
+          <div className="grid grid-cols-[70px_10px_1fr] leading-tight">
+            
+            {/* HANYA TAMPILKAN SMT JIKA MODE ADALAH TRANSKRIP */}
+            {mode === "transkrip" && (
+              <>
+                <div>SMT</div> <div>:</div> <div>Semester</div>
+              </>
+            )}
 
-          <div>SKS</div> <div>:</div> <div>Satuan Kredit Semester</div>
-          <div>HM</div> <div>:</div> <div>Huruf Mutu</div>
-          <div>AM</div> <div>:</div> <div>Angka Mutu</div>
-          <div>NM</div> <div>:</div> <div>Nilai Mutu</div>
+            <div>SKS</div> <div>:</div> <div>Satuan Kredit Semester</div>
+            <div>HM</div> <div>:</div> <div>Huruf Mutu</div>
+            <div>AM</div> <div>:</div> <div>Angka Mutu</div>
+            <div>NM</div> <div>:</div> <div>Nilai Mutu</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Area Tanda Tangan Kanan */}
       <div className="flex flex-col items-center w-fit mt-0 pr-1">

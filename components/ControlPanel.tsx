@@ -11,13 +11,29 @@ interface ControlPanelProps {
 
   onPrint: () => void;
   
-  // HAPUS: onPreview prop tidak lagi dibutuhkan
-
-  // Props opsional untuk KHS (Semester)
+  // Props KHS
   showSemesterSelect?: boolean;
   availableSemesters?: number[];
   selectedSemester?: number;
   onSelectSemester?: (smt: number) => void;
+
+  // [BARU] Props Data Manual untuk Surat
+  nomorSurat?: string;
+  setNomorSurat?: (val: string) => void;
+  tahunAkademik?: string;
+  setTahunAkademik?: (val: string) => void;
+  
+  tempatLahir?: string;
+  setTempatLahir?: (val: string) => void;
+  tanggalLahir?: string;
+  setTanggalLahir?: (val: string) => void;
+  alamat?: string;
+  setAlamat?: (val: string) => void;
+  
+  namaOrangTua?: string;
+  setNamaOrangTua?: (val: string) => void;
+  pekerjaanOrangTua?: string;
+  setPekerjaanOrangTua?: (val: string) => void;
 }
 
 export default function ControlPanel({
@@ -27,16 +43,25 @@ export default function ControlPanel({
   signatureType,
   onSignatureChange,
   onPrint,
-  // onPreview, // HAPUS
   showSemesterSelect = false,
   availableSemesters = [],
   selectedSemester,
   onSelectSemester,
+  // Props Baru
+  nomorSurat, setNomorSurat,
+  tahunAkademik, setTahunAkademik,
+  tempatLahir, setTempatLahir,
+  tanggalLahir, setTanggalLahir,
+  alamat, setAlamat,
+  namaOrangTua, setNamaOrangTua,
+  pekerjaanOrangTua, setPekerjaanOrangTua,
 }: ControlPanelProps) {
   const selectedStudent = students[selectedIndex];
 
+  // Styling
   const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
   const selectClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:ring-2 focus:ring-[#1B3F95]/30 focus:border-[#1B3F95] hover:border-gray-300";
+  const inputClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none transition focus:ring-2 focus:ring-[#1B3F95]/30 focus:border-[#1B3F95] hover:border-gray-300";
   const sectionClass = "flex flex-col gap-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3";
 
   return (
@@ -49,7 +74,7 @@ export default function ControlPanel({
 
         <div className="p-5 flex flex-col gap-4">
           
-          {/* 1. Select Mahasiswa */}
+          {/* 1. Pilih Mahasiswa */}
           <div className={sectionClass}>
             <div className="flex items-baseline justify-between">
               <p className={labelClass}>Mahasiswa</p>
@@ -64,30 +89,68 @@ export default function ControlPanel({
                 <option key={student.id} value={index}>{student.profile.nama}</option>
               ))}
             </select>
-            <div className="text-xs text-gray-600">
-              NIM. <span className="font-mono text-gray-800">{selectedStudent?.profile?.nim ?? "-"}</span>
-            </div>
           </div>
 
-          {/* 2. Select Semester (KHUSUS HALAMAN KHS) */}
-          {showSemesterSelect && availableSemesters.length > 0 && (
+          {/* 2. Detail Surat */}
+          {setNomorSurat && (
             <div className={sectionClass}>
-               <p className={labelClass}>Pilih Semester</p>
-               <select
-                value={selectedSemester}
-                onChange={(e) => onSelectSemester && onSelectSemester(Number(e.target.value))}
-                className={selectClass}
-               >
-                 {availableSemesters.map((smt) => (
-                   <option key={smt} value={smt}>Semester {smt}</option>
-                 ))}
-               </select>
+              <p className={labelClass}>Detail Surat</p>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] text-gray-400">Nomor Surat</label>
+                  <input type="text" value={nomorSurat} onChange={(e) => setNomorSurat(e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400">Tahun Akademik</label>
+                  <input type="text" value={tahunAkademik} onChange={(e) => setTahunAkademik?.(e.target.value)} className={inputClass} />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* 3. Tanda Tangan */}
+          {/* 3. Biodata Tambahan */}
+          {setTempatLahir && (
+             <div className={sectionClass}>
+              <p className={labelClass}>Biodata Mahasiswa</p>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-gray-400">Tempat Lahir</label>
+                    <input type="text" value={tempatLahir} onChange={(e) => setTempatLahir(e.target.value)} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400">Tgl Lahir</label>
+                    <input type="text" value={tanggalLahir} onChange={(e) => setTanggalLahir?.(e.target.value)} className={inputClass} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400">Alamat Lengkap</label>
+                  <textarea value={alamat} onChange={(e) => setAlamat?.(e.target.value)} className={`${inputClass} h-16 resize-none leading-tight`} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4. Data Orang Tua */}
+          {setNamaOrangTua && (
+            <div className={sectionClass}>
+              <p className={labelClass}>Data Orang Tua</p>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] text-gray-400">Nama Orang Tua</label>
+                  <input type="text" value={namaOrangTua} onChange={(e) => setNamaOrangTua(e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400">Pekerjaan</label>
+                  <input type="text" value={pekerjaanOrangTua} onChange={(e) => setPekerjaanOrangTua?.(e.target.value)} className={inputClass} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5. Tanda Tangan */}
           <div className={sectionClass}>
-            <p className={labelClass}>Opsi Tanda Tangan</p>
+            <p className={labelClass}>Tanda Tangan</p>
             <select
               value={signatureType}
               onChange={(e) => onSignatureChange(e.target.value as "basah" | "digital" | "none")}
@@ -99,25 +162,15 @@ export default function ControlPanel({
             </select>
           </div>
 
-          {/* 4. Action Buttons */}
           <div className="pt-1 flex flex-col gap-3">
-            
-            {/* HAPUS TOMBOL PREVIEW DI SINI */}
-
-            {/* TOMBOL CETAK */}
-            <button
-              onClick={onPrint}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B3F95] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-900 active:translate-y-[1px]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v8H6z" />
-              </svg>
-              Cetak PDF
-            </button>
-            
-            <div className="text-center">
-              <p className="text-[10px] text-gray-400 leading-snug">Pastikan pengaturan kertas <b>A4</b> & margin <b>None</b>.</p>
-            </div>
+            <button onClick={onPrint} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B3F95] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-900 active:translate-y-[1px]" > 
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"> <path d="M6 9V2h12v7" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v8H6z" /></svg> 
+              Cetak PDF 
+            </button> 
+            <div className="text-center"> 
+              <p className="text-[10px] text-gray-400 leading-snug">Pastikan pengaturan kertas <b>A4</b> & margin <b>None</b>.</p> 
+            </div> 
           </div>
         </div>
       </div>

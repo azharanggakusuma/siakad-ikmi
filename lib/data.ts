@@ -76,7 +76,15 @@ const COURSES_DB: Record<string, CourseData> = {
   "MDK-0306":   { matkul: "Data Science", sks: 3, smt_default: 3 },
   "MDK-0302":   { matkul: "Rekayasa Perangkat Lunak", sks: 4, smt_default: 3 },
 
-  // --- SEMESTER 4 (MBKM / Reguler) ---
+  // --- SEMESTER 4 (REGULER / ASLI KAMPUS) ---
+  "TDK-0406": { matkul: "Basis Data", sks: 3, smt_default: 4 },
+  "MDK-0405": { matkul: "Internet of Thing", sks: 3, smt_default: 4 },
+  "MDK-0404": { matkul: "Data Mining", sks: 4, smt_default: 4 },
+  "TDK-0403": { matkul: "Metode Numerik", sks: 3, smt_default: 4 },
+  "MDK-0402": { matkul: "Interaksi Manusia Komputer", sks: 3, smt_default: 4 },
+  "TDK-0401": { matkul: "Jaringan Komputer Expert", sks: 4, smt_default: 4 },
+
+  // --- SEMESTER 4 (KHUSUS MBKM / LUAR KAMPUS) ---
   "MBKM-TI-04078": { matkul: "TP. Camping dan Trekking", sks: 3, smt_default: 4 },
   "MBKM-TI-04049": { matkul: "Modul Nusantara", sks: 4, smt_default: 4 },
   "MBKM-TI-04051": { matkul: "Pendidikan Anti Korupsi", sks: 3, smt_default: 4 },
@@ -84,12 +92,6 @@ const COURSES_DB: Record<string, CourseData> = {
   "MBKM-TI-04017": { matkul: "Etika Bisnis Profesi", sks: 3, smt_default: 4 },
   "MBKM-TI-04073": { matkul: "Technopreneurship", sks: 3, smt_default: 4 },
   "MBKM-TI-04044": { matkul: "Media Pembelajaran", sks: 3, smt_default: 4 },
-  "TDK-0406": { matkul: "Basis Data", sks: 3, smt_default: 4 },
-  "MDK-0405": { matkul: "Internet of Thing", sks: 3, smt_default: 4 },
-  "MDK-0404": { matkul: "Data Mining", sks: 4, smt_default: 4 },
-  "TDK-0403": { matkul: "Metode Numerik", sks: 3, smt_default: 4 },
-  "MDK-0402": { matkul: "Interaksi Manusia Komputer", sks: 3, smt_default: 4 },
-  "TDK-0401": { matkul: "Jaringan Komputer Expert", sks: 4, smt_default: 4 },
 
   // --- SEMESTER 5 ---
   "TKK-0501": { matkul: "Cloud Computing", sks: 4, smt_default: 5 },

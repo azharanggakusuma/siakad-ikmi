@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Tooltip from "./Tooltip"; // Import komponen baru
+import Tooltip from "./Tooltip";
 
 type SidebarProps = {
   open: boolean;
@@ -42,29 +42,34 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           ${open ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 lg:static lg:h-screen
           print:hidden
-          
-          ${isCollapsed ? "lg:w-[80px]" : "lg:w-64"}
           w-64
+          ${isCollapsed ? "lg:w-[80px]" : "lg:w-64"}
         `}
       >
         {/* === HEADER BRAND === */}
         <div className={`
             h-16 flex items-center bg-white transition-all duration-300 relative overflow-hidden shrink-0
-            ${isCollapsed ? "pl-6" : "pl-6 pr-4"} 
+            pl-6 pr-4
+            ${isCollapsed ? "lg:pr-0" : ""}
         `}>
           <div className="flex items-center gap-3">
+            {/* Logo */}
             <div className="relative w-8 h-8 shrink-0">
                <Image src="/img/logo-ikmi.png" alt="Logo" fill className="object-contain" />
             </div>
+            
+            {/* Teks Brand */}
             <div className={`
                 flex flex-col min-w-0 whitespace-nowrap transition-all duration-300 origin-left
-                ${isCollapsed ? "opacity-0 scale-90 translate-x-[-10px] w-0" : "opacity-100 scale-100 translate-x-0 w-auto"}
+                opacity-100 scale-100 translate-x-0 w-auto
+                ${isCollapsed ? "lg:opacity-0 lg:scale-90 lg:translate-x-[-10px] lg:w-0" : ""}
             `}>
               <p className="font-bold text-slate-800 text-lg leading-none truncate">SIAKAD</p>
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-1 truncate">STMIK IKMI Cirebon</p>
             </div>
           </div>
 
+          {/* Close button (Mobile Only) */}
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -76,6 +81,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
 
         {/* === MENU NAVIGATION === */}
         <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
+          
           <div className="space-y-1">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
             
@@ -90,22 +96,27 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
              <SectionLabel label="Lainnya" isCollapsed={isCollapsed} />
             <NavItem href="/pengaturan" label="Pengaturan" icon={<SettingsIcon />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
           </div>
+
         </nav>
 
         {/* === FOOTER === */}
         <div className="p-3 bg-white border-t border-slate-100 shrink-0 relative">
-           {/* Implementasi Tooltip Sederhana */}
            <Tooltip content="Logout" enabled={isCollapsed} position="right">
               <button
                 onClick={handleLogout}
                 className={`
                   w-full flex items-center rounded-lg text-sm font-semibold transition-colors overflow-hidden group
                   text-rose-600 hover:bg-rose-50
-                  ${isCollapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-2.5"}
+                  gap-3 px-3 py-2.5
+                  ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
                 `}
               >
                 <div className="shrink-0"><LogoutIcon /></div>
-                <span className={`transition-all duration-300 whitespace-nowrap ${isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
+                
+                <span className={`transition-all duration-300 whitespace-nowrap 
+                  w-auto opacity-100
+                  ${isCollapsed ? "lg:w-0 lg:opacity-0" : ""}
+                `}>
                   Logout
                 </span>
               </button>
@@ -117,7 +128,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
 }
 
 /* ================= COMPONENT: NAV ITEM ================= */
-// Jauh lebih bersih tanpa logika portal manual
+
 function NavItem({
   href, icon, label, active, onClick, isCollapsed,
 }: {
@@ -130,7 +141,8 @@ function NavItem({
           className={`
             flex items-center gap-3 rounded-lg relative
             text-sm font-medium transition-all duration-200
-            ${isCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"}
+            px-3 py-2.5
+            ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
             ${active ? "bg-blue-50 text-[#1B3F95]" : "text-slate-600 hover:bg-slate-50"}
           `}
         >
@@ -138,7 +150,11 @@ function NavItem({
           <span className={`transition-colors shrink-0 ${active ? "text-[#1B3F95]" : "text-slate-400 group-hover:text-slate-600"}`}>
             {icon}
           </span>
-          <span className={`truncate transition-all duration-300 ${isCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"}`}>
+          
+          <span className={`truncate transition-all duration-300 block
+             w-auto opacity-100
+             ${isCollapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : ""}
+          `}>
               {label}
           </span>
         </div>
@@ -148,7 +164,16 @@ function NavItem({
 }
 
 function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed?: boolean }) {
-  if (isCollapsed) return <div className="h-px bg-slate-100 mx-2 my-2" />;
+  if (isCollapsed) {
+    return (
+      <>
+        <div className="hidden lg:block h-px bg-slate-100 mx-2 my-2" />
+        <p className="lg:hidden px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 select-none truncate">
+          {label}
+        </p>
+      </>
+    );
+  }
   return (
     <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 select-none truncate transition-opacity duration-300">
       {label}
@@ -156,7 +181,7 @@ function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed?: boo
   );
 }
 
-/* ================= ICONS (Tetap Sama) ================= */
+/* ================= ICONS (Tidak Ada Perubahan) ================= */
 const CloseIcon = () => (<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const DashboardIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>);
 const DocIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>);

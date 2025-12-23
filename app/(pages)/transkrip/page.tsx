@@ -10,14 +10,12 @@ import ControlPanel from "@/components/ControlPanel";
 import { useSignature } from "@/hooks/useSignature";
 import PageHeader from "@/components/PageHeader";
 import { useLayout } from "@/app/context/LayoutContext";
-// [HAPUS] Import Modal dihapus
 
 export default function TranskripPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  // [HAPUS] State modal dihapus
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
   const { isCollapsed } = useLayout();
-  
+
   const currentStudent = students[selectedIndex];
 
   const handlePrint = () => {
@@ -29,38 +27,39 @@ export default function TranskripPage() {
       <Header title="TRANSKRIP NILAI" />
       <StudentInfo profile={currentStudent.profile} />
       <GradeTable data={currentStudent.transcript} mode="transkrip" />
-      <Footer signatureType={signatureType} signatureBase64={secureImage} mode="transkrip" />
+      <Footer
+        signatureType={signatureType}
+        signatureBase64={secureImage}
+        mode="transkrip"
+      />
     </>
   );
 
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="print:hidden">
-        <PageHeader 
-          title="Transkrip Nilai" 
-          breadcrumb={["SIAKAD", "Transkrip"]} 
+        <PageHeader
+          title="Transkrip Nilai"
+          breadcrumb={["SIAKAD", "Transkrip"]}
         />
       </div>
 
       <div className="flex flex-col xl:flex-row items-start justify-start gap-6 min-h-screen">
-        
         {/* --- AREA KERTAS --- */}
-        <div className={`
+        <div
+          className={`
             hidden xl:flex print:flex print:w-full print:justify-center
             shrink-0 justify-start w-full 
             transition-all duration-300
             
-            ${isCollapsed 
-               ? "xl:w-[210mm]" 
-               : "xl:w-[189mm]" 
-            }
+            ${isCollapsed ? "xl:w-[210mm]" : "xl:w-[189mm]"}
 
             overflow-visible mb-0 
-        `}>
-          
-          <div 
+        `}
+        >
+          <div
             className={`
-              bg-white p-12 shadow-2xl border border-gray-300 
+              bg-white p-8 shadow-2xl border border-gray-300 
               print:shadow-none print:border-none print:m-0 
               w-[210mm] min-h-[297mm] 
               
@@ -84,12 +83,9 @@ export default function TranskripPage() {
             signatureType={signatureType}
             onSignatureChange={setSignatureType}
             onPrint={handlePrint}
-            // [HAPUS] onPreview dihapus
           />
         </div>
       </div>
-
-      {/* [HAPUS] Komponen Modal dihapus dari sini */}
     </div>
   );
 }

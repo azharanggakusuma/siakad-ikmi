@@ -145,7 +145,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                        text-rose-600 hover:bg-rose-50"
           >
             <LogoutIcon />
-            Keluar Aplikasi
+            Logout
           </button>
         </div>
       </aside>

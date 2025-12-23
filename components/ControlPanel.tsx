@@ -17,7 +17,7 @@ interface ControlPanelProps {
   selectedSemester?: number;
   onSelectSemester?: (smt: number) => void;
 
-  // [BARU] Props Data Manual untuk Surat
+  // Props Data Manual untuk Surat
   nomorSurat?: string;
   setNomorSurat?: (val: string) => void;
   tahunAkademik?: string;
@@ -97,12 +97,27 @@ export default function ControlPanel({
               <p className={labelClass}>Detail Surat</p>
               <div className="space-y-2">
                 <div>
-                  <label className="text-[10px] text-gray-400">Nomor Surat</label>
-                  <input type="text" value={nomorSurat} onChange={(e) => setNomorSurat(e.target.value)} className={inputClass} />
+                  <label className="text-[10px] text-gray-400">Nomor Urut Surat</label>
+                  <input 
+                    type="text" 
+                    value={nomorSurat} 
+                    onChange={(e) => setNomorSurat(e.target.value)} 
+                    className={inputClass} 
+                    placeholder="Contoh: 125" 
+                  />
+                  <p className="text-[9px] text-gray-400 italic mt-1">
+                    *Otomatis format: /A/S.KET/STMIK-IKMI/[Bln]/[Thn]
+                  </p>
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-400">Tahun Akademik</label>
-                  <input type="text" value={tahunAkademik} onChange={(e) => setTahunAkademik?.(e.target.value)} className={inputClass} />
+                  <input 
+                    type="text" 
+                    value={tahunAkademik} 
+                    onChange={(e) => setTahunAkademik?.(e.target.value)} 
+                    className={inputClass} 
+                    placeholder="Contoh: 2024/2025" 
+                  />
                 </div>
               </div>
             </div>
@@ -116,16 +131,33 @@ export default function ControlPanel({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] text-gray-400">Tempat Lahir</label>
-                    <input type="text" value={tempatLahir} onChange={(e) => setTempatLahir(e.target.value)} className={inputClass} />
+                    <input 
+                      type="text" 
+                      value={tempatLahir} 
+                      onChange={(e) => setTempatLahir(e.target.value)} 
+                      className={inputClass} 
+                      placeholder="Contoh: Bandung" 
+                    />
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400">Tgl Lahir</label>
-                    <input type="text" value={tanggalLahir} onChange={(e) => setTanggalLahir?.(e.target.value)} className={inputClass} />
+                    <input 
+                      type="text" 
+                      value={tanggalLahir} 
+                      onChange={(e) => setTanggalLahir?.(e.target.value)} 
+                      className={inputClass} 
+                      placeholder="Contoh: 17 Agustus 2002" 
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-400">Alamat Lengkap</label>
-                  <textarea value={alamat} onChange={(e) => setAlamat?.(e.target.value)} className={`${inputClass} h-16 resize-none leading-tight`} />
+                  <textarea 
+                    value={alamat} 
+                    onChange={(e) => setAlamat?.(e.target.value)} 
+                    className={`${inputClass} h-16 resize-none leading-tight`} 
+                    placeholder="Contoh: Jl. Asia Afrika No. 10, RT 01/RW 02, Bandung" 
+                  />
                 </div>
               </div>
             </div>
@@ -138,11 +170,23 @@ export default function ControlPanel({
               <div className="space-y-2">
                 <div>
                   <label className="text-[10px] text-gray-400">Nama Orang Tua</label>
-                  <input type="text" value={namaOrangTua} onChange={(e) => setNamaOrangTua(e.target.value)} className={inputClass} />
+                  <input 
+                    type="text" 
+                    value={namaOrangTua} 
+                    onChange={(e) => setNamaOrangTua(e.target.value)} 
+                    className={inputClass} 
+                    placeholder="Contoh: Budi Santoso" 
+                  />
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-400">Pekerjaan</label>
-                  <input type="text" value={pekerjaanOrangTua} onChange={(e) => setPekerjaanOrangTua?.(e.target.value)} className={inputClass} />
+                  <input 
+                    type="text" 
+                    value={pekerjaanOrangTua} 
+                    onChange={(e) => setPekerjaanOrangTua?.(e.target.value)} 
+                    className={inputClass} 
+                    placeholder="Contoh: Wirausaha" 
+                  />
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { students } from "@/lib/data";
 import Header from "@/components/Header"; 
 import Footer from "@/components/Footer"; 
@@ -13,21 +13,35 @@ export default function SuratKeteranganPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   // --- STATE DATA ---
-  const [nomorSurat, setNomorSurat] = useState(`125/A/S.KET/STMIK-IKMI/XII/${new Date().getFullYear()}`);
-  const [tahunAkademik, setTahunAkademik] = useState("2025/2026");
+  // "nomorSurat" sekarang hanya menyimpan urutan (contoh: "125")
+  const [nomorSurat, setNomorSurat] = useState(""); 
+  const [tahunAkademik, setTahunAkademik] = useState("");
   
-  const [tempatLahir, setTempatLahir] = useState("Cirebon");
-  const [tanggalLahir, setTanggalLahir] = useState("02 Januari 2003");
-  // Contoh alamat panjang untuk tes wrapping
-  const [alamat, setAlamat] = useState("Blok Wage RT/RW 002/001, Desa Karang Suwung, Kec. Karang Sembung, Kab. Cirebon");
+  const [tempatLahir, setTempatLahir] = useState("");
+  const [tanggalLahir, setTanggalLahir] = useState("");
   
-  const [namaOrangTua, setNamaOrangTua] = useState("Cecep Supriatna");
-  const [pekerjaanOrangTua, setPekerjaanOrangTua] = useState("Buruh");
+  const [alamat, setAlamat] = useState("");
+  
+  const [namaOrangTua, setNamaOrangTua] = useState("");
+  const [pekerjaanOrangTua, setPekerjaanOrangTua] = useState("");
 
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
   const { isCollapsed } = useLayout();
 
   const currentStudent = students[selectedIndex];
+
+  // --- HELPER OTOMATIS NOMOR SURAT ---
+  const getRomanMonth = () => {
+    const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+    return months[new Date().getMonth()];
+  };
+
+  const currentYear = new Date().getFullYear();
+  const currentMonthRoman = getRomanMonth();
+  
+  // Format: [Urutan]/A/S.KET/STMIK-IKMI/[BulanRomawi]/[Tahun]
+  // Jika nomorSurat kosong, tampilkan placeholder "..." di preview
+  const fullNomorSurat = `${nomorSurat || "..."}/A/S.KET/STMIK-IKMI/${currentMonthRoman}/${currentYear}`;
 
   const handlePrint = () => {
     window.print();
@@ -39,11 +53,8 @@ export default function SuratKeteranganPage() {
   };
 
   // --- STYLE UTAMA ---
-  // tableLayout: 'fixed' -> KUNCI agar tabel tidak melebar keluar kertas
   const labelStyle = { width: '150px', verticalAlign: 'top', padding: '1px 0' };
   const colonStyle = { width: '15px', verticalAlign: 'top', padding: '1px 0', textAlign: 'center' as const };
-  
-  // padding-right: 20px -> Memberi nafas di kanan agar teks tidak nempel tepi kertas
   const valueStyle = { verticalAlign: 'top', padding: '1px 20px 1px 4px' }; 
 
   const renderPaperContent = () => (
@@ -54,7 +65,8 @@ export default function SuratKeteranganPage() {
       {/* 2. JUDUL & NOMOR SURAT */}
       <div className="text-center mt-[-10px] mb-8 font-['Cambria'] text-black leading-snug">
         <h2 className="font-bold text-[14px] underline uppercase mb-0">SURAT KETERANGAN</h2>
-        <p className="text-[11px]">Nomor : {nomorSurat}</p>
+        {/* Tampilkan Nomor Surat Otomatis */}
+        <p className="text-[11px]">Nomor : {fullNomorSurat}</p>
       </div>
 
       {/* 3. ISI SURAT */}
@@ -97,7 +109,11 @@ export default function SuratKeteranganPage() {
               <tr>
                 <td style={labelStyle}>Tempat, tanggal lahir</td>
                 <td style={colonStyle}>:</td>
-                <td style={valueStyle} className="capitalize break-words">{tempatLahir}, {tanggalLahir}</td>
+                <td style={valueStyle} className="capitalize break-words">
+                  {/* Fallback tampilan jika kosong */}
+                  {tempatLahir || "..."}
+                  , {tanggalLahir || "..."}
+                </td>
               </tr>
               <tr>
                 <td style={labelStyle}>Jurusan</td>
@@ -114,13 +130,13 @@ export default function SuratKeteranganPage() {
               <tr>
                 <td style={labelStyle}>Tahun Akademik</td>
                 <td style={colonStyle}>:</td>
-                <td style={valueStyle} className="break-words">{tahunAkademik}</td>
+                <td style={valueStyle} className="break-words">{tahunAkademik || "..."}</td>
               </tr>
               <tr>
                 <td style={labelStyle}>Alamat</td>
                 <td style={colonStyle}>:</td>
                 <td style={valueStyle} className="break-words whitespace-pre-wrap text-justify">
-                  {alamat}
+                  {alamat || "..."}
                 </td>
               </tr>
             </tbody>
@@ -135,12 +151,12 @@ export default function SuratKeteranganPage() {
               <tr>
                 <td style={labelStyle}>Nama Orang Tua</td>
                 <td style={colonStyle}>:</td>
-                <td style={valueStyle} className="font-bold break-words">{namaOrangTua}</td>
+                <td style={valueStyle} className="font-bold break-words">{namaOrangTua || "..."}</td>
               </tr>
               <tr>
                 <td style={labelStyle}>Pekerjaan</td>
                 <td style={colonStyle}>:</td>
-                <td style={valueStyle} className="capitalize break-words">{pekerjaanOrangTua}</td>
+                <td style={valueStyle} className="capitalize break-words">{pekerjaanOrangTua || "..."}</td>
               </tr>
             </tbody>
           </table>
@@ -186,7 +202,7 @@ export default function SuratKeteranganPage() {
         `}>
           <div 
              className={`
-              bg-white p-8 shadow-2xl border border-gray-300 
+              bg-white p-6 shadow-2xl border border-gray-300 
               print:shadow-none print:border-none print:m-0 
               w-[210mm] min-h-[297mm] 
               
@@ -215,7 +231,7 @@ export default function SuratKeteranganPage() {
             onSignatureChange={setSignatureType}
             onPrint={handlePrint}
             
-            // State
+            // State (nomorSurat disini hanya urutan)
             nomorSurat={nomorSurat} setNomorSurat={setNomorSurat}
             tahunAkademik={tahunAkademik} setTahunAkademik={setTahunAkademik}
             tempatLahir={tempatLahir} setTempatLahir={setTempatLahir}

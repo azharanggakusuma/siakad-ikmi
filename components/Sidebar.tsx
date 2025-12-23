@@ -189,8 +189,6 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
               text-rose-600 hover:bg-rose-50
               ${isCollapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-2.5"}
             `}
-            // HAPUS title standar browser
-            // title={isCollapsed ? "Logout" : ""} 
           >
             <div className="shrink-0">
                <LogoutIcon />
@@ -285,7 +283,7 @@ function NavItem({
       >
         <div
           className={`
-            flex items-center gap-3 rounded-lg
+            flex items-center gap-3 rounded-lg relative
             text-sm font-medium transition-all duration-200
             ${isCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"}
             ${
@@ -295,9 +293,14 @@ function NavItem({
             }
           `}
         >
-          {active && !isCollapsed && (
+          {/* PERBAIKAN: Active Indicator (Garis Biru)
+             - Hapus kondisi `!isCollapsed` agar tetap muncul saat sidebar kecil.
+             - Atur posisi agar rapi di mode collapsed (hanya w-1 di kiri).
+          */}
+          {active && (
             <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />
           )}
+
           <span
             className={`transition-colors shrink-0 ${
               active
@@ -328,7 +331,7 @@ function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed?: boo
   );
 }
 
-/* ================= ICONS ================= */
+/* ================= ICONS (Sama seperti sebelumnya) ================= */
 const CloseIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

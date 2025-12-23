@@ -114,6 +114,10 @@ const COURSES_DB: Record<string, CourseData> = {
   "MKK-0703": { matkul: "Proposal Skripsi", sks: 2, smt_default: 7, kategori: "Reguler" },
   "MKK-0702": { matkul: "Literature Review", sks: 4, smt_default: 7, kategori: "Reguler" },
   "MKK-0701": { matkul: "Metode Penelitian", sks: 4, smt_default: 7, kategori: "Reguler" },
+
+  // --- SEMESTER 8 (Reguler) ---
+  "MKK-0802": { matkul: "Skripsi", sks: 6, smt_default: 8, kategori: "Reguler" },
+  "MKK-0801": { matkul: "Sistematic Literature Review", sks: 4, smt_default: 8, kategori: "Reguler" },
 };
 
 // =========================================

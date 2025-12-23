@@ -35,7 +35,7 @@ interface ControlPanelProps {
   pekerjaanOrangTua?: string;
   setPekerjaanOrangTua?: (val: string) => void;
   
-  // [BARU] Info Halaman
+  // Info Halaman
   totalPages?: number;
 }
 
@@ -60,8 +60,7 @@ export default function ControlPanel({
   pekerjaanOrangTua, setPekerjaanOrangTua,
   totalPages
 }: ControlPanelProps) {
-  const selectedStudent = students[selectedIndex];
-
+  
   // Styling
   const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
   const selectClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:ring-2 focus:ring-[#1B3F95]/30 focus:border-[#1B3F95] hover:border-gray-300";
@@ -107,7 +106,28 @@ export default function ControlPanel({
             </select>
           </div>
 
-          {/* 2. Detail Surat */}
+          {/* 2. Pilih Semester (KHUSUS KHS) */}
+          {showSemesterSelect && (
+            <div className={sectionClass}>
+              <div className="flex items-baseline justify-between">
+                <p className={labelClass}>Semester</p>
+                <p className="text-[11px] text-gray-400">Pilih Smt</p>
+              </div>
+              <select
+                value={selectedSemester}
+                onChange={(e) => onSelectSemester && onSelectSemester(Number(e.target.value))}
+                className={selectClass}
+              >
+                {availableSemesters.map((smt) => (
+                  <option key={smt} value={smt}>
+                    Semester {smt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 3. Detail Surat (Opsional) */}
           {setNomorSurat && (
             <div className={sectionClass}>
               <p className={labelClass}>Detail Surat</p>
@@ -139,7 +159,7 @@ export default function ControlPanel({
             </div>
           )}
 
-          {/* 3. Biodata Tambahan */}
+          {/* 4. Biodata Tambahan (Opsional) */}
           {setTempatLahir && (
              <div className={sectionClass}>
               <p className={labelClass}>Biodata Mahasiswa</p>
@@ -179,7 +199,7 @@ export default function ControlPanel({
             </div>
           )}
 
-          {/* 4. Data Orang Tua */}
+          {/* 5. Data Orang Tua (Opsional) */}
           {setNamaOrangTua && (
             <div className={sectionClass}>
               <p className={labelClass}>Data Orang Tua</p>
@@ -208,7 +228,7 @@ export default function ControlPanel({
             </div>
           )}
 
-          {/* 5. Tanda Tangan */}
+          {/* 6. Tanda Tangan */}
           <div className={sectionClass}>
             <p className={labelClass}>Tanda Tangan</p>
             <select
@@ -222,6 +242,7 @@ export default function ControlPanel({
             </select>
           </div>
 
+          {/* Tombol Cetak */}
           <div className="pt-1 flex flex-col gap-3">
             <button onClick={onPrint} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B3F95] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-900 active:translate-y-[1px]" > 
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"> <path d="M6 9V2h12v7" />

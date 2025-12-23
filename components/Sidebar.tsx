@@ -22,7 +22,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
   return (
     <>
-      {/* OVERLAY */}
+      {/* OVERLAY (Mobile Only) */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -30,7 +30,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         />
       )}
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR CONTAINER */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-64
@@ -42,7 +42,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
           print:hidden
         `}
       >
-        {/* BRAND + CLOSE (MOBILE ONLY) */}
+        {/* === HEADER BRAND === */}
         <div className="h-20 px-6 pr-4 flex items-center justify-between border-b border-slate-100 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10">
@@ -63,7 +63,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
             </div>
           </div>
 
-          {/* ✅ Close button khusus mobile */}
+          {/* Close button (Mobile Only) */}
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -76,79 +76,91 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
           </button>
         </div>
 
-        {/* MENU */}
-        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-          <SectionLabel label="Menu Utama" />
+        {/* === MENU NAVIGATION === */}
+        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+          
+          {/* GROUP: MENU UTAMA */}
+          <div className="space-y-1">
+            <SectionLabel label="Menu Utama" />
+            
+            {/* 1. Dashboard */}
+            <NavItem
+              href="/"
+              label="Dashboard"
+              icon={<DashboardIcon />}
+              active={isActive("/")}
+              onClick={() => setOpen(false)}
+            />
 
-          <NavItem
-            href="/"
-            label="Dashboard"
-            icon={<DashboardIcon />}
-            active={isActive("/")}
-            onClick={() => setOpen(false)}
-          />
-          <NavItem
-            href="/transkrip"
-            label="Transkrip Nilai"
-            icon={<DocIcon />}
-            active={isActive("/transkrip")}
-            onClick={() => setOpen(false)}
-          />
-          {/* ✅ Menu Baru */}
-          <NavItem
-            href="/khs"
-            label="Kartu Hasil Studi"
-            icon={<KhsIcon />}
-            active={isActive("/khs")}
-            onClick={() => setOpen(false)}
-          />
-          <NavItem
-            href="/mahasiswa"
-            label="Data Mahasiswa"
-            icon={<UserIcon />}
-            active={isActive("/mahasiswa")}
-            onClick={() => setOpen(false)}
-          />
-          <NavItem
-            href="/matakuliah"
-            label="Mata Kuliah"
-            icon={<BookIcon />}
-            active={isActive("/matakuliah")}
-            onClick={() => setOpen(false)}
-          />
+            {/* 2. Data Mahasiswa */}
+            <NavItem
+              href="/mahasiswa"
+              label="Data Mahasiswa"
+              icon={<UserIcon />}
+              active={isActive("/mahasiswa")}
+              onClick={() => setOpen(false)}
+            />
 
-          <div className="my-4 border-t border-slate-100" />
+            {/* 3. Kartu Hasil Studi */}
+            <NavItem
+              href="/khs"
+              label="Kartu Hasil Studi"
+              icon={<KhsIcon />}
+              active={isActive("/khs")}
+              onClick={() => setOpen(false)}
+            />
 
-          <NavItem
-            href="/pengaturan"
-            label="Pengaturan"
-            icon={<SettingsIcon />}
-            active={isActive("/pengaturan")}
-            onClick={() => setOpen(false)}
-          />
+            {/* 4. Transkrip Nilai */}
+            <NavItem
+              href="/transkrip"
+              label="Transkrip Nilai"
+              icon={<DocIcon />}
+              active={isActive("/transkrip")}
+              onClick={() => setOpen(false)}
+            />
+
+            {/* 5. Mata Kuliah */}
+            <NavItem
+              href="/matakuliah"
+              label="Mata Kuliah"
+              icon={<BookIcon />}
+              active={isActive("/matakuliah")}
+              onClick={() => setOpen(false)}
+            />
+          </div>
+
+          {/* GROUP: LAINNYA */}
+          <div className="space-y-1">
+            <SectionLabel label="Lainnya" />
+            <NavItem
+              href="/pengaturan"
+              label="Pengaturan"
+              icon={<SettingsIcon />}
+              active={isActive("/pengaturan")}
+              onClick={() => setOpen(false)}
+            />
+          </div>
+
         </nav>
 
-        {/* FOOTER */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+        {/* === FOOTER === */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5
-                       rounded-lg text-sm font-semibold
+                       rounded-lg text-sm font-semibold transition-colors
                        text-rose-600 hover:bg-rose-100/60"
           >
             <LogoutIcon />
             Logout
           </button>
-
-          {/* Bagian Version App 1.0.0 telah dihapus dari sini */}
         </div>
       </aside>
     </>
   );
 }
 
-/* ================= NAV ITEM ================= */
-// ... (sisa kode di bawah ini tetap sama seperti sebelumnya)
+/* ================= COMPONENT: NAV ITEM ================= */
 
 function NavItem({
   href,
@@ -164,7 +176,7 @@ function NavItem({
   onClick?: () => void;
 }) {
   return (
-    <Link href={href} onClick={onClick}>
+    <Link href={href} onClick={onClick} className="block">
       <div
         className={`
           group relative flex items-center gap-3 px-4 py-2.5 rounded-lg
@@ -177,7 +189,7 @@ function NavItem({
         `}
       >
         {active && (
-          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-[#1B3F95]" />
+          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />
         )}
 
         <span
@@ -197,13 +209,13 @@ function NavItem({
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="px-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+    <p className="px-4 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 select-none">
       {label}
     </p>
   );
 }
 
-/* ================= ICONS ================= */
+/* ================= ICONS (SVG) ================= */
 
 const CloseIcon = () => (
   <svg
@@ -253,7 +265,6 @@ const DocIcon = () => (
   </svg>
 );
 
-// ✅ Icon Baru untuk KHS
 const KhsIcon = () => (
   <svg
     className="w-5 h-5"
@@ -281,7 +292,7 @@ const UserIcon = () => (
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
     />
   </svg>
 );

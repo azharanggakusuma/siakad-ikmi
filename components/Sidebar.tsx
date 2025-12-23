@@ -47,7 +47,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         {/* UPDATED: 'border-b' DIHAPUS agar tidak ada garis pemisah antara brand dan menu */}
         <div className="h-16 px-6 pr-4 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
-            <div className="relative w-8 h-8">
+            <div className="relative w-10 h-10">
               <Image
                 src="/img/logo-ikmi.png"
                 alt="Logo"
@@ -59,8 +59,8 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
               <p className="font-bold text-slate-800 text-lg leading-none">
                 SIAKAD
               </p>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-0.5">
-                STMIK IKMI
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mt-1">
+                STMIK IKMI Cirebon
               </p>
             </div>
           </div>

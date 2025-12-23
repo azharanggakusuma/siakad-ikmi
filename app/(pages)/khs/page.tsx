@@ -65,12 +65,11 @@ export default function KhsPage() {
 
       <div className="flex flex-col xl:flex-row items-start justify-start gap-6 min-h-screen">
         
-        {/* WRAPPER KERTAS DENGAN LEBAR DINAMIS */}
+        {/* WRAPPER KERTAS */}
         <div className={`
             shrink-0 flex justify-start w-full 
             transition-all duration-300
 
-            /* Logika Lebar Dinamis */
             ${isCollapsed 
                ? "lg:w-[179mm] xl:w-[210mm]" 
                : "lg:w-[147mm] xl:w-[189mm]" 
@@ -103,7 +102,7 @@ export default function KhsPage() {
         </div>
 
         {/* Control Panel */}
-        <div className="w-full xl:w-96 shrink-0 print:hidden xl:h-[calc(100vh-6rem)] xl:sticky xl:top-24 z-10 pb-10 xl:pb-0">
+        <div className="w-full flex-1 print:hidden xl:h-[calc(100vh-6rem)] xl:sticky xl:top-24 z-10 pb-10 xl:pb-0">
           <ControlPanel
             students={students}
             selectedIndex={selectedIndex}

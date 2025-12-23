@@ -69,12 +69,7 @@ export default function TranskripPage() {
           </div>
         </div>
 
-        {/* Control Panel
-            PERUBAHAN:
-            - Hapus 'xl:w-96' (lebar tetap)
-            - Hapus 'shrink-0'
-            - Tambah 'flex-1' agar memenuhi sisa ruang
-        */}
+        {/* Control Panel */}
         <div className="w-full flex-1 print:hidden xl:h-[calc(100vh-6rem)] xl:sticky xl:top-24 z-10 pb-10 xl:pb-0">
           <ControlPanel
             students={students}

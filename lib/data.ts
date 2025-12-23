@@ -84,6 +84,12 @@ const COURSES_DB: Record<string, CourseData> = {
   "MBKM-TI-04017": { matkul: "Etika Bisnis Profesi", sks: 3, smt_default: 4 },
   "MBKM-TI-04073": { matkul: "Technopreneurship", sks: 3, smt_default: 4 },
   "MBKM-TI-04044": { matkul: "Media Pembelajaran", sks: 3, smt_default: 4 },
+  "TDK-0406": { matkul: "Basis Data", sks: 3, smt_default: 4 },
+  "MDK-0405": { matkul: "Internet of Thing", sks: 3, smt_default: 4 },
+  "MDK-0404": { matkul: "Data Mining", sks: 4, smt_default: 4 },
+  "TDK-0403": { matkul: "Metode Numerik", sks: 3, smt_default: 4 },
+  "MDK-0402": { matkul: "Interaksi Manusia Komputer", sks: 3, smt_default: 4 },
+  "TDK-0401": { matkul: "Jaringan Komputer Expert", sks: 4, smt_default: 4 },
 
   // --- SEMESTER 5 ---
   "TKK-0501": { matkul: "Cloud Computing", sks: 4, smt_default: 5 },
@@ -240,7 +246,7 @@ const azhar = createStudent(
 const budi = createStudent(
   "budi",
   {
-    nama: "BUDI SANTOSO",
+    nama: "JOHN DOE",
     nim: "41226155",
     prodi: "Teknik Informatika (S1)",
     semester: 4,
@@ -274,11 +280,12 @@ const budi = createStudent(
     { kode: "MDK-0302", hm: "B" },
 
     // Smt 4
-    { kode: "MBKM-TI-04078", hm: "A" },
-    { kode: "MBKM-TI-04049", hm: "A" },
-    { kode: "MBKM-TI-04051", hm: "A" },
-    { kode: "MBKM-TI-04066", hm: "B" },
-    { kode: "MBKM-TI-04017", hm: "B" },
+    { kode: "TDK-0406", hm: "A" },
+    { kode: "MDK-0405", hm: "B" },
+    { kode: "MDK-0404", hm: "B" },
+    { kode: "TDK-0403", hm: "B" },
+    { kode: "MDK-0402", hm: "B" },
+    { kode: "TDK-0401", hm: "A" },
   ]
 );
 

@@ -186,7 +186,7 @@ export default function SuratKeteranganPage() {
         `}>
           <div 
              className={`
-              bg-white p-6 shadow-2xl border border-gray-300 
+              bg-white p-8 shadow-2xl border border-gray-300 
               print:shadow-none print:border-none print:m-0 
               w-[210mm] min-h-[297mm] 
               

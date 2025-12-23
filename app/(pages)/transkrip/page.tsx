@@ -10,11 +10,11 @@ import ControlPanel from "@/components/ControlPanel";
 import { useSignature } from "@/hooks/useSignature";
 import PageHeader from "@/components/PageHeader";
 import { useLayout } from "@/app/context/LayoutContext";
-import PreviewModal from "@/components/PreviewModal"; // Import Modal
+import PreviewModal from "@/components/PreviewModal"; 
 
 export default function TranskripPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // State Modal
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); 
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
   const { isCollapsed } = useLayout();
   
@@ -24,7 +24,6 @@ export default function TranskripPage() {
     window.print();
   };
 
-  // Helper untuk merender konten kertas agar tidak duplikasi kode (dipakai di Canvas & Modal)
   const renderPaperContent = () => (
     <>
       <Header title="TRANSKRIP NILAI" />
@@ -45,18 +44,15 @@ export default function TranskripPage() {
 
       <div className="flex flex-col xl:flex-row items-start justify-start gap-6 min-h-screen">
         
-        {/* --- AREA KERTAS (HANYA TAMPIL DI DESKTOP / XL) --- 
-            hidden xl:flex -> Sembunyikan di mobile
-        */}
+        {/* --- AREA KERTAS --- */}
         <div className={`
-            hidden xl:flex 
+            hidden xl:flex print:flex print:w-full print:justify-center
             shrink-0 justify-start w-full 
             transition-all duration-300
             
-            /* Logika Lebar Dinamis agar Control Panel merapat */
             ${isCollapsed 
-               ? "xl:w-[210mm]"   // Saat sidebar kecil, kertas full width (scale 100%)
-               : "xl:w-[189mm]"   // Saat sidebar muncul, kertas scale 90% (210 * 0.9)
+               ? "xl:w-[210mm]" 
+               : "xl:w-[189mm]" 
             }
 
             overflow-visible mb-0 
@@ -65,24 +61,24 @@ export default function TranskripPage() {
           <div 
             className={`
               bg-white p-12 shadow-2xl border border-gray-300 
-              print:shadow-none print:border-none print:p-0 print:m-0 
+              
+              /* PERBAIKAN: Hapus 'print:p-0' agar margin kertas tetap ada */
+              print:shadow-none print:border-none print:m-0 
+              
               w-[210mm] min-h-[297mm] 
               
-              /* Desktop: Origin Kiri Atas agar rata kiri */
               origin-top-left 
               transform transition-transform duration-300
               
-              /* Scaling Desktop */
               ${isCollapsed ? "xl:scale-100" : "xl:scale-[0.9]"}
+              print:scale-100
             `}
           >
             {renderPaperContent()}
           </div>
         </div>
 
-        {/* --- CONTROL PANEL --- 
-            flex-1: Agar memenuhi sisa ruang di desktop
-        */}
+        {/* --- CONTROL PANEL --- */}
         <div className="w-full flex-1 print:hidden z-10 pb-10 xl:pb-0">
           <ControlPanel
             students={students}
@@ -91,12 +87,12 @@ export default function TranskripPage() {
             signatureType={signatureType}
             onSignatureChange={setSignatureType}
             onPrint={handlePrint}
-            onPreview={() => setIsPreviewOpen(true)} // Trigger Modal
+            onPreview={() => setIsPreviewOpen(true)} 
           />
         </div>
       </div>
 
-      {/* --- MODAL PREVIEW (KHUSUS MOBILE) --- */}
+      {/* --- MODAL PREVIEW --- */}
       <PreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} title="Preview Transkrip">
          <div className="bg-white p-6 sm:p-10 w-[210mm] min-h-[297mm] scale-[0.5] sm:scale-[0.6] origin-top">
             {renderPaperContent()}

@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* --- PERBAIKAN: Konfigurasi Print --- */
+@layer utilities {
+  @media print {
+    @page {
+      size: A4;
+      margin: 0; /* Hilangkan margin default browser agar diatur oleh padding CSS */
+    }
+    body {
+      -webkit-print-color-adjust: exact; /* Paksa cetak warna/background */
+      print-color-adjust: exact;
+    }
+  }
+}

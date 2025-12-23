@@ -10,12 +10,12 @@ import GradeTable from "@/components/GradeTable";
 import { useSignature } from "@/hooks/useSignature";
 import PageHeader from "@/components/PageHeader";
 import { useLayout } from "@/app/context/LayoutContext";
-import PreviewModal from "@/components/PreviewModal"; // Import Modal
+import PreviewModal from "@/components/PreviewModal"; 
 
 export default function KhsPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState<number>(1);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // State Modal
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); 
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
   const { isCollapsed } = useLayout();
 
@@ -56,7 +56,6 @@ export default function KhsPage() {
     window.print();
   };
 
-  // Helper Render Content
   const renderPaperContent = () => (
     <>
       <Header title={`KARTU HASIL STUDI`} />
@@ -77,9 +76,9 @@ export default function KhsPage() {
 
       <div className="flex flex-col xl:flex-row items-start justify-start gap-6 min-h-screen">
         
-        {/* --- AREA KERTAS (HANYA DESKTOP) --- */}
+        {/* --- AREA KERTAS --- */}
         <div className={`
-            hidden xl:flex 
+            hidden xl:flex print:flex print:w-full print:justify-center
             shrink-0 justify-start w-full 
             transition-all duration-300
             
@@ -94,13 +93,17 @@ export default function KhsPage() {
           <div 
              className={`
               bg-white p-12 shadow-2xl border border-gray-300 
-              print:shadow-none print:border-none print:p-0 print:m-0 
+              
+              /* PERBAIKAN: Hapus 'print:p-0' agar margin kertas tetap ada */
+              print:shadow-none print:border-none print:m-0 
+              
               w-[210mm] min-h-[297mm] 
               
               origin-top-left 
               transform transition-transform duration-300
 
               ${isCollapsed ? "xl:scale-100" : "xl:scale-[0.9]"}
+              print:scale-100
             `}
           >
             {renderPaperContent()}
@@ -116,9 +119,8 @@ export default function KhsPage() {
             signatureType={signatureType}
             onSignatureChange={setSignatureType}
             onPrint={handlePrint}
-            onPreview={() => setIsPreviewOpen(true)} // Trigger Modal
+            onPreview={() => setIsPreviewOpen(true)}
             
-            // Props KHS
             showSemesterSelect={true}
             availableSemesters={availableSemesters}
             selectedSemester={selectedSemester}

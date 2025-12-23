@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,14 +28,14 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-[98] lg:hidden"
         />
       )}
 
       {/* SIDEBAR CONTAINER */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 
+          fixed inset-y-0 left-0 z-[99] 
           bg-white border-r border-slate-200 
           flex flex-col
           transform transition-all duration-300 ease-in-out
@@ -42,19 +43,18 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           lg:translate-x-0 lg:static lg:h-screen
           print:hidden
           
-          /* Lebar Sidebar: 256px (w-64) atau 80px (w-[80px]) */
+          /* Lebar Sidebar */
           ${isCollapsed ? "lg:w-[80px]" : "lg:w-64"}
           w-64
         `}
       >
         {/* === HEADER BRAND === */}
-        {/* PERBAIKAN: Gunakan pl-6 (24px) tetap agar logo tidak lompat. */}
         <div className={`
-            h-16 flex items-center bg-white transition-all duration-300 relative overflow-hidden
+            h-16 flex items-center bg-white transition-all duration-300 relative overflow-hidden shrink-0
             ${isCollapsed ? "pl-6" : "pl-6 pr-4"} 
         `}>
           <div className="flex items-center gap-3">
-            {/* Logo: Ukuran tetap, posisi tetap */}
+            {/* Logo */}
             <div className="relative w-8 h-8 shrink-0">
                <Image
                 src="/img/logo-ikmi.png"
@@ -64,7 +64,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
               />
             </div>
             
-            {/* Teks Brand: Fade out saat collapsed */}
+            {/* Teks Brand */}
             <div className={`
                 flex flex-col min-w-0 whitespace-nowrap transition-all duration-300 origin-left
                 ${isCollapsed ? "opacity-0 scale-90 translate-x-[-10px] w-0" : "opacity-100 scale-100 translate-x-0 w-auto"}
@@ -89,8 +89,12 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </div>
 
         {/* === MENU NAVIGATION === */}
-        {/* PERBAIKAN: px-3 (12px) di container */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6 overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
+        <nav 
+          className={`
+            flex-1 px-3 py-4 space-y-6 
+            overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200
+          `}
+        >
           
           {/* GROUP: MENU UTAMA */}
           <div className="space-y-1">
@@ -154,7 +158,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </nav>
 
         {/* === FOOTER === */}
-        <div className="p-3 bg-white border-t border-slate-100">
+        <div className="p-3 bg-white border-t border-slate-100 shrink-0">
            <button
             onClick={handleLogout}
             className={`
@@ -178,7 +182,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
   );
 }
 
-/* ================= COMPONENT: NAV ITEM ================= */
+/* ================= COMPONENT: NAV ITEM DENGAN PORTAL TOOLTIP ================= */
 
 function NavItem({
   href,
@@ -195,52 +199,95 @@ function NavItem({
   onClick?: () => void;
   isCollapsed?: boolean;
 }) {
+  // State untuk mengontrol visibilitas tooltip
+  const [showTooltip, setShowTooltip] = useState(false);
+  // Ref untuk elemen Link agar kita bisa tahu posisinya di layar
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  // State untuk menyimpan koordinat dimana tooltip harus muncul
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  const handleMouseEnter = () => {
+    if (!isCollapsed || !linkRef.current) return;
+
+    // Dapatkan posisi elemen menu yang di-hover relatif terhadap viewport
+    const rect = linkRef.current.getBoundingClientRect();
+    setCoords({
+      top: rect.top + rect.height / 2, // Posisi tengah vertikal dari menu item
+      left: rect.right + 10 // Posisi di sebelah kanan menu item (ditambah jarak 10px)
+    });
+    setShowTooltip(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
+  // Komponen Tooltip yang akan di-render via Portal
+  const TooltipPortal = isCollapsed && showTooltip ? createPortal(
+    <div 
+      className="fixed z-[9999] px-3 py-2 bg-slate-800 text-white text-[11px] font-medium rounded shadow-xl pointer-events-none whitespace-nowrap"
+      style={{
+        top: `${coords.top}px`,
+        left: `${coords.left}px`,
+        // Geser ke atas 50% dari tingginya sendiri agar benar-benar di tengah secara vertikal
+        transform: "translateY(-50%)" 
+      }}
+    >
+      {label}
+      {/* Panah kecil di kiri tooltip */}
+      <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
+    </div>,
+    document.body // Render langsung ke dalam elemen <body>
+  ) : null;
+
   return (
-    <Link href={href} onClick={onClick} className="block group relative">
-      <div
-        className={`
-          flex items-center gap-3 rounded-lg
-          text-sm font-medium transition-all duration-200
-          /* PERBAIKAN PADDING: px-3 (12px). Total padding kiri = 12px (nav) + 12px (item) = 24px (Sejajar Logo) */
-          ${isCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"}
-          ${
-            active
-              ? "bg-blue-50 text-[#1B3F95]"
-              : "text-slate-600 hover:bg-slate-50"
-          }
-        `}
+    <>
+      <Link 
+        href={href} 
+        onClick={onClick} 
+        ref={linkRef} // Pasang ref di sini
+        onMouseEnter={handleMouseEnter} // Handle hover masuk
+        onMouseLeave={handleMouseLeave} // Handle hover keluar
+        className="block group relative"
       >
-        {/* Active Indicator */}
-        {active && !isCollapsed && (
-          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />
-        )}
-
-        {/* ICON */}
-        <span
-          className={`transition-colors shrink-0 ${
-            active
-              ? "text-[#1B3F95]"
-              : "text-slate-400 group-hover:text-slate-600"
-          }`}
+        <div
+          className={`
+            flex items-center gap-3 rounded-lg
+            text-sm font-medium transition-all duration-200
+            ${isCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"}
+            ${
+              active
+                ? "bg-blue-50 text-[#1B3F95]"
+                : "text-slate-600 hover:bg-slate-50"
+            }
+          `}
         >
-          {icon}
-        </span>
-        
-        {/* Label Menu */}
-        <span className={`truncate transition-all duration-300 ${isCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"}`}>
-            {label}
-        </span>
-      </div>
+          {/* Active Indicator */}
+          {active && !isCollapsed && (
+            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />
+          )}
 
-      {/* TOOLTIP (Hanya muncul jika collapsed + hover) */}
-      {isCollapsed && (
-        <div className="absolute left-14 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-slate-800 text-white text-[11px] font-medium rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[60] shadow-xl pointer-events-none">
-          {label}
-          {/* Panah kecil */}
-          <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
+          {/* ICON */}
+          <span
+            className={`transition-colors shrink-0 ${
+              active
+                ? "text-[#1B3F95]"
+                : "text-slate-400 group-hover:text-slate-600"
+            }`}
+          >
+            {icon}
+          </span>
+          
+          {/* Label Menu */}
+          <span className={`truncate transition-all duration-300 ${isCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"}`}>
+              {label}
+          </span>
         </div>
-      )}
-    </Link>
+      </Link>
+      
+      {/* Render Portal di luar Link */}
+      {TooltipPortal}
+    </>
   );
 }
 
@@ -256,7 +303,7 @@ function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed?: boo
   );
 }
 
-/* ================= ICONS ================= */
+/* ================= ICONS (Tidak ada perubahan) ================= */
 const CloseIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

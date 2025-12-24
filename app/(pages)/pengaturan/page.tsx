@@ -9,12 +9,7 @@ export default function PengaturanPage() {
         title="Pengaturan" 
         breadcrumb={["SIAKAD", "Pengaturan"]} 
       />
-
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="border-2 border-dashed border-gray-200 rounded-xl h-96 flex items-center justify-center text-gray-400">
-          Konfigurasi profil kampus dan tanda tangan pejabat.
-        </div>
-      </div>
+      {/* Content for Pengaturan Page goes here */}
     </div>
   );
 }

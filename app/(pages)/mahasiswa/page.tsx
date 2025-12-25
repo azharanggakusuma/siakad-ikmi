@@ -27,7 +27,7 @@ import {
 // --- IMPORT CUSTOM COMPONENTS ---
 import { DataTable, type Column } from "@/components/DataTable";
 import { FormModal } from "@/components/FormModal";
-import { ConfirmModal } from "@/components/ConfirmModal"; // <--- IMPORT MODAL BARU
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 // --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -61,7 +61,7 @@ export default function MahasiswaPage() {
     nim: "", nama: "", prodi: "", semester: "", alamat: ""
   });
 
-  // MODAL STATE (DELETE) -> Penambahan State Baru
+  // MODAL STATE (DELETE)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -83,7 +83,12 @@ export default function MahasiswaPage() {
 
   // --- HANDLERS ---
   
-  // 1. FORM HANDLERS
+  // 1. Handler Search (INI YANG TADI HILANG)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); 
+  };
+
   const handleOpenAdd = () => {
     setFormData({ nim: "", nama: "", prodi: "", semester: "", alamat: "" });
     setIsEditing(false);
@@ -124,7 +129,6 @@ export default function MahasiswaPage() {
     setIsFormOpen(false);
   };
 
-  // 2. DELETE HANDLERS (UPDATED)
   const openDeleteModal = (id: string) => {
     setDeleteId(id);
     setIsDeleteOpen(true);
@@ -158,15 +162,14 @@ export default function MahasiswaPage() {
     },
     { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
     { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
+    
+    // --- SEMESTER (PLAIN TEXT) ---
     {
       header: "Semester",
-      className: "text-center w-[100px]",
-      render: (row) => (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
-          {row.profile.semester}
-        </span>
-      )
+      className: "text-center w-[100px] text-gray-700", 
+      render: (row) => row.profile.semester
     },
+
     {
       header: "Aksi",
       className: "text-center w-[100px]",
@@ -180,8 +183,6 @@ export default function MahasiswaPage() {
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          
-          {/* TOMBOL HAPUS SEKARANG MEMBUKA MODAL */}
           <Button
             variant="ghost"
             size="icon"
@@ -226,7 +227,7 @@ export default function MahasiswaPage() {
             data={currentData}
             columns={columns}
             searchQuery={searchQuery}
-            onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            onSearchChange={handleSearchChange} // Sekarang sudah terdefinisi
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
             addLabel="Tambah Mahasiswa"
@@ -243,7 +244,7 @@ export default function MahasiswaPage() {
         </CardContent>
       </Card>
 
-      {/* MODAL FORM (TAMBAH/EDIT) */}
+      {/* MODAL FORM */}
       <FormModal
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
@@ -256,21 +257,50 @@ export default function MahasiswaPage() {
           <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2 col-span-2">
               <Label htmlFor="nim">NIM</Label>
-              <Input id="nim" value={formData.nim} onChange={(e) => setFormData({ ...formData, nim: e.target.value })} disabled={isEditing} placeholder="Contoh: 4121001" required />
+              <Input 
+                id="nim" 
+                value={formData.nim} 
+                onChange={(e) => setFormData({ ...formData, nim: e.target.value })} 
+                disabled={isEditing} 
+                placeholder="Contoh: 4121001" 
+                required 
+              />
             </div>
             <div className="grid gap-2 col-span-1">
               <Label htmlFor="semester">Semester</Label>
-              <Input id="semester" type="number" min={1} max={14} value={formData.semester} onChange={(e) => setFormData({ ...formData, semester: e.target.value })} placeholder="1" required />
+              <Input 
+                id="semester" 
+                type="number" 
+                min={1} 
+                max={14} 
+                value={formData.semester} 
+                onChange={(e) => setFormData({ ...formData, semester: e.target.value })} 
+                placeholder="1" 
+                required 
+              />
             </div>
           </div>
+
           <div className="grid gap-2">
             <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input id="nama" value={formData.nama} onChange={(e) => setFormData({ ...formData, nama: e.target.value })} placeholder="Contoh: Budi Santoso" required />
+            <Input 
+              id="nama" 
+              value={formData.nama} 
+              onChange={(e) => setFormData({ ...formData, nama: e.target.value })} 
+              placeholder="Contoh: Budi Santoso" 
+              required 
+            />
           </div>
+
           <div className="grid gap-2">
             <Label htmlFor="prodi">Program Studi</Label>
-            <Select value={formData.prodi} onValueChange={(val) => setFormData({ ...formData, prodi: val })}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Program Studi" /></SelectTrigger>
+            <Select 
+              value={formData.prodi} 
+              onValueChange={(val) => setFormData({ ...formData, prodi: val })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih Program Studi" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
                 <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
@@ -280,9 +310,15 @@ export default function MahasiswaPage() {
               </SelectContent>
             </Select>
           </div>
+
           <div className="grid gap-2">
             <Label htmlFor="alamat">Alamat Domisili</Label>
-            <Input id="alamat" value={formData.alamat} onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon" />
+            <Input 
+              id="alamat" 
+              value={formData.alamat} 
+              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} 
+              placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon" 
+            />
           </div>
         </div>
       </FormModal>

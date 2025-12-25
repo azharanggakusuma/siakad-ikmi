@@ -302,9 +302,8 @@ export default function MataKuliahPage() {
         </CardContent>
       </Card>
 
-      {/* --- MODAL DIALOG (LEBIH LEBAR & RAPI) --- */}
+      {/* --- MODAL DIALOG (UPDATED LAYOUT) --- */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        {/* Mengubah max-width jadi 600px agar lebih lega */}
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="text-xl">
@@ -316,10 +315,11 @@ export default function MataKuliahPage() {
           </DialogHeader>
           
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-6 py-4">
-              {/* Row 1: Kode & Kategori Berdampingan */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
+            <div className="grid gap-5 py-4">
+              
+              {/* Row 1: Kode MK, SKS, Semester (Technical Details) */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="grid gap-2 col-span-2">
                   <Label htmlFor="kode">Kode MK</Label>
                   <Input
                     id="kode"
@@ -330,40 +330,8 @@ export default function MataKuliahPage() {
                     required
                   />
                 </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="kategori">Kategori</Label>
-                  <Select
-                    value={formData.kategori}
-                    onValueChange={(val: CourseCategory) => setFormData({ ...formData, kategori: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Reguler">Reguler</SelectItem>
-                      <SelectItem value="MBKM">MBKM</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Row 2: Nama Mata Kuliah Full Width */}
-              <div className="grid gap-2">
-                <Label htmlFor="matkul">Nama Mata Kuliah</Label>
-                <Input
-                  id="matkul"
-                  value={formData.matkul}
-                  onChange={(e) => setFormData({ ...formData, matkul: e.target.value })}
-                  placeholder="Contoh: Pemrograman Web Lanjut"
-                  required
-                />
-              </div>
-
-              {/* Row 3: SKS & Semester Berdampingan */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="sks">SKS (Kredit)</Label>
+                <div className="grid gap-2 col-span-1">
+                  <Label htmlFor="sks">SKS</Label>
                   <Input
                     id="sks"
                     type="number"
@@ -374,8 +342,8 @@ export default function MataKuliahPage() {
                     required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="smt">Semester</Label>
+                <div className="grid gap-2 col-span-1">
+                  <Label htmlFor="smt">Smt</Label>
                   <Input
                     id="smt"
                     type="number"
@@ -387,6 +355,36 @@ export default function MataKuliahPage() {
                   />
                 </div>
               </div>
+
+              {/* Row 2: Nama Mata Kuliah (Full Width) */}
+              <div className="grid gap-2">
+                <Label htmlFor="matkul">Nama Mata Kuliah</Label>
+                <Input
+                  id="matkul"
+                  value={formData.matkul}
+                  onChange={(e) => setFormData({ ...formData, matkul: e.target.value })}
+                  placeholder="Contoh: Pemrograman Web Lanjut"
+                  required
+                />
+              </div>
+
+              {/* Row 3: Kategori (Full Width - WIDENED) */}
+              <div className="grid gap-2">
+                <Label htmlFor="kategori">Kategori</Label>
+                <Select
+                  value={formData.kategori}
+                  onValueChange={(val: CourseCategory) => setFormData({ ...formData, kategori: val })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Kategori Mata Kuliah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Reguler">Reguler</SelectItem>
+                    <SelectItem value="MBKM">MBKM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
             </div>
 
             <DialogFooter className="mt-2">

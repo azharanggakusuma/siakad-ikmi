@@ -37,6 +37,7 @@ interface StudentFormState {
   nim: string;
   nama: string;
   prodi: string;
+  jenjang: string;
   semester: number | string;
   alamat: string;
 }
@@ -57,8 +58,10 @@ export default function MahasiswaPage() {
   // MODAL STATE (FORM)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Initial State Form
   const [formData, setFormData] = useState<StudentFormState>({
-    nim: "", nama: "", prodi: "", semester: "", alamat: ""
+    nim: "", nama: "", prodi: "", jenjang: "", semester: "", alamat: ""
   });
 
   // MODAL STATE (DELETE)
@@ -71,8 +74,10 @@ export default function MahasiswaPage() {
     const matchSearch = 
       student.profile.nama.toLowerCase().includes(query) ||
       student.profile.nim.toLowerCase().includes(query);
+    
     const matchProdi = prodiFilter === "ALL" || student.profile.prodi === prodiFilter;
     const matchSemester = semesterFilter === "ALL" || student.profile.semester.toString() === semesterFilter;
+    
     return matchSearch && matchProdi && matchSemester;
   });
 
@@ -82,15 +87,13 @@ export default function MahasiswaPage() {
   const currentData = filteredData.slice(startIndex, endIndex);
 
   // --- HANDLERS ---
-  
-  // 1. Handler Search (INI YANG TADI HILANG)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); 
   };
 
   const handleOpenAdd = () => {
-    setFormData({ nim: "", nama: "", prodi: "", semester: "", alamat: "" });
+    setFormData({ nim: "", nama: "", prodi: "", jenjang: "", semester: "", alamat: "" });
     setIsEditing(false);
     setIsFormOpen(true);
   };
@@ -100,6 +103,7 @@ export default function MahasiswaPage() {
       nim: student.profile.nim,
       nama: student.profile.nama,
       prodi: student.profile.prodi,
+      jenjang: student.profile.jenjang,
       semester: student.profile.semester,
       alamat: student.profile.alamat
     });
@@ -109,13 +113,14 @@ export default function MahasiswaPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nim || !formData.nama || !formData.prodi || formData.semester === "") {
-      alert("Mohon lengkapi data wajib."); return;
+    if (!formData.nim || !formData.nama || !formData.prodi || !formData.jenjang || formData.semester === "") {
+      alert("Mohon lengkapi data wajib (termasuk Jenjang)."); return;
     }
     const newProfile = {
       nim: formData.nim,
       nama: formData.nama,
       prodi: formData.prodi,
+      jenjang: formData.jenjang,
       semester: Number(formData.semester),
       alamat: formData.alamat,
     };
@@ -150,24 +155,40 @@ export default function MahasiswaPage() {
       className: "w-[50px] text-center",
       render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
+    
+    // --- KOLOM NIM (TEKS BIASA) ---
     {
       header: "NIM",
       accessorKey: "id",
       className: "w-[120px]",
       render: (row) => (
-        <Badge variant="outline" className="font-mono font-normal bg-slate-50 text-slate-700">
+        // Menggunakan font-mono agar angka NIM tetap rapi, tapi tanpa Badge
+        <span className="font-mono font-medium text-gray-700">
           {row.profile.nim}
-        </Badge>
+        </span>
       )
     },
+    // -----------------------------
+
     { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
     { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
     
-    // --- SEMESTER (PLAIN TEXT) ---
+    // --- KOLOM JENJANG (PAKE STYLE NIM LAMA) ---
     {
-      header: "Semester",
+      header: "Jenjang",
+      className: "text-center w-[80px]",
+      render: (row) => (
+         <Badge variant="outline" className="font-mono font-normal bg-slate-50 text-slate-700">
+            {row.profile.jenjang}
+         </Badge>
+      )
+    },
+    // ------------------------------------------
+
+    { 
+      header: "Semester", 
       className: "text-center w-[100px] text-gray-700", 
-      render: (row) => row.profile.semester
+      render: (row) => row.profile.semester 
     },
 
     {
@@ -227,7 +248,7 @@ export default function MahasiswaPage() {
             data={currentData}
             columns={columns}
             searchQuery={searchQuery}
-            onSearchChange={handleSearchChange} // Sekarang sudah terdefinisi
+            onSearchChange={handleSearchChange}
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
             addLabel="Tambah Mahasiswa"
@@ -254,8 +275,8 @@ export default function MahasiswaPage() {
         maxWidth="sm:max-w-[600px]"
       >
         <div className="grid gap-5 py-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="grid gap-2 col-span-2">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="grid gap-2 col-span-3">
               <Label htmlFor="nim">NIM</Label>
               <Input 
                 id="nim" 
@@ -267,7 +288,7 @@ export default function MahasiswaPage() {
               />
             </div>
             <div className="grid gap-2 col-span-1">
-              <Label htmlFor="semester">Semester</Label>
+              <Label htmlFor="semester">Smt</Label>
               <Input 
                 id="semester" 
                 type="number" 
@@ -292,23 +313,32 @@ export default function MahasiswaPage() {
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="prodi">Program Studi</Label>
-            <Select 
-              value={formData.prodi} 
-              onValueChange={(val) => setFormData({ ...formData, prodi: val })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih Program Studi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
-                <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
-                <SelectItem value="Manajemen Informatika">Manajemen Informatika</SelectItem>
-                <SelectItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</SelectItem>
-                <SelectItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-4 gap-4">
+             <div className="grid gap-2 col-span-3">
+                <Label htmlFor="prodi">Program Studi</Label>
+                <Select value={formData.prodi} onValueChange={(val) => setFormData({ ...formData, prodi: val })}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Program Studi" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
+                    <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
+                    <SelectItem value="Manajemen Informatika">Manajemen Informatika</SelectItem>
+                    <SelectItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</SelectItem>
+                    <SelectItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+             <div className="grid gap-2 col-span-1">
+                <Label htmlFor="jenjang">Jenjang</Label>
+                <Select value={formData.jenjang} onValueChange={(val) => setFormData({ ...formData, jenjang: val })}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Pilih" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="D3">D3</SelectItem>
+                    <SelectItem value="D4">D4</SelectItem>
+                    <SelectItem value="S1">S1</SelectItem>
+                    <SelectItem value="S2">S2</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
           </div>
 
           <div className="grid gap-2">

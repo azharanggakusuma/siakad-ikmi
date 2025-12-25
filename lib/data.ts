@@ -24,6 +24,7 @@ export interface StudentProfile {
   nama: string;
   alamat: string;
   prodi: string;
+  jenjang: string;
   semester: number;
 }
 
@@ -123,41 +124,46 @@ function getAm(hm: string): number {
   return map[hm] ?? 0;
 }
 
+// Map Singkatan ke Nama Lengkap
+const PRODI_FULL_NAMES: Record<string, string> = {
+  "TI": "Teknik Informatika",
+  "SI": "Sistem Informasi",
+  "MI": "Manajemen Informatika",
+  "KA": "Komputerisasi Akuntansi",
+  "RPL": "Rekayasa Perangkat Lunak"
+};
+
 function createStudent(
-  profile: StudentProfile,
+  rawProfile: any,
   rawGrades: RawGrade[]
 ): StudentData {
   
+  // Normalisasi Prodi (Ubah singkatan ke nama lengkap)
+  const fullProdi = PRODI_FULL_NAMES[rawProfile.prodi] || rawProfile.prodi;
+
+  // Buat Profile dengan Default Jenjang S1
+  const profile: StudentProfile = {
+    nim: rawProfile.nim,
+    nama: rawProfile.nama,
+    alamat: rawProfile.alamat,
+    prodi: fullProdi,
+    jenjang: rawProfile.jenjang,
+    semester: rawProfile.semester
+  };
+
   const transcript: TranscriptItem[] = rawGrades.map((g, index) => {
     const course = COURSES_DB[g.kode];
-    
     if (!course) {
-      console.warn(`[WARNING] MK kode ${g.kode} tidak ditemukan.`);
       return {
-        no: index + 1,
-        kode: g.kode,
-        matkul: "UNKNOWN",
-        smt: g.smt || 0,
-        sks: 0,
-        hm: g.hm,
-        am: 0,
-        nm: 0,
-        kategori: "Reguler"
+        no: index + 1, kode: g.kode, matkul: "UNKNOWN", smt: g.smt || 0,
+        sks: 0, hm: g.hm, am: 0, nm: 0, kategori: "Reguler"
       };
     }
-
     const am = getAm(g.hm);
-    
     return {
-      no: index + 1,
-      kode: g.kode,
-      matkul: course.matkul,
-      smt: g.smt || course.smt_default,
-      sks: course.sks,
-      hm: g.hm,
-      am: am,
-      nm: am * course.sks,
-      kategori: course.kategori
+      no: index + 1, kode: g.kode, matkul: course.matkul,
+      smt: g.smt || course.smt_default, sks: course.sks,
+      hm: g.hm, am: am, nm: am * course.sks, kategori: course.kategori
     };
   });
 

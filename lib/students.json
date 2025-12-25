@@ -3,14 +3,16 @@
     "nim": "41226142",
     "nama": "AZHARANGGA KUSUMA",
     "alamat": "Jl. Perjuangan No. 1, Cirebon",
-    "prodi": "Teknik Informatika (S1)",
+    "prodi": "Teknik Informatika",
+    "jenjang": "S1",
     "semester": 8
   },
   {
     "nim": "41226155",
     "nama": "JOHN DOE",
     "alamat": "Jl. Pemuda No. 10, Cirebon",
-    "prodi": "Teknik Informatika (S1)",
+    "prodi": "Teknik Informatika",
+    "jenjang": "S1",
     "semester": 4
   }
 ]

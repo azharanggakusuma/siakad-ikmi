@@ -7,9 +7,10 @@ import {
   Trash2, 
   Plus, 
   Search, 
-  Filter,
+  Filter,         // Icon Filter
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ListFilter      // Icon Filter dengan indikator (opsional, tapi kita pakai style button aja)
 } from "lucide-react";
 
 // --- SHADCN COMPONENTS ---
@@ -44,17 +45,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+// Import DropdownMenu untuk Filter
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // --- IMPORT DATA DARI LIB ---
 import { COURSES_DB, type CourseData as TCourseData, type CourseCategory } from "@/lib/data";
 
 // --- TYPES ---
-// Kita perlu tipe data yang memiliki properti 'kode', karena COURSES_DB menyimpannya sebagai key object
 interface CourseState extends TCourseData {
   kode: string;
 }
 
-// Tipe data khusus untuk Form (agar bisa menampung string kosong saat input dihapus)
 interface CourseFormState {
   kode: string;
   matkul: string;
@@ -64,7 +73,6 @@ interface CourseFormState {
 }
 
 // --- TRANSFORMASI DATA ---
-// Mengubah Object COURSES_DB menjadi Array untuk ditampilkan di tabel
 const DATA_FROM_DB: CourseState[] = Object.entries(COURSES_DB).map(([kode, data]) => ({
   kode,
   ...data
@@ -74,6 +82,10 @@ export default function MataKuliahPage() {
   const [courses, setCourses] = useState<CourseState[]>(DATA_FROM_DB);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // --- FILTER STATE ---
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | CourseCategory>("ALL");
+  const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
+
   // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -91,38 +103,51 @@ export default function MataKuliahPage() {
     kategori: "",   
   });
 
-  // --- FILTER & PAGINATION LOGIC ---
-  const filteredCourses = courses.filter((course) =>
-    course.matkul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.kode.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // --- FILTER LOGIC (SEARCH + KATEGORI + SEMESTER) ---
+  const filteredCourses = courses.filter((course) => {
+    // 1. Filter Search
+    const matchSearch = 
+      course.matkul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.kode.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // 2. Filter Kategori
+    const matchCategory = categoryFilter === "ALL" || course.kategori === categoryFilter;
 
+    // 3. Filter Semester
+    const matchSemester = semesterFilter === "ALL" || course.smt_default.toString() === semesterFilter;
+
+    return matchSearch && matchCategory && matchSemester;
+  });
+
+  // --- PAGINATION CALCULATION ---
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredCourses.slice(startIndex, endIndex);
+
+  // --- HANDLERS ---
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); 
   };
 
-  // --- CRUD HANDLERS ---
-  
-  // 1. Handler Buka Modal Tambah
+  const handleCategoryFilterChange = (val: string) => {
+    setCategoryFilter(val as "ALL" | CourseCategory);
+    setCurrentPage(1);
+  };
+
+  const handleSemesterFilterChange = (val: string) => {
+    setSemesterFilter(val);
+    setCurrentPage(1);
+  };
+
   const handleOpenAdd = () => {
-    setFormData({ 
-      kode: "", 
-      matkul: "", 
-      sks: "",         
-      smt_default: "", 
-      kategori: ""     
-    });
+    setFormData({ kode: "", matkul: "", sks: "", smt_default: "", kategori: "" });
     setIsEditing(false);
     setIsDialogOpen(true);
   };
 
-  // 2. Handler Buka Modal Edit
   const handleOpenEdit = (course: CourseState) => {
     setFormData({
       kode: course.kode,
@@ -144,7 +169,6 @@ export default function MataKuliahPage() {
     }
   };
 
-  // 3. Handler Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -175,6 +199,9 @@ export default function MataKuliahPage() {
     setIsDialogOpen(false);
   };
 
+  // Cek apakah ada filter yang aktif (untuk styling button)
+  const isFilterActive = categoryFilter !== "ALL" || semesterFilter !== "ALL";
+
   return (
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
       <PageHeader 
@@ -187,6 +214,7 @@ export default function MataKuliahPage() {
           {/* TOOLBAR */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* SEARCH INPUT */}
                 <div className="relative flex-1 sm:w-72">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -196,9 +224,49 @@ export default function MataKuliahPage() {
                     onChange={handleSearchChange}
                   />
                 </div>
-                <Button variant="outline" size="icon" className="text-muted-foreground shrink-0">
-                  <Filter className="h-4 w-4" />
-                </Button>
+
+                {/* FILTER BUTTON (DROPDOWN) */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className={`shrink-0 transition-colors ${
+                        isFilterActive 
+                          ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700" 
+                          : "text-muted-foreground"
+                      }`}
+                      title="Filter Data"
+                    >
+                      {isFilterActive ? <ListFilter className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {/* Filter Kategori */}
+                    <DropdownMenuLabel>Kategori</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+                      <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="Reguler">Reguler</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="MBKM">MBKM</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    {/* Filter Semester */}
+                    <DropdownMenuLabel>Semester</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={semesterFilter} onValueChange={handleSemesterFilterChange}>
+                      <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="1">Semester 1</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="2">Semester 2</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="3">Semester 3</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="4">Semester 4</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="5">Semester 5</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="6">Semester 6</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="7">Semester 7</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="8">Semester 8</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <Button 
@@ -247,7 +315,7 @@ export default function MataKuliahPage() {
                         {row.smt_default}
                       </TableCell>
                       
-                      {/* --- BADGE KATEGORI (SERAGAM OUTLINE) --- */}
+                      {/* --- BADGE KATEGORI --- */}
                       <TableCell>
                         <Badge 
                           variant="outline"
@@ -287,6 +355,15 @@ export default function MataKuliahPage() {
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Search className="h-8 w-8 text-gray-300" />
                         <p>Data tidak ditemukan.</p>
+                        {(isFilterActive) && (
+                          <Button 
+                            variant="link" 
+                            className="text-primary h-auto p-0"
+                            onClick={() => { setCategoryFilter("ALL"); setSemesterFilter("ALL"); setSearchQuery(""); }}
+                          >
+                            Reset Filter
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

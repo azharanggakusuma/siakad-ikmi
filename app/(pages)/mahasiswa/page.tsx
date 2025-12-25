@@ -27,6 +27,7 @@ import {
 // --- IMPORT CUSTOM COMPONENTS ---
 import { DataTable, type Column } from "@/components/DataTable";
 import { FormModal } from "@/components/FormModal";
+import { ConfirmModal } from "@/components/ConfirmModal"; // <--- IMPORT MODAL BARU
 
 // --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -41,7 +42,7 @@ interface StudentFormState {
 }
 
 export default function MahasiswaPage() {
-  // --- STATE ---
+  // --- STATE DATA ---
   const [dataList, setDataList] = useState<StudentData[]>(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -49,31 +50,29 @@ export default function MahasiswaPage() {
   const [prodiFilter, setProdiFilter] = useState<string>("ALL");
   const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
 
-  // Pagination State
+  // PAGINATION STATE
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Dialog & Form State
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // MODAL STATE (FORM)
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<StudentFormState>({
     nim: "", nama: "", prodi: "", semester: "", alamat: ""
   });
 
-  // --- LOGIC FILTER (SEARCH + PRODI + SEMESTER) ---
+  // MODAL STATE (DELETE) -> Penambahan State Baru
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // --- LOGIC FILTER ---
   const filteredData = dataList.filter((student) => {
-    // 1. Filter Search (Nama / NIM)
     const query = searchQuery.toLowerCase();
     const matchSearch = 
       student.profile.nama.toLowerCase().includes(query) ||
       student.profile.nim.toLowerCase().includes(query);
-
-    // 2. Filter Prodi
     const matchProdi = prodiFilter === "ALL" || student.profile.prodi === prodiFilter;
-
-    // 3. Filter Semester
     const matchSemester = semesterFilter === "ALL" || student.profile.semester.toString() === semesterFilter;
-
     return matchSearch && matchProdi && matchSemester;
   });
 
@@ -82,32 +81,65 @@ export default function MahasiswaPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // --- DEFINISI KONTEN FILTER (DROPDOWN) ---
-  const filterContent = (
-    <>
-      <DropdownMenuLabel>Program Studi</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={prodiFilter} onValueChange={(v) => { setProdiFilter(v); setCurrentPage(1); }}>
-        <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Teknik Informatika">Teknik Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Sistem Informasi">Sistem Informasi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Manajemen Informatika">Manajemen Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</DropdownMenuRadioItem>
-      </DropdownMenuRadioGroup>
-      
-      <DropdownMenuSeparator />
-      
-      <DropdownMenuLabel>Semester</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={semesterFilter} onValueChange={(v) => { setSemesterFilter(v); setCurrentPage(1); }}>
-        <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-          <DropdownMenuRadioItem key={i} value={i.toString()}>Semester {i}</DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-    </>
-  );
+  // --- HANDLERS ---
+  
+  // 1. FORM HANDLERS
+  const handleOpenAdd = () => {
+    setFormData({ nim: "", nama: "", prodi: "", semester: "", alamat: "" });
+    setIsEditing(false);
+    setIsFormOpen(true);
+  };
 
-  // --- COLUMNS DEFINITION ---
+  const handleOpenEdit = (student: StudentData) => {
+    setFormData({
+      nim: student.profile.nim,
+      nama: student.profile.nama,
+      prodi: student.profile.prodi,
+      semester: student.profile.semester,
+      alamat: student.profile.alamat
+    });
+    setIsEditing(true);
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nim || !formData.nama || !formData.prodi || formData.semester === "") {
+      alert("Mohon lengkapi data wajib."); return;
+    }
+    const newProfile = {
+      nim: formData.nim,
+      nama: formData.nama,
+      prodi: formData.prodi,
+      semester: Number(formData.semester),
+      alamat: formData.alamat,
+    };
+
+    if (isEditing) {
+      setDataList((prev) => prev.map((item) => item.id === formData.nim ? { ...item, profile: newProfile } : item));
+    } else {
+      if (dataList.some((s) => s.id === formData.nim)) { alert("NIM sudah terdaftar!"); return; }
+      setDataList((prev) => [{ id: formData.nim, profile: newProfile, transcript: [] }, ...prev]);
+    }
+    setIsFormOpen(false);
+  };
+
+  // 2. DELETE HANDLERS (UPDATED)
+  const openDeleteModal = (id: string) => {
+    setDeleteId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteId) {
+      setDataList((prev) => prev.filter((item) => item.id !== deleteId));
+      if (currentData.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
+    }
+  };
+
+  // --- COLUMNS ---
   const columns: Column<StudentData>[] = [
     {
       header: "#",
@@ -124,14 +156,8 @@ export default function MahasiswaPage() {
         </Badge>
       )
     },
-    {
-      header: "Nama Lengkap",
-      render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span>
-    },
-    {
-      header: "Program Studi",
-      render: (row) => <span className="text-gray-600">{row.profile.prodi}</span>
-    },
+    { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
+    { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
     {
       header: "Semester",
       className: "text-center w-[100px]",
@@ -151,16 +177,16 @@ export default function MahasiswaPage() {
             size="icon"
             className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
             onClick={() => handleOpenEdit(row)}
-            title="Edit Data"
           >
             <Pencil className="h-4 w-4" />
           </Button>
+          
+          {/* TOMBOL HAPUS SEKARANG MEMBUKA MODAL */}
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => handleDelete(row.id)}
-            title="Hapus Data"
+            onClick={() => openDeleteModal(row.id)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -169,108 +195,44 @@ export default function MahasiswaPage() {
     }
   ];
 
-  // --- HANDLERS ---
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); 
-  };
-
-  const handleOpenAdd = () => {
-    setFormData({ nim: "", nama: "", prodi: "", semester: "", alamat: "" });
-    setIsEditing(false);
-    setIsDialogOpen(true);
-  };
-
-  const handleOpenEdit = (student: StudentData) => {
-    setFormData({
-      nim: student.profile.nim,
-      nama: student.profile.nama,
-      prodi: student.profile.prodi,
-      semester: student.profile.semester,
-      alamat: student.profile.alamat
-    });
-    setIsEditing(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm(`Hapus data mahasiswa dengan NIM ${id}?`)) {
-      setDataList((prev) => prev.filter((item) => item.id !== id));
-      if (currentData.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.nim || !formData.nama || !formData.prodi || formData.semester === "") {
-      alert("Mohon lengkapi data wajib (NIM, Nama, Prodi, Semester).");
-      return;
-    }
-
-    const newProfile = {
-      nim: formData.nim,
-      nama: formData.nama,
-      prodi: formData.prodi,
-      semester: Number(formData.semester),
-      alamat: formData.alamat,
-    };
-
-    if (isEditing) {
-      setDataList((prev) =>
-        prev.map((item) => 
-          item.id === formData.nim 
-            ? { ...item, profile: newProfile } 
-            : item
-        )
-      );
-    } else {
-      if (dataList.some((s) => s.id === formData.nim)) {
-        alert("NIM sudah terdaftar!");
-        return;
-      }
-      const newStudent: StudentData = {
-        id: formData.nim,
-        profile: newProfile,
-        transcript: []
-      };
-      setDataList((prev) => [newStudent, ...prev]);
-    }
-    setIsDialogOpen(false);
-  };
+  // --- FILTER CONTENT ---
+  const filterContent = (
+    <>
+      <DropdownMenuLabel>Program Studi</DropdownMenuLabel>
+      <DropdownMenuRadioGroup value={prodiFilter} onValueChange={(v) => { setProdiFilter(v); setCurrentPage(1); }}>
+        <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="Teknik Informatika">Teknik Informatika</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="Sistem Informasi">Sistem Informasi</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="Manajemen Informatika">Manajemen Informatika</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuLabel>Semester</DropdownMenuLabel>
+      <DropdownMenuRadioGroup value={semesterFilter} onValueChange={(v) => { setSemesterFilter(v); setCurrentPage(1); }}>
+        <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
+        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <DropdownMenuRadioItem key={i} value={i.toString()}>Semester {i}</DropdownMenuRadioItem>)}
+      </DropdownMenuRadioGroup>
+    </>
+  );
 
   return (
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
-      <PageHeader 
-        title="Data Mahasiswa" 
-        breadcrumb={["SIAKAD", "Mahasiswa"]} 
-      />
+      <PageHeader title="Data Mahasiswa" breadcrumb={["SIAKAD", "Mahasiswa"]} />
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
         <CardContent className="p-6">
-          
           <DataTable 
             data={currentData}
             columns={columns}
             searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
+            onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             searchPlaceholder="Cari Nama atau NIM..."
-            
             onAdd={handleOpenAdd}
             addLabel="Tambah Mahasiswa"
-            
-            // --- FILTER PROPS ---
             filterContent={filterContent}
             isFilterActive={prodiFilter !== "ALL" || semesterFilter !== "ALL"}
-            onResetFilter={() => { 
-              setProdiFilter("ALL"); 
-              setSemesterFilter("ALL"); 
-              setSearchQuery(""); 
-            }}
-            
-            // Pagination Props
+            onResetFilter={() => { setProdiFilter("ALL"); setSemesterFilter("ALL"); setSearchQuery(""); }}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
@@ -278,13 +240,13 @@ export default function MahasiswaPage() {
             endIndex={endIndex}
             totalItems={filteredData.length}
           />
-
         </CardContent>
       </Card>
 
+      {/* MODAL FORM (TAMBAH/EDIT) */}
       <FormModal
-        isOpen={isDialogOpen}
-        onClose={setIsDialogOpen}
+        isOpen={isFormOpen}
+        onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
         description="Pastikan data mahasiswa yang dimasukkan sudah benar."
         onSubmit={handleSubmit}
@@ -294,50 +256,21 @@ export default function MahasiswaPage() {
           <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2 col-span-2">
               <Label htmlFor="nim">NIM</Label>
-              <Input 
-                id="nim" 
-                value={formData.nim} 
-                onChange={(e) => setFormData({ ...formData, nim: e.target.value })} 
-                disabled={isEditing} 
-                placeholder="Contoh: 4121001" 
-                required 
-              />
+              <Input id="nim" value={formData.nim} onChange={(e) => setFormData({ ...formData, nim: e.target.value })} disabled={isEditing} placeholder="Contoh: 4121001" required />
             </div>
             <div className="grid gap-2 col-span-1">
               <Label htmlFor="semester">Semester</Label>
-              <Input 
-                id="semester" 
-                type="number" 
-                min={1} 
-                max={14} 
-                value={formData.semester} 
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })} 
-                placeholder="1" 
-                required 
-              />
+              <Input id="semester" type="number" min={1} max={14} value={formData.semester} onChange={(e) => setFormData({ ...formData, semester: e.target.value })} placeholder="1" required />
             </div>
           </div>
-
           <div className="grid gap-2">
             <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input 
-              id="nama" 
-              value={formData.nama} 
-              onChange={(e) => setFormData({ ...formData, nama: e.target.value })} 
-              placeholder="Contoh: Budi Santoso" 
-              required 
-            />
+            <Input id="nama" value={formData.nama} onChange={(e) => setFormData({ ...formData, nama: e.target.value })} placeholder="Contoh: Budi Santoso" required />
           </div>
-
           <div className="grid gap-2">
             <Label htmlFor="prodi">Program Studi</Label>
-            <Select 
-              value={formData.prodi} 
-              onValueChange={(val) => setFormData({ ...formData, prodi: val })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih Program Studi" />
-              </SelectTrigger>
+            <Select value={formData.prodi} onValueChange={(val) => setFormData({ ...formData, prodi: val })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Program Studi" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
                 <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
@@ -347,18 +280,23 @@ export default function MahasiswaPage() {
               </SelectContent>
             </Select>
           </div>
-
           <div className="grid gap-2">
             <Label htmlFor="alamat">Alamat Domisili</Label>
-            <Input 
-              id="alamat" 
-              value={formData.alamat} 
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} 
-              placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon" 
-            />
+            <Input id="alamat" value={formData.alamat} onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon" />
           </div>
         </div>
       </FormModal>
+
+      {/* MODAL KONFIRMASI DELETE */}
+      <ConfirmModal 
+        isOpen={isDeleteOpen}
+        onClose={setIsDeleteOpen}
+        onConfirm={confirmDelete}
+        title="Hapus Data Mahasiswa?"
+        description={`Apakah Anda yakin ingin menghapus data mahasiswa dengan NIM ${deleteId}? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus Permanen"
+        variant="destructive"
+      />
 
     </div>
   );

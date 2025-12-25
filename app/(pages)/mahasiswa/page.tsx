@@ -190,7 +190,21 @@ export default function MahasiswaPage() {
       className: "text-center w-[100px] text-gray-700", 
       render: (row) => row.profile.semester 
     },
-    { header: "Alamat", render: (row) => <span className="text-gray-600">{row.profile.alamat}</span> },
+    
+    // --- KOLOM ALAMAT (DIPERBARUI) ---
+    {
+      header: "Alamat",
+      className: "max-w-[250px]", // Membatasi lebar kolom
+      render: (row) => (
+        <div 
+          className="truncate text-gray-600" // truncate memotong teks panjang dgn "..."
+          title={row.profile.alamat} // Tooltip native browser saat hover
+        >
+          {row.profile.alamat}
+        </div>
+      )
+    },
+    // ---------------------------------
 
     {
       header: "Aksi",

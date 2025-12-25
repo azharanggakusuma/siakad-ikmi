@@ -8,7 +8,9 @@ import {
   Trash2, 
   Plus, 
   Search, 
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 // --- SHADCN COMPONENTS ---
@@ -71,11 +73,19 @@ const INITIAL_DATA: CourseData[] = [
   { kode: "SIW-2121", matkul: "Jaringan Komputer", sks: 3, smt_default: 2, kategori: "Reguler" },
   { kode: "MDK-0306", matkul: "Data Science", sks: 3, smt_default: 3, kategori: "Reguler" },
   { kode: "MBKM-TI-04073", matkul: "Technopreneurship", sks: 3, smt_default: 4, kategori: "MBKM" },
+  { kode: "MDK-0402", matkul: "Interaksi Manusia Komputer", sks: 3, smt_default: 4, kategori: "Reguler" },
+  { kode: "TKK-0501", matkul: "Cloud Computing", sks: 4, smt_default: 5, kategori: "Reguler" },
 ];
 
 export default function MataKuliahPage() {
   const [courses, setCourses] = useState<CourseData[]>(INITIAL_DATA);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // --- DIALOG STATE ---
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
@@ -87,13 +97,28 @@ export default function MataKuliahPage() {
     kategori: "Reguler",
   });
 
-  // Filter Logic
+  // --- FILTER & PAGINATION LOGIC ---
+  
+  // 1. Filter Data (Search)
   const filteredCourses = courses.filter((course) =>
     course.matkul.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.kode.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handlers
+  // 2. Hitung Pagination
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredCourses.slice(startIndex, endIndex);
+
+  // Handler Search (Reset page ke 1 saat search berubah)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); 
+  };
+
+  // --- CRUD HANDLERS ---
+
   const handleOpenAdd = () => {
     setFormData({ kode: "", matkul: "", sks: 2, smt_default: 1, kategori: "Reguler" });
     setIsEditing(false);
@@ -109,6 +134,10 @@ export default function MataKuliahPage() {
   const handleDelete = (kode: string) => {
     if (confirm(`Hapus data ${kode}?`)) {
       setCourses((prev) => prev.filter((item) => item.kode !== kode));
+      // Jika halaman kosong setelah delete, mundur 1 halaman (kecuali di halaman 1)
+      if (currentData.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
     }
   };
 
@@ -129,7 +158,6 @@ export default function MataKuliahPage() {
   };
 
   return (
-    // PERUBAHAN 1: gap-8 diubah jadi gap-4 agar lebih rapat
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
       <PageHeader 
         title="Mata Kuliah" 
@@ -138,7 +166,7 @@ export default function MataKuliahPage() {
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
         <CardContent className="p-6">
-          {/* PERUBAHAN 2: mb-6 diubah jadi mb-4 agar jarak toolbar ke tabel lebih dekat */}
+          {/* TOOLBAR */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-72">
@@ -147,7 +175,7 @@ export default function MataKuliahPage() {
                     placeholder="Cari kode atau nama..."
                     className="pl-9 bg-muted/30"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange} // Pakai handler baru
                   />
                 </div>
                 <Button variant="outline" size="icon" className="text-muted-foreground shrink-0">
@@ -161,8 +189,8 @@ export default function MataKuliahPage() {
             </Button>
           </div>
 
-          {/* Table Modern */}
-          <div className="rounded-md border">
+          {/* TABLE SECTION */}
+          <div className="rounded-md border min-h-[300px]">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -176,11 +204,12 @@ export default function MataKuliahPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCourses.length > 0 ? (
-                  filteredCourses.map((row, index) => (
+                {currentData.length > 0 ? (
+                  currentData.map((row, index) => (
                     <TableRow key={row.kode} className="group hover:bg-muted/30 transition-colors">
                       <TableCell className="text-center font-medium text-muted-foreground">
-                        {index + 1}
+                        {/* Nomor urut global (bukan reset per halaman) */}
+                        {startIndex + index + 1}
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         {row.kode}
@@ -235,8 +264,11 @@ export default function MataKuliahPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      Data tidak ditemukan.
+                    <TableCell colSpan={7} className="h-64 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Search className="h-8 w-8 text-gray-300" />
+                        <p>Data tidak ditemukan.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -244,10 +276,45 @@ export default function MataKuliahPage() {
             </Table>
           </div>
           
-          {/* PERUBAHAN 3: Update format teks footer */}
-          <div className="mt-4 text-xs text-muted-foreground">
-            Menampilkan <strong>{filteredCourses.length}</strong> dari <strong>{courses.length}</strong> data
+          {/* PAGINATION FOOTER */}
+          <div className="flex items-center justify-between mt-4">
+             {/* Info Data */}
+             <div className="text-xs text-muted-foreground">
+              {filteredCourses.length > 0 ? (
+                <>
+                  Menampilkan <strong>{startIndex + 1}-{Math.min(endIndex, filteredCourses.length)}</strong> dari <strong>{filteredCourses.length}</strong> data
+                </>
+              ) : (
+                "Tidak ada data"
+              )}
+            </div>
+
+            {/* Tombol Navigasi */}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-xs font-medium px-2">
+                Hal {currentPage} / {totalPages || 1}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+
         </CardContent>
       </Card>
 

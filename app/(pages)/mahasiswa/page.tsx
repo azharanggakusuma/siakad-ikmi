@@ -28,7 +28,7 @@ import {
 import { DataTable, type Column } from "@/components/DataTable";
 import { FormModal } from "@/components/FormModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import Tooltip from "@/components/Tooltip"; // <--- IMPORT TOOLTIP DI SINI
+import Tooltip from "@/components/Tooltip"; // Import Tooltip
 
 // --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -191,12 +191,11 @@ export default function MahasiswaPage() {
       render: (row) => row.profile.semester 
     },
     
-    // --- KOLOM ALAMAT (MENGGUNAKAN CUSTOM TOOLTIP) ---
+    // --- KOLOM ALAMAT ---
     {
       header: "Alamat",
       className: "max-w-[250px]", 
       render: (row) => (
-        // Bungkus elemen dengan Tooltip
         <Tooltip content={row.profile.alamat} position="top">
           <div className="truncate text-gray-600 cursor-default">
             {row.profile.alamat}
@@ -204,7 +203,7 @@ export default function MahasiswaPage() {
         </Tooltip>
       )
     },
-    // -------------------------------------------------
+    // --------------------
 
     {
       header: "Aksi",
@@ -342,18 +341,20 @@ export default function MahasiswaPage() {
                   </SelectContent>
                 </Select>
              </div>
+             
+             {/* --- UPDATE BAGIAN JENJANG DI SINI --- */}
              <div className="grid gap-2 col-span-1">
                 <Label htmlFor="jenjang">Jenjang</Label>
                 <Select value={formData.jenjang} onValueChange={(val) => setFormData({ ...formData, jenjang: val })}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="Pilih" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="D3">D3</SelectItem>
-                    <SelectItem value="D4">D4</SelectItem>
                     <SelectItem value="S1">S1</SelectItem>
-                    <SelectItem value="S2">S2</SelectItem>
                   </SelectContent>
                 </Select>
              </div>
+             {/* ------------------------------------ */}
+
           </div>
 
           <div className="grid gap-2">

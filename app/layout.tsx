@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner"; // <--- 1. Import Toaster
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,14 +31,12 @@ export const metadata: Metadata = {
   creator: "STMIK IKMI Cirebon",
   publisher: "STMIK IKMI Cirebon",
   
-  // Ikon di Tab Browser
   icons: {
     icon: "/img/logo-ikmi.png", 
     shortcut: "/img/logo-ikmi.png",
     apple: "/img/logo-ikmi.png",
   },
 
-  // Tampilan saat link dibagikan di Sosmed (WhatsApp/FB/Twitter)
   openGraph: {
     title: "SIAKAD STMIK IKMI Cirebon",
     description: "Cetak Transkrip Nilai Mahasiswa & Layanan Akademik Digital.",
@@ -45,7 +44,7 @@ export const metadata: Metadata = {
     siteName: "SIAKAD IKMI",
     images: [
       {
-        url: "/img/logo-ikmi.png", // Menggunakan logo sebagai preview
+        url: "/img/logo-ikmi.png",
         width: 800,
         height: 800,
         alt: "Logo STMIK IKMI Cirebon",
@@ -55,7 +54,6 @@ export const metadata: Metadata = {
     type: "website",
   },
 
-  // Konfigurasi Robot (Agar terindeks Google)
   robots: {
     index: true,
     follow: true,
@@ -69,12 +67,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Ubah lang='en' jadi 'id' untuk SEO Indonesia
     <html lang="id">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-100`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

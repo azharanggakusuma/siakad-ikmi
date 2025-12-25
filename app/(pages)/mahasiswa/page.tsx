@@ -28,7 +28,8 @@ import {
 import { DataTable, type Column } from "@/components/DataTable";
 import { FormModal } from "@/components/FormModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import Tooltip from "@/components/Tooltip"; // Import Tooltip
+import Tooltip from "@/components/Tooltip"; 
+import { toast } from "sonner"; // <--- Import Toast
 
 // --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -115,7 +116,11 @@ export default function MahasiswaPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nim || !formData.nama || !formData.prodi || !formData.jenjang || formData.semester === "") {
-      alert("Mohon lengkapi data wajib (termasuk Jenjang)."); return;
+      // GANTI ALERT DENGAN TOAST ERROR
+      toast.error("Gagal menyimpan data", {
+        description: "Mohon lengkapi data wajib (termasuk Jenjang)."
+      });
+      return;
     }
     const newProfile = {
       nim: formData.nim,
@@ -128,9 +133,23 @@ export default function MahasiswaPage() {
 
     if (isEditing) {
       setDataList((prev) => prev.map((item) => item.id === formData.nim ? { ...item, profile: newProfile } : item));
+      // TOAST SUKSES EDIT
+      toast.success("Data Diperbarui", {
+        description: `Data mahasiswa ${formData.nama} berhasil diupdate.`
+      });
     } else {
-      if (dataList.some((s) => s.id === formData.nim)) { alert("NIM sudah terdaftar!"); return; }
+      if (dataList.some((s) => s.id === formData.nim)) { 
+        // TOAST ERROR DUPLIKAT
+        toast.error("Gagal menambahkan", {
+          description: `NIM ${formData.nim} sudah terdaftar dalam sistem.`
+        });
+        return; 
+      }
       setDataList((prev) => [{ id: formData.nim, profile: newProfile, transcript: [] }, ...prev]);
+      // TOAST SUKSES TAMBAH
+      toast.success("Berhasil Ditambahkan", {
+        description: `Mahasiswa baru atas nama ${formData.nama} telah disimpan.`
+      });
     }
     setIsFormOpen(false);
   };
@@ -146,6 +165,10 @@ export default function MahasiswaPage() {
       if (currentData.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       }
+      // TOAST SUKSES DELETE
+      toast.success("Data Dihapus", {
+        description: "Data mahasiswa berhasil dihapus permanen."
+      });
     }
   };
 
@@ -156,8 +179,6 @@ export default function MahasiswaPage() {
       className: "w-[50px] text-center",
       render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
-    
-    // --- KOLOM NIM ---
     {
       header: "NIM",
       accessorKey: "id",
@@ -168,12 +189,8 @@ export default function MahasiswaPage() {
         </span>
       )
     },
-    // -----------------
-
     { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
     { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
-    
-    // --- KOLOM JENJANG ---
     {
       header: "Jenjang",
       className: "text-center w-[80px]",
@@ -183,15 +200,11 @@ export default function MahasiswaPage() {
          </Badge>
       )
     },
-    // ---------------------
-
     { 
       header: "Semester", 
       className: "text-center w-[100px] text-gray-700", 
       render: (row) => row.profile.semester 
     },
-    
-    // --- KOLOM ALAMAT ---
     {
       header: "Alamat",
       className: "max-w-[250px]", 
@@ -203,8 +216,6 @@ export default function MahasiswaPage() {
         </Tooltip>
       )
     },
-    // --------------------
-
     {
       header: "Aksi",
       className: "text-center w-[100px]",
@@ -341,8 +352,6 @@ export default function MahasiswaPage() {
                   </SelectContent>
                 </Select>
              </div>
-             
-             {/* --- UPDATE BAGIAN JENJANG DI SINI --- */}
              <div className="grid gap-2 col-span-1">
                 <Label htmlFor="jenjang">Jenjang</Label>
                 <Select value={formData.jenjang} onValueChange={(val) => setFormData({ ...formData, jenjang: val })}>
@@ -353,8 +362,6 @@ export default function MahasiswaPage() {
                   </SelectContent>
                 </Select>
              </div>
-             {/* ------------------------------------ */}
-
           </div>
 
           <div className="grid gap-2">

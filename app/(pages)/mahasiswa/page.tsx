@@ -28,6 +28,7 @@ import {
 import { DataTable, type Column } from "@/components/DataTable";
 import { FormModal } from "@/components/FormModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import Tooltip from "@/components/Tooltip"; // <--- IMPORT TOOLTIP DI SINI
 
 // --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -156,24 +157,23 @@ export default function MahasiswaPage() {
       render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
     
-    // --- KOLOM NIM (TEKS BIASA) ---
+    // --- KOLOM NIM ---
     {
       header: "NIM",
       accessorKey: "id",
       className: "w-[120px]",
       render: (row) => (
-        // Menggunakan font-mono agar angka NIM tetap rapi, tapi tanpa Badge
         <span className="font-mono font-medium text-gray-700">
           {row.profile.nim}
         </span>
       )
     },
-    // -----------------------------
+    // -----------------
 
     { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
     { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
     
-    // --- KOLOM JENJANG (PAKE STYLE NIM LAMA) ---
+    // --- KOLOM JENJANG ---
     {
       header: "Jenjang",
       className: "text-center w-[80px]",
@@ -183,7 +183,7 @@ export default function MahasiswaPage() {
          </Badge>
       )
     },
-    // ------------------------------------------
+    // ---------------------
 
     { 
       header: "Semester", 
@@ -191,20 +191,20 @@ export default function MahasiswaPage() {
       render: (row) => row.profile.semester 
     },
     
-    // --- KOLOM ALAMAT (DIPERBARUI) ---
+    // --- KOLOM ALAMAT (MENGGUNAKAN CUSTOM TOOLTIP) ---
     {
       header: "Alamat",
-      className: "max-w-[250px]", // Membatasi lebar kolom
+      className: "max-w-[250px]", 
       render: (row) => (
-        <div 
-          className="truncate text-gray-600" // truncate memotong teks panjang dgn "..."
-          title={row.profile.alamat} // Tooltip native browser saat hover
-        >
-          {row.profile.alamat}
-        </div>
+        // Bungkus elemen dengan Tooltip
+        <Tooltip content={row.profile.alamat} position="top">
+          <div className="truncate text-gray-600 cursor-default">
+            {row.profile.alamat}
+          </div>
+        </Tooltip>
       )
     },
-    // ---------------------------------
+    // -------------------------------------------------
 
     {
       header: "Aksi",

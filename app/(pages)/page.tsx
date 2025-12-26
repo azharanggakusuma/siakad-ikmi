@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
+import { students, coursesList, StudentData, TranscriptItem } from "../../lib/data";
 
 /* ================= TYPES ================= */
 
@@ -12,18 +13,125 @@ type StatCardProps = {
   icon: React.ReactNode;
 };
 
-/* ================= DATA ================= */
+/* ================= HELPER FUNCTIONS ================= */
 
-const STATS: StatCardProps[] = [
-  { label: "Total Mahasiswa", value: "1,284", description: "+20 dari bulan lalu", icon: <UsersIcon /> },
-  { label: "Mata Kuliah", value: "86", description: "Kurikulum Aktif", icon: <BookIcon /> },
-  { label: "Transkrip Terbit", value: "3,124", description: "+12% peningkatan", icon: <FileTextIcon /> },
-  { label: "Rata-rata IPK", value: "3.42", description: "Skala 4.00", icon: <TrendingUpIcon /> },
-];
+// Menghitung IPK (Indeks Prestasi Kumulatif) untuk satu mahasiswa
+function calculateIPK(transcript: TranscriptItem[]) {
+  const totalSKS = transcript.reduce((acc, curr) => acc + curr.sks, 0);
+  const totalNM = transcript.reduce((acc, curr) => acc + curr.nm, 0);
+  if (totalSKS === 0) return 0;
+  return totalNM / totalSKS;
+}
+
+// Menghitung IPS (Indeks Prestasi Semester) untuk satu mahasiswa pada semester tertentu
+function calculateStudentIPS(transcript: TranscriptItem[], semester: number) {
+  const semesterItems = transcript.filter((t) => t.smt === semester);
+  if (semesterItems.length === 0) return null; // Mahasiswa tidak mengambil semester ini
+
+  const totalSKS = semesterItems.reduce((acc, curr) => acc + curr.sks, 0);
+  const totalNM = semesterItems.reduce((acc, curr) => acc + curr.nm, 0);
+  
+  if (totalSKS === 0) return 0;
+  return totalNM / totalSKS;
+}
+
+// Menghitung Rata-rata IPS per Semester (Mean of IPS)
+function calculateSemesterTrend(allStudents: StudentData[]) {
+  // Cari semester maksimal yang ada datanya
+  let maxSmt = 0;
+  allStudents.forEach(s => {
+    s.transcript.forEach(t => {
+      if (t.smt > maxSmt) maxSmt = t.smt;
+    });
+  });
+
+  const trendData = [];
+
+  for (let smt = 1; smt <= maxSmt; smt++) {
+    let totalIPS = 0;
+    let countStudent = 0;
+
+    allStudents.forEach((student) => {
+      const ips = calculateStudentIPS(student.transcript, smt);
+      if (ips !== null) {
+        totalIPS += ips;
+        countStudent++;
+      }
+    });
+
+    const avgIPS = countStudent > 0 ? totalIPS / countStudent : 0;
+    // Hitung tinggi bar untuk visualisasi (skala 4.0)
+    const heightPercentage = Math.min((avgIPS / 4) * 100, 100);
+
+    trendData.push({
+      label: `Smt ${smt}`,
+      val: Number(avgIPS.toFixed(2)),
+      height: `${heightPercentage}%`,
+    });
+  }
+
+  return trendData;
+}
+
+// Menghitung Distribusi Nilai (A, B, C, D, E)
+function calculateGradeDistribution(allStudents: StudentData[]) {
+  const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+  let totalGrades = 0;
+  let totalAM = 0; // Total Angka Mutu untuk rata-rata global
+
+  allStudents.forEach((student) => {
+    student.transcript.forEach((item) => {
+      const grade = item.hm as keyof typeof counts;
+      if (counts[grade] !== undefined) {
+        counts[grade]++;
+        totalGrades++;
+        totalAM += item.am;
+      }
+    });
+  });
+
+  return { counts, totalGrades, totalAM };
+}
 
 /* ================= PAGE ================= */
 
 export default function DashboardPage() {
+  
+  // --- CALCULATE REAL DATA ---
+  const { statData, trendData, gradeDistData } = useMemo(() => {
+    // 1. Total Mahasiswa
+    const studentCount = students.length;
+
+    // 2. Mata Kuliah (Unique Courses)
+    const courseCount = coursesList.length;
+
+    // 3. Rata-rata IPK Global (Rata-rata dari IPK setiap mahasiswa)
+    let totalIPK = 0;
+    students.forEach(s => {
+      totalIPK += calculateIPK(s.transcript);
+    });
+    const avgIPK = studentCount > 0 ? (totalIPK / studentCount).toFixed(2) : "0.00";
+
+    // 4. Kalkulasi Data Statistik & Distribusi
+    const dist = calculateGradeDistribution(students);
+    const trend = calculateSemesterTrend(students);
+
+    // 5. Rata-rata Nilai Global (Average Grade Point)
+    // Menggantikan "Transkrip Terbit" (Total) dengan "Rata-rata Nilai"
+    const avgGradePoint = dist.totalGrades > 0 ? (dist.totalAM / dist.totalGrades).toFixed(2) : "0.00";
+
+    return {
+      statData: [
+        { label: "Total Mahasiswa", value: studentCount.toLocaleString(), description: "Data Aktif", icon: <UsersIcon /> },
+        { label: "Mata Kuliah", value: courseCount.toString(), description: "Kurikulum Aktif", icon: <BookIcon /> },
+        { label: "Rata-rata Nilai", value: avgGradePoint, description: "Seluruh Mata Kuliah", icon: <FileTextIcon /> }, // Diganti dari Total ke Rata-rata
+        { label: "Rata-rata IPK", value: avgIPK, description: "Seluruh Mahasiswa", icon: <TrendingUpIcon /> },
+      ],
+      trendData: trend,
+      gradeDistData: dist,
+    };
+  }, []);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* ===== HEADER ===== */}
@@ -33,7 +141,7 @@ export default function DashboardPage() {
             Dashboard
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Selamat datang kembali. Berikut adalah ringkasan sistem Anda hari ini.
+            Selamat datang kembali. Berikut adalah ringkasan performa akademik rata-rata saat ini.
           </p>
         </div>
 
@@ -64,7 +172,7 @@ export default function DashboardPage() {
 
       {/* ===== STAT GRID ===== */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {STATS.map((s) => (
+        {statData.map((s) => (
           <StatCard key={s.label} {...s} />
         ))}
       </div>
@@ -72,25 +180,24 @@ export default function DashboardPage() {
       {/* ===== GRAFIK GRID ===== */}
       <div className="grid gap-4 lg:grid-cols-7">
         
-        {/* GRAFIK 1: TREN PERFORMA (Bar Chart) - Menggantikan Aktivitas */}
+        {/* GRAFIK 1: TREN PERFORMA (Bar Chart) */}
         <section className="lg:col-span-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
           <header className="p-6 border-b border-slate-100">
             <h3 className="font-semibold tracking-tight text-slate-900 flex items-center gap-2">
               <TrendingUpIcon className="w-4 h-4 text-blue-600" />
-              Tren Rata-rata IPK Mahasiswa
+              Tren Rata-rata IPS Mahasiswa
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Performa akademik mahasiswa per semester tahun ini.
+              Rata-rata Indeks Prestasi Semester (IPS) kumulatif seluruh mahasiswa.
             </p>
           </header>
 
           <div className="p-6 flex-1 flex items-end justify-center">
-            {/* Custom Simple Bar Chart */}
-            <SemesterBarChart />
+            <SemesterBarChart data={trendData} />
           </div>
         </section>
 
-        {/* GRAFIK 2: DISTRIBUSI NILAI (Donut Chart) - Menggantikan Pintasan */}
+        {/* GRAFIK 2: DISTRIBUSI NILAI (Donut Chart) */}
         <section className="lg:col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
           <header className="p-6 border-b border-slate-100">
             <h3 className="font-semibold tracking-tight text-slate-900 flex items-center gap-2">
@@ -98,13 +205,12 @@ export default function DashboardPage() {
               Distribusi Indeks Nilai
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Persentase perolehan nilai (A/B/C/D).
+              Proporsi perolehan nilai (A/B/C/D/E) dari total {gradeDistData.totalGrades} entri nilai.
             </p>
           </header>
 
           <div className="p-6 flex-1 flex flex-col items-center justify-center">
-            {/* Custom Simple Donut Chart */}
-            <GradeDonutChart />
+            <GradeDonutChart counts={gradeDistData.counts} total={gradeDistData.totalGrades} />
           </div>
         </section>
       </div>
@@ -130,24 +236,18 @@ function StatCard({ label, value, description, icon }: StatCardProps) {
 }
 
 // --- CUSTOM BAR CHART COMPONENT ---
-function SemesterBarChart() {
-  // Data Dummy: Semester 1 s.d 6
-  const data = [
-    { label: "Smt 1", val: 3.1, height: "65%" },
-    { label: "Smt 2", val: 3.3, height: "72%" },
-    { label: "Smt 3", val: 3.4, height: "78%" },
-    { label: "Smt 4", val: 3.2, height: "70%" },
-    { label: "Smt 5", val: 3.6, height: "85%" },
-    { label: "Smt 6", val: 3.8, height: "92%" },
-  ];
+function SemesterBarChart({ data }: { data: { label: string; val: number; height: string }[] }) {
+  if (data.length === 0) {
+    return <div className="text-sm text-slate-400">Belum ada data nilai per semester.</div>;
+  }
 
   return (
     <div className="w-full h-64 flex items-end justify-between gap-2 sm:gap-4 px-2">
       {data.map((item, idx) => (
         <div key={idx} className="group relative flex-1 flex flex-col items-center justify-end h-full">
           {/* Tooltip Hover */}
-          <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded mb-2">
-            IPK: {item.val}
+          <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded mb-2 whitespace-nowrap z-10">
+            Rata-rata IPS: {item.val}
           </div>
           
           {/* Bar */}
@@ -155,7 +255,7 @@ function SemesterBarChart() {
             className="w-full max-w-[40px] bg-blue-100 rounded-t-lg relative overflow-hidden group-hover:bg-blue-200 transition-colors"
             style={{ height: item.height }}
           >
-            {/* Inner Bar Fill animation or solid */}
+            {/* Inner Bar Fill animation */}
             <div className="absolute bottom-0 left-0 right-0 bg-[#1B3F95] w-full h-full opacity-80 group-hover:opacity-100 transition-opacity" />
           </div>
 
@@ -170,26 +270,39 @@ function SemesterBarChart() {
 }
 
 // --- CUSTOM DONUT CHART COMPONENT ---
-function GradeDonutChart() {
-  // Data Persentase: A=45%, B=30%, C=15%, D/E=10%
-  // Conic Gradient Calculation:
-  // A (0% - 45%) -> #10B981
-  // B (45% - 75%) -> #3B82F6
-  // C (75% - 90%) -> #F59E0B
-  // D (90% - 100%) -> #EF4444
+function GradeDonutChart({ counts, total }: { counts: { A: number; B: number; C: number; D: number; E: number }; total: number }) {
+  if (total === 0) {
+    return <div className="text-sm text-slate-400">Belum ada data nilai.</div>;
+  }
+
+  // Calculate percentages
+  const pA = (counts.A / total) * 100;
+  const pB = (counts.B / total) * 100;
+  const pC = (counts.C / total) * 100;
+  const pD = (counts.D / total) * 100;
+  // const pE = (counts.E / total) * 100; // Sisa
+
+  // Conic Gradient Calculation
+  // A starts at 0%
+  const stopA = pA;
+  const stopB = stopA + pB;
+  const stopC = stopB + pC;
+  const stopD = stopC + pD;
+  // E is the rest
 
   const gradient = `conic-gradient(
-    #10B981 0% 45%, 
-    #3B82F6 45% 75%, 
-    #F59E0B 75% 90%, 
-    #EF4444 90% 100%
+    #10B981 0% ${stopA}%, 
+    #3B82F6 ${stopA}% ${stopB}%, 
+    #F59E0B ${stopB}% ${stopC}%, 
+    #EF4444 ${stopC}% ${stopD}%,
+    #64748B ${stopD}% 100%
   )`;
 
   const legend = [
-    { label: "Nilai A (Sangat Baik)", color: "bg-emerald-500", val: "45%" },
-    { label: "Nilai B (Baik)", color: "bg-blue-500", val: "30%" },
-    { label: "Nilai C (Cukup)", color: "bg-amber-500", val: "15%" },
-    { label: "Nilai D/E (Kurang)", color: "bg-red-500", val: "10%" },
+    { label: "A (Sangat Baik)", color: "bg-emerald-500", val: `${Math.round(pA)}%`, count: counts.A },
+    { label: "B (Baik)", color: "bg-blue-500", val: `${Math.round(pB)}%`, count: counts.B },
+    { label: "C (Cukup)", color: "bg-amber-500", val: `${Math.round(pC)}%`, count: counts.C },
+    { label: "D/E (Kurang)", color: "bg-red-500", val: `${Math.round(100 - stopC)}%`, count: counts.D + counts.E },
   ];
 
   return (
@@ -198,8 +311,8 @@ function GradeDonutChart() {
       <div className="relative w-48 h-48 rounded-full shadow-inner" style={{ background: gradient }}>
         {/* Center Hole (Donut) */}
         <div className="absolute inset-8 bg-white rounded-full flex items-center justify-center flex-col shadow-sm">
-          <span className="text-3xl font-bold text-slate-800">86</span>
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">Total MK</span>
+          <span className="text-3xl font-bold text-slate-800">{total}</span>
+          <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">Total Nilai</span>
         </div>
       </div>
 

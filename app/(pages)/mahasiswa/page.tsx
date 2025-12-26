@@ -15,11 +15,11 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-// IMPORT YANG BENAR (Pastikan file data-table.tsx sudah dibuat)
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
+// Pastikan import path ini benar sesuai struktur foldermu
 import { StudentForm, type StudentFormValues } from "@/components/features/mahasiswa/StudentForm";
 
 import { students as initialData, type StudentData } from "@/lib/data";
@@ -37,9 +37,11 @@ export default function MahasiswaPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  
+  // State untuk data yang sedang diedit
   const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
 
-  // --- LOGIC FILTER ---
+  // --- LOGIC FILTER (Tetap sama) ---
   const filteredData = useMemo(() => {
     return dataList.filter((student) => {
       const query = searchQuery.toLowerCase();
@@ -59,12 +61,14 @@ export default function MahasiswaPage() {
 
   // --- HANDLERS ---
   const handleOpenAdd = () => {
-    setFormData(undefined);
+    setFormData(undefined); // Reset data form
     setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (student: StudentData) => {
+    // Siapkan data yang akan diedit
+    // Pastikan field sesuai dengan StudentFormValues
     setFormData({
       nim: student.profile.nim,
       nama: student.profile.nama,
@@ -78,6 +82,7 @@ export default function MahasiswaPage() {
   };
 
   const handleFormSubmit = (values: StudentFormValues) => {
+    // Validasi sederhana sebelum simpan
     if (!values.nim || !values.nama || !values.prodi || !values.jenjang || values.semester === "") {
       toast.error("Gagal menyimpan", { description: "Data wajib belum lengkap." });
       return;
@@ -96,6 +101,7 @@ export default function MahasiswaPage() {
         toast.error("Gagal", { description: "NIM sudah terdaftar." });
         return;
       }
+      // Tambah data baru
       setDataList((prev) => [{ id: values.nim, profile: newProfile, transcript: [] }, ...prev]);
       toast.success("Berhasil", { description: `Mahasiswa ${values.nama} ditambahkan.` });
     }
@@ -108,10 +114,10 @@ export default function MahasiswaPage() {
       if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
       toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
     }
+    setIsDeleteOpen(false); // Tutup modal delete setelah hapus
   };
 
   // --- COLUMNS ---
-  // Penambahan tipe eksplisit (row: StudentData) untuk mengatasi error "implicit any"
   const columns: Column<StudentData>[] = [
     {
       header: "#",
@@ -209,7 +215,6 @@ export default function MahasiswaPage() {
             data={currentData}
             columns={columns}
             searchQuery={searchQuery}
-            // Tambahkan tipe eksplisit React.ChangeEvent untuk mengatasi error 'implicit any' pada 'e'
             onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
@@ -231,11 +236,13 @@ export default function MahasiswaPage() {
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
-        description="Pastikan data mahasiswa yang dimasukkan sudah benar."
+        description={isEditing ? `Edit data untuk NIM ${formData?.nim}` : "Pastikan data mahasiswa yang dimasukkan sudah benar."}
         maxWidth="sm:max-w-[600px]"
       >
+        {/* 🔥 FIX: Tambahkan key di sini. Ini rahasianya agar form selalu 'fresh' saat dibuka */}
         <StudentForm 
-            initialData={formData as StudentFormValues}
+            key={isEditing && formData ? `edit-${formData.nim}` : "add-new"}
+            initialData={formData}
             isEditing={isEditing}
             onSubmit={handleFormSubmit}
             onCancel={() => setIsFormOpen(false)}

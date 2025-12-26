@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; 
@@ -33,34 +33,26 @@ const defaultValues: StudentFormValues = {
 };
 
 export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: StudentFormProps) {
-  const [formData, setFormData] = useState<StudentFormValues>(defaultValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof StudentFormValues, boolean>>>({});
-
-  // --- PERBAIKAN DI SINI (useEffect) ---
-  useEffect(() => {
+  // 🔥 FIX: Langsung inisialisasi state dari initialData. 
+  // Tidak butuh useEffect lagi karena 'key' di parent akan mereset komponen ini sepenuhnya.
+  const [formData, setFormData] = useState<StudentFormValues>(() => {
     if (initialData) {
-      // Kita lakukan normalisasi data agar prodi/jenjang pasti terpilih
-      // Cek variasi nama field yang mungkin dikirim dari backend/JSON
-      const rawData = initialData as any; 
-      
-      setFormData({
-        nim: rawData.nim || "",
-        nama: rawData.nama || "",
-        
-        // Cek 'prodi' atau 'program_studi' atau 'programStudi'
-        // Gunakan trim() untuk hapus spasi tidak sengaja
-        prodi: (rawData.prodi || rawData.program_studi || rawData.programStudi || "").trim(),
-        
-        // Cek 'jenjang' atau 'strata'
-        jenjang: (rawData.jenjang || rawData.strata || "").trim(),
-        
-        semester: rawData.semester || "",
-        alamat: rawData.alamat || ""
-      });
-    } else {
-      setFormData(defaultValues);
+      // Pastikan membersihkan data agar cocok dengan SelectItem
+      const raw = initialData as any;
+      return {
+        nim: raw.nim || "",
+        nama: raw.nama || "",
+        // Trim spasi agar cocok dengan value SelectItem
+        prodi: (raw.prodi || raw.program_studi || "").toString().trim(),
+        jenjang: (raw.jenjang || raw.strata || "").toString().trim(),
+        semester: raw.semester || "",
+        alamat: raw.alamat || ""
+      };
     }
-  }, [initialData]);
+    return defaultValues;
+  });
+
+  const [errors, setErrors] = useState<Partial<Record<keyof StudentFormValues, boolean>>>({});
 
   // --- FUNGSI VALIDASI ---
   const validate = (): boolean => {
@@ -142,6 +134,7 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
 
   const handleInputChange = (field: keyof StudentFormValues, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Hapus error jika user sudah mengetik/memilih
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
@@ -208,6 +201,7 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
       <div className="grid grid-cols-5 gap-4">
         <div className="grid gap-2 col-span-3"> 
           <Label htmlFor="prodi">Program Studi</Label>
+          {/* Component Select Controlled */}
           <Select 
             value={formData.prodi} 
             onValueChange={(val) => handleInputChange("prodi", val)}
@@ -216,7 +210,6 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
                <SelectValue placeholder="Pilih Prodi" />
             </SelectTrigger>
             <SelectContent>
-              {/* Pastikan value di sini sama persis dengan data dari database/json */}
               <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
               <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
               <SelectItem value="Manajemen Informatika">Manajemen Informatika</SelectItem>

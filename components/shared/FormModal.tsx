@@ -4,9 +4,9 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface FormModalProps {
@@ -15,7 +15,7 @@ interface FormModalProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  maxWidth?: string; // misal: "sm:max-w-[600px]"
+  maxWidth?: string;
 }
 
 export function FormModal({
@@ -24,22 +24,24 @@ export function FormModal({
   title,
   description,
   children,
-  maxWidth = "sm:max-w-[500px]",
+  maxWidth = "sm:max-w-[425px]",
 }: FormModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={maxWidth}>
+      <DialogContent
+        className={maxWidth}
+        // 👇 INI PERBAIKANNYA: Mencegah auto-focus ke input pertama
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle className="text-xl">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           {description && (
             <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
         
-        {/* HAPUS form wrapper & footer bawaan. 
-            Biarkan children (StudentForm/CourseForm) yang render form & buttonnya sendiri. */}
+        {/* Render konten form (CourseForm) di sini */}
         {children}
-
       </DialogContent>
     </Dialog>
   );

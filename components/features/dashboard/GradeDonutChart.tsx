@@ -1,3 +1,4 @@
+// components/features/dashboard/GradeDonutChart.tsx
 import { ChartPieIcon } from "./DashboardIcons";
 
 type Counts = { A: number; B: number; C: number; D: number; E: number };
@@ -13,6 +14,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
   const stopC = stopB + pC;
   const stopD = stopC + pD;
 
+  // A: Hijau (chart-2), B: Biru (chart-3), C: Kuning (chart-5), D/E: Merah (chart-1)
   const gradient = `conic-gradient(
     var(--color-chart-2) 0% ${stopA}%, 
     var(--color-chart-3) ${stopA}% ${stopB}%, 
@@ -42,15 +44,16 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
           <div className="text-sm text-muted-foreground">Belum ada data nilai.</div>
         ) : (
           <div className="flex flex-col items-center w-full">
-            {/* Donut Circle */}
-            <div className="relative w-52 h-52 rounded-full shadow-lg border-4 border-card" style={{ background: gradient }}>
-              <div className="absolute inset-4 bg-card rounded-full flex items-center justify-center flex-col shadow-inner">
-                <span className="text-4xl font-extrabold text-card-foreground tracking-tight">{total}</span>
+            <div 
+              className="relative w-52 h-52 rounded-full shadow-lg border-card/50"
+              style={{ background: gradient }}
+            >
+              <div className="absolute inset-6 bg-card rounded-full flex items-center justify-center flex-col shadow-inner">
+                <span className="text-3xl font-extrabold text-card-foreground tracking-tight">{total}</span>
                 <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mt-1">Total Nilai</span>
               </div>
             </div>
 
-            {/* Legend */}
             <div className="mt-8 grid grid-cols-2 gap-x-12 gap-y-4 w-full px-4">
               {legend.map((l, i) => (
                 <div key={i} className="flex items-center justify-between text-sm group cursor-default">

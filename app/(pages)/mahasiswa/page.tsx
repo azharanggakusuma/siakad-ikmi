@@ -36,6 +36,7 @@ export default function MahasiswaPage() {
   const [isEditing, setIsEditing] = useState(false);
   
   // State untuk Delete & Edit
+  // ID di sini adalah ID System (1, 2, dst), BUKAN NIM.
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null); 
@@ -69,6 +70,7 @@ export default function MahasiswaPage() {
   };
 
   const handleOpenEdit = (student: StudentData) => {
+    // Kita simpan ID System (1, 2...) untuk referensi update
     setEditId(student.id); 
     setFormData({
       nim: student.profile.nim,
@@ -83,34 +85,50 @@ export default function MahasiswaPage() {
   };
 
   const handleFormSubmit = (values: StudentFormValues) => {
+    // 1. Validasi Input Dasar
     if (!values.nim || !values.nama || !values.prodi || !values.jenjang || values.semester === "") {
       toast.error("Gagal menyimpan", { description: "Data wajib belum lengkap." });
       return;
     }
 
     if (isEditing && editId) {
-      // UPDATE EXISTING
+      // --- LOGIC UPDATE ---
+      
+      // Cek Duplikasi NIM saat Edit (Kecuali punya diri sendiri)
+      const isDuplicate = dataList.some(
+        (s) => s.profile.nim === values.nim && s.id !== editId
+      );
+
+      if (isDuplicate) {
+        toast.error("Gagal Update", { description: `NIM ${values.nim} sudah digunakan mahasiswa lain.` });
+        return;
+      }
+
       setDataList((prev) => prev.map((item) => {
         if (item.id === editId) {
           const updatedProfile: StudentProfile = {
              ...item.profile,
              ...values,
              semester: Number(values.semester),
-             id: Number(editId) 
+             id: Number(editId) // ID System tetap sama
           };
+          // Update data, termasuk NIM jika berubah
           return { ...item, profile: updatedProfile };
         }
         return item;
       }));
       toast.success("Berhasil Update", { description: `Data ${values.nama} diperbarui.` });
+
     } else {
-      // CREATE NEW
+      // --- LOGIC CREATE ---
+      
+      // Cek Duplikasi NIM Baru
       if (dataList.some((s) => s.profile.nim === values.nim)) {
         toast.error("Gagal", { description: "NIM sudah terdaftar." });
         return;
       }
 
-      // Generate ID Baru (Simulasi Auto Increment)
+      // Generate ID Baru (Auto Increment Manual)
       const maxId = dataList.reduce((max, item) => Math.max(max, Number(item.id)), 0);
       const newId = maxId + 1;
 
@@ -134,6 +152,7 @@ export default function MahasiswaPage() {
 
   const handleDelete = () => {
     if (deleteId) {
+      // Hapus berdasarkan ID System, bukan NIM
       setDataList((prev) => prev.filter((item) => item.id !== deleteId));
       if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
       toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
@@ -152,8 +171,7 @@ export default function MahasiswaPage() {
     },
     {
       header: "NIM",
-      // --- PERBAIKAN: accessorKey dihapus karena kita pakai render ---
-      // accessorKey: "profile.nim", <--- INI PENYEBAB ERROR
+      // accessorKey dihapus agar tidak error, kita pakai render
       className: "w-[120px]",
       render: (row: StudentData) => (
         <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
@@ -265,6 +283,7 @@ export default function MahasiswaPage() {
         maxWidth="sm:max-w-[600px]"
       >
         <StudentForm 
+            // Menggunakan editId (ID System) sebagai key untuk re-render saat ganti mode
             key={isEditing && editId ? `edit-${editId}` : "add-new"}
             initialData={formData}
             isEditing={isEditing}

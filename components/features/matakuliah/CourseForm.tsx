@@ -71,7 +71,7 @@ export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: Cours
           />
         </div>
         <div className="grid gap-2 col-span-1">
-          <Label htmlFor="smt">Smt</Label>
+          <Label htmlFor="smt">Semester</Label>
           <Input 
             id="smt" 
             type="number" 

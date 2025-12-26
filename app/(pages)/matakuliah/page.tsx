@@ -135,7 +135,7 @@ export default function MataKuliahPage() {
       render: (row) => <Tooltip content={row.matkul} position="top"><div className="truncate text-gray-700 font-medium cursor-default">{row.matkul}</div></Tooltip>
     },
     { header: "SKS", accessorKey: "sks", className: "text-center w-[100px] text-gray-700" },
-    { header: "Semester", accessorKey: "smt_default", className: "text-center w-[100px] text-muted-foreground" },
+    { header: "Semester", accessorKey: "smt_default", className: "text-center w-[100px] text-gray-700" },
     {
       header: "Kategori",
       accessorKey: "kategori",

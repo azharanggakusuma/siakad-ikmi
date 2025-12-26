@@ -148,7 +148,7 @@ export default function MahasiswaPage() {
       )
     },
     { 
-      header: "Smt", 
+      header: "Semester", 
       className: "text-center w-[60px]", 
       render: (row: StudentData) => row.profile.semester 
     },

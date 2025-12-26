@@ -50,7 +50,7 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
       
       {/* Baris 1: NIM & Semester */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <div className="grid gap-2 col-span-3">
           <Label htmlFor="nim">NIM</Label>
           <Input
@@ -62,8 +62,8 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
             required
           />
         </div>
-        <div className="grid gap-2 col-span-1">
-          <Label htmlFor="semester">Smt</Label>
+        <div className="grid gap-2 col-span-2">
+          <Label htmlFor="semester">Semester</Label>
           <Input
             id="semester"
             type="number"

@@ -146,7 +146,7 @@ export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: Cours
             id="kode" 
             value={formData.kode} 
             onChange={(e) => handleInputChange("kode", e.target.value)} 
-            disabled={isEditing} 
+            // --- PERUBAHAN: disabled={isEditing} DIHAPUS agar bisa diedit ---
             placeholder="Contoh: TKK-01" 
             className={getErrorClass(errors.kode)}
           />

@@ -23,22 +23,11 @@ import { toast } from "sonner";
 
 import { CourseForm, type CourseFormValues } from "@/components/features/matakuliah/CourseForm";
 
-// --- PERUBAHAN: Import data langsung dari JSON, bukan dari lib/data.ts ---
-import coursesDB from "@/lib/courses.json";
-import { type CourseData as TCourseData, type CourseCategory } from "@/lib/data";
-
-interface CourseState extends TCourseData {
-  kode: string;
-}
-
-// --- PERUBAHAN: Casting data dari JSON ---
-const DATA_FROM_DB: CourseState[] = Object.entries(coursesDB).map(([kode, data]) => ({
-  kode,
-  ...(data as TCourseData) // Pastikan TypeScript mengenali strukturnya
-}));
+// Import list yang baru (Array)
+import { coursesList, type CourseData, type CourseCategory } from "@/lib/data";
 
 export default function MataKuliahPage() {
-  const [courses, setCourses] = useState<CourseState[]>(DATA_FROM_DB);
+  const [courses, setCourses] = useState<CourseData[]>(coursesList);
   const [searchQuery, setSearchQuery] = useState("");
   
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | CourseCategory>("ALL");
@@ -49,8 +38,12 @@ export default function MataKuliahPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // State Edit & Delete menggunakan ID (Number/String)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteCode, setDeleteCode] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  
   const [formData, setFormData] = useState<CourseFormValues | undefined>(undefined);
 
   // --- LOGIC FILTER ---
@@ -70,12 +63,14 @@ export default function MataKuliahPage() {
 
   // --- HANDLERS ---
   const handleOpenAdd = () => {
-    setFormData(undefined); // Reset data
+    setFormData(undefined);
+    setEditId(null);
     setIsEditing(false);
     setIsDialogOpen(true);
   };
 
-  const handleOpenEdit = (course: CourseState) => {
+  const handleOpenEdit = (course: CourseData) => {
+    setEditId(course.id);
     setFormData({
       kode: course.kode,
       matkul: course.matkul,
@@ -87,49 +82,85 @@ export default function MataKuliahPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (kode: string) => {
-    setDeleteCode(kode);
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
     setIsDeleteOpen(true);
   };
 
   const confirmDelete = () => {
-    if (deleteCode) {
-      setCourses((prev) => prev.filter((item) => item.kode !== deleteCode));
+    if (deleteId) {
+      setCourses((prev) => prev.filter((item) => item.id !== deleteId));
       if (currentData.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       }
-      toast.success("Berhasil Dihapus", { description: `Mata kuliah ${deleteCode} telah dihapus.` });
+      toast.success("Berhasil Dihapus", { description: "Data mata kuliah telah dihapus." });
     }
+    setIsDeleteOpen(false);
   };
 
   const handleFormSubmit = (values: CourseFormValues) => {
-    if (values.sks === "" || values.smt_default === "" || values.kategori === "") {
+    // Validasi Kelengkapan
+    if (!values.kode || !values.matkul || values.sks === "" || values.smt_default === "" || values.kategori === "") {
       toast.error("Gagal Menyimpan", { description: "Mohon lengkapi semua data mata kuliah." });
       return;
     }
-    const finalData: CourseState = {
-      kode: values.kode,
-      matkul: values.matkul,
-      sks: Number(values.sks),
-      smt_default: Number(values.smt_default),
-      kategori: values.kategori as CourseCategory,
-    };
-    
-    if (isEditing) {
-      setCourses((prev) => prev.map((item) => (item.kode === finalData.kode ? finalData : item)));
-      toast.success("Data Diperbarui", { description: `Mata kuliah ${finalData.matkul} berhasil diupdate.` });
-    } else {
-      if (courses.some((c) => c.kode === finalData.kode)) {
-        toast.error("Gagal Menambahkan", { description: `Kode MK ${finalData.kode} sudah terdaftar!` });
+
+    if (isEditing && editId) {
+      // --- LOGIC UPDATE ---
+      
+      // Cek Duplikasi Kode MK (Kecuali punya sendiri)
+      const isDuplicate = courses.some(
+        (c) => c.kode === values.kode && c.id !== editId
+      );
+      if (isDuplicate) {
+        toast.error("Gagal Update", { description: `Kode MK ${values.kode} sudah digunakan!` });
         return;
       }
-      setCourses((prev) => [...prev, finalData]);
-      toast.success("Berhasil Ditambahkan", { description: `Mata kuliah baru ${finalData.matkul} telah disimpan.` });
+
+      setCourses((prev) => prev.map((item) => {
+        if (item.id === editId) {
+          return {
+            ...item,
+            kode: values.kode,
+            matkul: values.matkul,
+            sks: Number(values.sks),
+            smt_default: Number(values.smt_default),
+            kategori: values.kategori as CourseCategory,
+          };
+        }
+        return item;
+      }));
+      toast.success("Data Diperbarui", { description: `Mata kuliah ${values.matkul} berhasil diupdate.` });
+
+    } else {
+      // --- LOGIC CREATE ---
+
+      // Cek Duplikasi Kode MK
+      if (courses.some((c) => c.kode === values.kode)) {
+        toast.error("Gagal Menambahkan", { description: `Kode MK ${values.kode} sudah terdaftar!` });
+        return;
+      }
+
+      // Generate Auto-Increment ID
+      const maxId = courses.reduce((max, item) => Math.max(max, item.id), 0);
+      const newId = maxId + 1;
+
+      const newCourse: CourseData = {
+        id: newId,
+        kode: values.kode,
+        matkul: values.matkul,
+        sks: Number(values.sks),
+        smt_default: Number(values.smt_default),
+        kategori: values.kategori as CourseCategory,
+      };
+
+      setCourses((prev) => [...prev, newCourse]);
+      toast.success("Berhasil Ditambahkan", { description: `Mata kuliah baru ${values.matkul} telah disimpan.` });
     }
     setIsDialogOpen(false);
   };
 
-  const columns: Column<CourseState>[] = [
+  const columns: Column<CourseData>[] = [
     { header: "#", className: "w-[50px] text-center", render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span> },
     { header: "Kode MK", accessorKey: "kode", className: "font-medium" },
     { 
@@ -151,7 +182,7 @@ export default function MataKuliahPage() {
       render: (row) => (
         <div className="flex items-center justify-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" onClick={() => handleOpenEdit(row)}><Pencil className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(row.kode)}><Trash2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(row.id)}><Trash2 className="h-4 w-4" /></Button>
         </div>
       )
     }
@@ -207,7 +238,7 @@ export default function MataKuliahPage() {
         maxWidth="sm:max-w-[600px]"
       >
         <CourseForm
-            key={isEditing ? `edit-${formData?.kode}` : "create-new"} 
+            key={isEditing && editId ? `edit-${editId}` : "create-new"} 
             initialData={formData}
             isEditing={isEditing}
             onSubmit={handleFormSubmit}
@@ -220,7 +251,7 @@ export default function MataKuliahPage() {
         onClose={setIsDeleteOpen}
         onConfirm={confirmDelete}
         title="Hapus Mata Kuliah?"
-        description={`Apakah Anda yakin ingin menghapus mata kuliah ${deleteCode}?`}
+        description={`Apakah Anda yakin ingin menghapus data ini?`}
         confirmLabel="Hapus Permanen"
         variant="destructive"
       />

@@ -1,6 +1,6 @@
 import studentsDB from "./students.json";
 import gradesDB from "./grades.json";
-import coursesDB from "./courses.json"; // Pastikan file ini sudah Anda buat sebelumnya
+import coursesDB from "./courses.json";
 
 // =========================================
 // 1. TYPE DEFINITIONS
@@ -8,7 +8,10 @@ import coursesDB from "./courses.json"; // Pastikan file ini sudah Anda buat seb
 
 export type CourseCategory = "Reguler" | "MBKM";
 
+// Data Mata Kuliah sekarang punya ID
 export interface CourseData {
+  id: number;      // New: ID System
+  kode: string;    // Data yang bisa diedit
   matkul: string;
   sks: number;
   smt_default: number;
@@ -21,10 +24,9 @@ export interface RawGrade {
   smt?: number;
 }
 
-// Interface untuk data mentah di students.json
 export interface RawStudentProfile {
-  id: number;      // ID Unik (Auto Increment)
-  nim: string;     // Kunci Relasi ke Grades
+  id: number;      
+  nim: string;     
   nama: string;
   alamat: string;
   prodi: string;
@@ -32,9 +34,7 @@ export interface RawStudentProfile {
   semester: number;
 }
 
-export interface StudentProfile extends RawStudentProfile {
-  // Extend jika perlu properti tambahan di masa depan
-}
+export interface StudentProfile extends RawStudentProfile {}
 
 export interface TranscriptItem {
   no: number;
@@ -49,7 +49,7 @@ export interface TranscriptItem {
 }
 
 export interface StudentData {
-  id: string; // ID dikonversi ke string untuk konsistensi URL/State
+  id: string; 
   profile: StudentProfile;
   transcript: TranscriptItem[];
 }
@@ -58,7 +58,12 @@ export interface StudentData {
 // 2. CONSTANTS & MAPPINGS
 // =========================================
 
-const COURSES_MASTER: Record<string, CourseData> = coursesDB as Record<string, CourseData>;
+// --- PENTING: Konversi Array Courses ke Object Lookup ---
+// Agar kita bisa mencari detail mata kuliah berdasarkan "kode" dengan cepat (O(1))
+const COURSES_LOOKUP = (coursesDB as CourseData[]).reduce((acc, course) => {
+  acc[course.kode] = course;
+  return acc;
+}, {} as Record<string, CourseData>);
 
 const GRADE_POINTS: Record<string, number> = {
   "A": 4, "B": 3, "C": 2, "D": 1, "E": 0
@@ -81,7 +86,6 @@ function getAm(hm: string): number {
 }
 
 function createStudentData(rawStudent: RawStudentProfile): StudentData {
-  // Normalisasi Prodi
   const fullProdi = PRODI_FULL_NAMES[rawStudent.prodi] || rawStudent.prodi;
 
   const profile: StudentProfile = {
@@ -89,12 +93,12 @@ function createStudentData(rawStudent: RawStudentProfile): StudentData {
     prodi: fullProdi
   };
 
-  // AMBIL NILAI BERDASARKAN NIM (Relasi: ID -> NIM -> Grades)
   const allGrades = gradesDB as Record<string, RawGrade[]>;
   const rawGrades = allGrades[rawStudent.nim] || [];
 
   const transcript: TranscriptItem[] = rawGrades.map((g, index) => {
-    const course = COURSES_MASTER[g.kode];
+    // Lookup ke Object yang sudah kita buat
+    const course = COURSES_LOOKUP[g.kode];
 
     if (!course) {
       return {
@@ -118,7 +122,7 @@ function createStudentData(rawStudent: RawStudentProfile): StudentData {
   });
 
   return { 
-    id: rawStudent.id.toString(), // Convert ID number ke string
+    id: rawStudent.id.toString(),
     profile, 
     transcript 
   };
@@ -135,5 +139,7 @@ export function getStudentById(id: string | number): StudentData | null {
   return createStudentData(rawStudent);
 }
 
-// Export default list mahasiswa
 export const students: StudentData[] = studentsDB.map((s) => createStudentData(s));
+
+// Export raw courses array untuk halaman Mata Kuliah
+export const coursesList: CourseData[] = coursesDB as CourseData[];

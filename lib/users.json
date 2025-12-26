@@ -2,7 +2,7 @@
   {
     "id": 1,
     "username": "41226142",
-    "password": "password123",
+    "password": "41226142",
     "role": "mahasiswa",
     "name": "Azharangga Kusuma",
     "studentId": 1
@@ -10,7 +10,7 @@
   {
     "id": 2,
     "username": "41226155",
-    "password": "password123",
+    "password": "41226155",
     "role": "mahasiswa",
     "name": "John Doe",
     "studentId": 2

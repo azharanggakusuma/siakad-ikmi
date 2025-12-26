@@ -15,17 +15,17 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
 
   const gradient = `conic-gradient(
     var(--color-chart-2) 0% ${stopA}%, 
-    var(--color-chart-1) ${stopA}% ${stopB}%, 
-    var(--color-chart-4) ${stopB}% ${stopC}%, 
-    var(--color-chart-5) ${stopC}% ${stopD}%,
+    var(--color-chart-3) ${stopA}% ${stopB}%, 
+    var(--color-chart-5) ${stopB}% ${stopC}%, 
+    var(--color-chart-1) ${stopC}% ${stopD}%,
     var(--color-muted) ${stopD}% 100%
   )`;
 
   const legend = [
     { label: "A (Sangat Baik)", colorClass: "bg-chart-2", val: `${Math.round(pA)}%` },
-    { label: "B (Baik)", colorClass: "bg-chart-1", val: `${Math.round(pB)}%` },
-    { label: "C (Cukup)", colorClass: "bg-chart-4", val: `${Math.round(pC)}%` },
-    { label: "D/E (Kurang)", colorClass: "bg-chart-5", val: `${Math.round(100 - stopC)}%` },
+    { label: "B (Baik)", colorClass: "bg-chart-3", val: `${Math.round(pB)}%` },
+    { label: "C (Cukup)", colorClass: "bg-chart-5", val: `${Math.round(pC)}%` },
+    { label: "D/E (Kurang)", colorClass: "bg-chart-1", val: `${Math.round(100 - stopC)}%` },
   ];
 
   return (
@@ -42,6 +42,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
           <div className="text-sm text-muted-foreground">Belum ada data nilai.</div>
         ) : (
           <div className="flex flex-col items-center w-full">
+            {/* Donut Circle */}
             <div className="relative w-52 h-52 rounded-full shadow-lg border-4 border-card" style={{ background: gradient }}>
               <div className="absolute inset-4 bg-card rounded-full flex items-center justify-center flex-col shadow-inner">
                 <span className="text-4xl font-extrabold text-card-foreground tracking-tight">{total}</span>
@@ -49,6 +50,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
               </div>
             </div>
 
+            {/* Legend */}
             <div className="mt-8 grid grid-cols-2 gap-x-12 gap-y-4 w-full px-4">
               {legend.map((l, i) => (
                 <div key={i} className="flex items-center justify-between text-sm group cursor-default">

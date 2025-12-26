@@ -16,6 +16,8 @@ import {
   LogOut, 
   X 
 } from "lucide-react";
+// Import logout action
+import { logout } from "@/app/actions/auth";
 
 type SidebarProps = {
   open: boolean;
@@ -29,9 +31,9 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
   const isActive = (path: string) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
-  const handleLogout = () => {
-    // Logika logout bisa disesuaikan, misal clear cookie/session
-    window.location.href = "/login";
+  // Update handleLogout menjadi async dan panggil server action
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -115,7 +117,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         <div className="p-3 bg-white border-t border-slate-100 shrink-0 relative">
            <Tooltip content="Logout" enabled={isCollapsed} position="right">
               <button
-                onClick={handleLogout}
+                onClick={handleLogout} // Memanggil fungsi async handleLogout
                 className={`
                   w-full flex items-center rounded-lg text-sm font-semibold transition-colors overflow-hidden group
                   text-rose-600 hover:bg-rose-50

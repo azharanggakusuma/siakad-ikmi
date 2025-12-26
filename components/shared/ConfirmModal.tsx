@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react"; // Opsional: Tambah icon peringatan
+import { AlertTriangle } from "lucide-react"; 
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ interface ConfirmModalProps {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: "default" | "destructive"; // Agar tombol bisa merah untuk delete
+  variant?: "default" | "destructive"; 
 }
 
 export function ConfirmModal({

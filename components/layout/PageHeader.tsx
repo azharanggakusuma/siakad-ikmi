@@ -7,7 +7,6 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, breadcrumb }: PageHeaderProps) {
   return (
-    // HAPUS "mb-6" dari sini agar jarak diatur oleh parent (gap-8)
     <div className="flex flex-col min-w-0"> 
       <h1 className="text-2xl font-bold tracking-tight text-slate-800 truncate">
         {title}

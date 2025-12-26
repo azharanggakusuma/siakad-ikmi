@@ -1,22 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import PageHeader from "@/components/PageHeader";
+import React, { useState, useMemo } from "react";
+import PageHeader from "@/components/layout/PageHeader";
+import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 
-// --- IMPORT KOMPONEN UI ---
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -24,64 +15,42 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-// --- IMPORT CUSTOM COMPONENTS ---
-import { DataTable, type Column } from "@/components/DataTable";
-import { FormModal } from "@/components/FormModal";
-import { ConfirmModal } from "@/components/ConfirmModal";
-import Tooltip from "@/components/Tooltip"; 
-import { toast } from "sonner"; // <--- Import Toast
+// IMPORT YANG BENAR (Pastikan file data-table.tsx sudah dibuat)
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { FormModal } from "@/components/shared/FormModal";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import Tooltip from "@/components/shared/Tooltip";
+import { StudentForm, type StudentFormValues } from "@/components/features/mahasiswa/StudentForm";
 
-// --- IMPORT DATA ---
 import { students as initialData, type StudentData } from "@/lib/data";
 
-// --- TYPES ---
-interface StudentFormState {
-  nim: string;
-  nama: string;
-  prodi: string;
-  jenjang: string;
-  semester: number | string;
-  alamat: string;
-}
-
 export default function MahasiswaPage() {
-  // --- STATE DATA ---
   const [dataList, setDataList] = useState<StudentData[]>(initialData);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // FILTER STATE
   const [prodiFilter, setProdiFilter] = useState<string>("ALL");
   const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
-
-  // PAGINATION STATE
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // MODAL STATE (FORM)
+  // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Initial State Form
-  const [formData, setFormData] = useState<StudentFormState>({
-    nim: "", nama: "", prodi: "", jenjang: "", semester: "", alamat: ""
-  });
-
-  // MODAL STATE (DELETE)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
 
   // --- LOGIC FILTER ---
-  const filteredData = dataList.filter((student) => {
-    const query = searchQuery.toLowerCase();
-    const matchSearch = 
-      student.profile.nama.toLowerCase().includes(query) ||
-      student.profile.nim.toLowerCase().includes(query);
-    
-    const matchProdi = prodiFilter === "ALL" || student.profile.prodi === prodiFilter;
-    const matchSemester = semesterFilter === "ALL" || student.profile.semester.toString() === semesterFilter;
-    
-    return matchSearch && matchProdi && matchSemester;
-  });
+  const filteredData = useMemo(() => {
+    return dataList.filter((student) => {
+      const query = searchQuery.toLowerCase();
+      const matchSearch =
+        student.profile.nama.toLowerCase().includes(query) ||
+        student.profile.nim.toLowerCase().includes(query);
+      const matchProdi = prodiFilter === "ALL" || student.profile.prodi === prodiFilter;
+      const matchSemester = semesterFilter === "ALL" || student.profile.semester.toString() === semesterFilter;
+      return matchSearch && matchProdi && matchSemester;
+    });
+  }, [dataList, searchQuery, prodiFilter, semesterFilter]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -89,13 +58,8 @@ export default function MahasiswaPage() {
   const currentData = filteredData.slice(startIndex, endIndex);
 
   // --- HANDLERS ---
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); 
-  };
-
   const handleOpenAdd = () => {
-    setFormData({ nim: "", nama: "", prodi: "", jenjang: "", semester: "", alamat: "" });
+    setFormData(undefined);
     setIsEditing(false);
     setIsFormOpen(true);
   };
@@ -107,108 +71,91 @@ export default function MahasiswaPage() {
       prodi: student.profile.prodi,
       jenjang: student.profile.jenjang,
       semester: student.profile.semester,
-      alamat: student.profile.alamat
+      alamat: student.profile.alamat,
     });
     setIsEditing(true);
     setIsFormOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.nim || !formData.nama || !formData.prodi || !formData.jenjang || formData.semester === "") {
-      // GANTI ALERT DENGAN TOAST ERROR
-      toast.error("Gagal menyimpan data", {
-        description: "Mohon lengkapi data wajib (termasuk Jenjang)."
-      });
+  const handleFormSubmit = (values: StudentFormValues) => {
+    if (!values.nim || !values.nama || !values.prodi || !values.jenjang || values.semester === "") {
+      toast.error("Gagal menyimpan", { description: "Data wajib belum lengkap." });
       return;
     }
+
     const newProfile = {
-      nim: formData.nim,
-      nama: formData.nama,
-      prodi: formData.prodi,
-      jenjang: formData.jenjang,
-      semester: Number(formData.semester),
-      alamat: formData.alamat,
+      ...values,
+      semester: Number(values.semester),
     };
 
     if (isEditing) {
-      setDataList((prev) => prev.map((item) => item.id === formData.nim ? { ...item, profile: newProfile } : item));
-      // TOAST SUKSES EDIT
-      toast.success("Data Diperbarui", {
-        description: `Data mahasiswa ${formData.nama} berhasil diupdate.`
-      });
+      setDataList((prev) => prev.map((item) => item.id === values.nim ? { ...item, profile: newProfile } : item));
+      toast.success("Berhasil Update", { description: `Data ${values.nama} diperbarui.` });
     } else {
-      if (dataList.some((s) => s.id === formData.nim)) { 
-        // TOAST ERROR DUPLIKAT
-        toast.error("Gagal menambahkan", {
-          description: `NIM ${formData.nim} sudah terdaftar dalam sistem.`
-        });
-        return; 
+      if (dataList.some((s) => s.id === values.nim)) {
+        toast.error("Gagal", { description: "NIM sudah terdaftar." });
+        return;
       }
-      setDataList((prev) => [{ id: formData.nim, profile: newProfile, transcript: [] }, ...prev]);
-      // TOAST SUKSES TAMBAH
-      toast.success("Berhasil Ditambahkan", {
-        description: `Mahasiswa baru atas nama ${formData.nama} telah disimpan.`
-      });
+      setDataList((prev) => [{ id: values.nim, profile: newProfile, transcript: [] }, ...prev]);
+      toast.success("Berhasil", { description: `Mahasiswa ${values.nama} ditambahkan.` });
     }
     setIsFormOpen(false);
   };
 
-  const openDeleteModal = (id: string) => {
-    setDeleteId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const confirmDelete = () => {
+  const handleDelete = () => {
     if (deleteId) {
       setDataList((prev) => prev.filter((item) => item.id !== deleteId));
-      if (currentData.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
-      // TOAST SUKSES DELETE
-      toast.success("Data Dihapus", {
-        description: "Data mahasiswa berhasil dihapus permanen."
-      });
+      if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
+      toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
     }
   };
 
   // --- COLUMNS ---
+  // Penambahan tipe eksplisit (row: StudentData) untuk mengatasi error "implicit any"
   const columns: Column<StudentData>[] = [
     {
       header: "#",
       className: "w-[50px] text-center",
-      render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
+      render: (_: StudentData, index: number) => (
+        <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
+      )
     },
     {
       header: "NIM",
       accessorKey: "id",
       className: "w-[120px]",
-      render: (row) => (
-        <span className="font-mono font-medium text-gray-700">
-          {row.profile.nim}
-        </span>
-      )
-    },
-    { header: "Nama Lengkap", render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span> },
-    { header: "Program Studi", render: (row) => <span className="text-gray-600">{row.profile.prodi}</span> },
-    {
-      header: "Jenjang",
-      className: "text-center w-[80px]",
-      render: (row) => (
-         <Badge variant="outline" className="font-mono font-normal bg-slate-50 text-slate-700">
-            {row.profile.jenjang}
-         </Badge>
+      render: (row: StudentData) => (
+        <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
       )
     },
     { 
-      header: "Semester", 
-      className: "text-center w-[100px] text-gray-700", 
-      render: (row) => row.profile.semester 
+      header: "Nama Lengkap", 
+      render: (row: StudentData) => (
+        <span className="font-semibold text-gray-800">{row.profile.nama}</span>
+      ) 
+    },
+    { 
+      header: "Program Studi", 
+      render: (row: StudentData) => (
+        <span className="text-gray-600">{row.profile.prodi}</span>
+      ) 
+    },
+    {
+      header: "Jenjang",
+      className: "text-center w-[80px]",
+      render: (row: StudentData) => (
+        <Badge variant="outline" className="bg-slate-50 text-slate-700">{row.profile.jenjang}</Badge>
+      )
+    },
+    { 
+      header: "Smt", 
+      className: "text-center w-[60px]", 
+      render: (row: StudentData) => row.profile.semester 
     },
     {
       header: "Alamat",
       className: "max-w-[250px]", 
-      render: (row) => (
+      render: (row: StudentData) => (
         <Tooltip content={row.profile.alamat} position="top">
           <div className="truncate text-gray-600 cursor-default">
             {row.profile.alamat}
@@ -219,22 +166,12 @@ export default function MahasiswaPage() {
     {
       header: "Aksi",
       className: "text-center w-[100px]",
-      render: (row) => (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
-            onClick={() => handleOpenEdit(row)}
-          >
+      render: (row: StudentData) => (
+        <div className="flex justify-center gap-2">
+          <Button variant="ghost" size="icon" className="text-yellow-600 hover:bg-yellow-50 h-8 w-8" onClick={() => handleOpenEdit(row)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => openDeleteModal(row.id)}
-          >
+          <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 h-8 w-8" onClick={() => { setDeleteId(row.id); setIsDeleteOpen(true); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -242,7 +179,6 @@ export default function MahasiswaPage() {
     }
   ];
 
-  // --- FILTER CONTENT ---
   const filterContent = (
     <>
       <DropdownMenuLabel>Program Studi</DropdownMenuLabel>
@@ -269,11 +205,12 @@ export default function MahasiswaPage() {
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
         <CardContent className="p-6">
-          <DataTable 
+          <DataTable
             data={currentData}
             columns={columns}
             searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
+            // Tambahkan tipe eksplisit React.ChangeEvent untuk mengatasi error 'implicit any' pada 'e'
+            onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
             addLabel="Tambah Data"
@@ -290,103 +227,30 @@ export default function MahasiswaPage() {
         </CardContent>
       </Card>
 
-      {/* MODAL FORM */}
       <FormModal
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
         description="Pastikan data mahasiswa yang dimasukkan sudah benar."
-        onSubmit={handleSubmit}
         maxWidth="sm:max-w-[600px]"
       >
-        <div className="grid gap-5 py-4">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="grid gap-2 col-span-3">
-              <Label htmlFor="nim">NIM</Label>
-              <Input 
-                id="nim" 
-                value={formData.nim} 
-                onChange={(e) => setFormData({ ...formData, nim: e.target.value })} 
-                disabled={isEditing} 
-                placeholder="Contoh: 4121001" 
-                required 
-              />
-            </div>
-            <div className="grid gap-2 col-span-1">
-              <Label htmlFor="semester">Smt</Label>
-              <Input 
-                id="semester" 
-                type="number" 
-                min={1} 
-                max={14} 
-                value={formData.semester} 
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })} 
-                placeholder="1" 
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input 
-              id="nama" 
-              value={formData.nama} 
-              onChange={(e) => setFormData({ ...formData, nama: e.target.value })} 
-              placeholder="Contoh: Budi Santoso" 
-              required 
-            />
-          </div>
-
-          <div className="grid grid-cols-4 gap-4">
-             <div className="grid gap-2 col-span-3">
-                <Label htmlFor="prodi">Program Studi</Label>
-                <Select value={formData.prodi} onValueChange={(val) => setFormData({ ...formData, prodi: val })}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Program Studi" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
-                    <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
-                    <SelectItem value="Manajemen Informatika">Manajemen Informatika</SelectItem>
-                    <SelectItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</SelectItem>
-                    <SelectItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
-             <div className="grid gap-2 col-span-1">
-                <Label htmlFor="jenjang">Jenjang</Label>
-                <Select value={formData.jenjang} onValueChange={(val) => setFormData({ ...formData, jenjang: val })}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Pilih" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="D3">D3</SelectItem>
-                    <SelectItem value="S1">S1</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="alamat">Alamat Domisili</Label>
-            <Input 
-              id="alamat" 
-              value={formData.alamat} 
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} 
-              placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon" 
-            />
-          </div>
-        </div>
+        <StudentForm 
+            initialData={formData as StudentFormValues}
+            isEditing={isEditing}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsFormOpen(false)}
+        />
       </FormModal>
 
-      {/* MODAL KONFIRMASI DELETE */}
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={isDeleteOpen}
         onClose={setIsDeleteOpen}
-        onConfirm={confirmDelete}
-        title="Hapus Data Mahasiswa?"
-        description={`Apakah Anda yakin ingin menghapus data mahasiswa dengan NIM ${deleteId}? Tindakan ini tidak dapat dibatalkan.`}
+        onConfirm={handleDelete}
+        title="Hapus Data?"
+        description={`Yakin hapus NIM ${deleteId}?`}
         confirmLabel="Hapus Permanen"
         variant="destructive"
       />
-
     </div>
   );
 }

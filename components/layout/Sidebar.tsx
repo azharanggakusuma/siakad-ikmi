@@ -4,7 +4,18 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Tooltip from "./Tooltip";
+import Tooltip from "@/components/shared/Tooltip";
+import { 
+  LayoutDashboard, 
+  Users, 
+  BookOpen, 
+  FileText, 
+  FileSpreadsheet, 
+  Mail, 
+  Settings, 
+  LogOut, 
+  X 
+} from "lucide-react";
 
 type SidebarProps = {
   open: boolean;
@@ -19,6 +30,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   const handleLogout = () => {
+    // Logika logout bisa disesuaikan, misal clear cookie/session
     window.location.href = "/login";
   };
 
@@ -75,7 +87,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             onClick={() => setOpen(false)}
             className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 transition"
           >
-            <CloseIcon />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -84,17 +96,17 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           
           <div className="space-y-1">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
-            <NavItem href="/" label="Dashboard" icon={<DashboardIcon />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<UserIcon />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/matakuliah" label="Mata Kuliah" icon={<BookIcon />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/khs" label="Kartu Hasil Studi" icon={<KhsIcon />} active={isActive("/khs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/transkrip" label="Transkrip Nilai" icon={<DocIcon />} active={isActive("/transkrip")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<EnvelopeIcon />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/" label="Dashboard" icon={<LayoutDashboard size={20} />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/matakuliah" label="Mata Kuliah" icon={<BookOpen size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/khs" label="Kartu Hasil Studi" icon={<FileSpreadsheet size={20} />} active={isActive("/khs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/transkrip" label="Transkrip Nilai" icon={<FileText size={20} />} active={isActive("/transkrip")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<Mail size={20} />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
           </div>
 
           <div className="space-y-1">
             <SectionLabel label="Lainnya" isCollapsed={isCollapsed} />
-            <NavItem href="/pengaturan" label="Pengaturan" icon={<SettingsIcon />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            <NavItem href="/pengaturan" label="Pengaturan" icon={<Settings size={20} />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
           </div>
 
         </nav>
@@ -111,7 +123,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
                   ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
                 `}
               >
-                <div className="shrink-0"><LogoutIcon /></div>
+                <div className="shrink-0"><LogOut size={20} /></div>
                 
                 <span className={`transition-all duration-300 whitespace-nowrap 
                   w-auto opacity-100
@@ -127,13 +139,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
   );
 }
 
-/* ================= COMPONENT: NAV ITEM ================= */
-
-function NavItem({
-  href, icon, label, active, onClick, isCollapsed,
-}: {
-  href: string; icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void; isCollapsed?: boolean;
-}) {
+function NavItem({ href, icon, label, active, onClick, isCollapsed }: any) {
   return (
     <Tooltip content={label} enabled={isCollapsed} position="right">
       <Link href={href} onClick={onClick} className="block group relative">
@@ -180,14 +186,3 @@ function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed?: boo
     </p>
   );
 }
-
-/* ================= ICONS ================= */
-const CloseIcon = () => (<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
-const DashboardIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>);
-const DocIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>);
-const KhsIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>);
-const UserIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>);
-const BookIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>);
-const EnvelopeIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>);
-const SettingsIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>);
-const LogoutIcon = () => (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>);

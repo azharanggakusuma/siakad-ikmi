@@ -1,32 +1,20 @@
-// components/GradeTable.tsx
 import React from "react";
 import { TranscriptItem } from "@/lib/data";
 
 interface GradeTableProps {
   data: TranscriptItem[];
-  ipk?: string; // Optional, bisa dihitung otomatis atau di-pass (utk KHS)
-  ips?: string; // Optional, hanya untuk KHS
-  mode?: "transkrip" | "khs"; // Default: "transkrip"
+  ipk?: string;
+  ips?: string;
+  mode?: "transkrip" | "khs";
 }
 
-export default function GradeTable({ 
-  data, 
-  ipk, 
-  ips, 
-  mode = "transkrip" 
-}: GradeTableProps) {
-  
-  // 1. Hitung Total SKS & NM (Dari data yang ditampilkan)
+export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: GradeTableProps) {
   const totalSKS = data.reduce((acc, row) => acc + row.sks, 0);
   const totalNM = data.reduce((acc, row) => acc + row.nm, 0);
 
-  // 2. Hitung IPK jika tidak diberikan sebagai props
-  // (Biasanya di Transkrip, IPK dihitung dari semua data ini)
   const displayedIPK = ipk 
     ? ipk 
-    : (totalSKS > 0 
-        ? (totalNM / totalSKS).toFixed(2).replace('.', ',') 
-        : "0,00");
+    : (totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace('.', ',') : "0,00");
 
   return (
     <table className="w-full text-[9px] border-collapse border border-black mb-2 font-['Cambria']">
@@ -35,7 +23,6 @@ export default function GradeTable({
           <th className="border border-black w-6">No</th>
           <th className="border border-black w-34">Kode MK</th>
           <th className="border border-black text-left pl-2">Mata Kuliah</th>
-          {/* Kolom SMT disembunyikan di mode KHS agar lebih bersih, tampil di mode Transkrip */}
           {mode === "transkrip" && <th className="border border-black w-10">SMT</th>}
           <th className="border border-black w-10">SKS</th>
           <th className="border border-black w-10">HM</th>
@@ -43,16 +30,12 @@ export default function GradeTable({
           <th className="border border-black w-10">NM</th>
         </tr>
       </thead>
-
       <tbody className="font-normal">
         {data.map((row, index) => (
           <tr key={index} className="text-center leading-none h-[13px]">
-            {/* Nomor urut: di KHS reset per tampilan, di Transkrip biasanya pakai row.no atau index+1 */}
             <td className="border border-black">{mode === 'khs' ? index + 1 : row.no}</td>
             <td className="border border-black">{row.kode}</td>
-            <td className="border border-black text-left pl-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-              {row.matkul}
-            </td>
+            <td className="border border-black text-left pl-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">{row.matkul}</td>
             {mode === "transkrip" && <td className="border border-black">{row.smt}</td>}
             <td className="border border-black">{row.sks}</td>
             <td className="border border-black">{row.hm}</td>
@@ -61,9 +44,8 @@ export default function GradeTable({
           </tr>
         ))}
 
-        {/* --- FOOTER SECTION --- */}
+        {/* FOOTER SECTION */}
         {mode === "khs" ? (
-          // === FOOTER MODE KHS ===
           <>
              <tr className="font-bold bg-white h-4 border-t border-black">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah</td>
@@ -82,7 +64,6 @@ export default function GradeTable({
             </tr>
           </>
         ) : (
-          // === FOOTER MODE TRANSKRIP ===
           <>
             <tr className="font-bold bg-white h-4 border-t border-black">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah Beban SKS</td>

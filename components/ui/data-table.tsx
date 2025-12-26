@@ -11,54 +11,35 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight,
-  ListFilter 
-} from "lucide-react";
+import { Search, Plus, Filter, ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// --- TIPE DEFINISI KOLOM ---
+// Definisi Tipe Column
 export interface Column<T> {
   header: string;
   className?: string;
-  // Bisa ambil dari key object atau fungsi custom render
   accessorKey?: keyof T;
   render?: (item: T, index: number) => React.ReactNode;
 }
 
-// --- PROPS KOMPONEN TABLE ---
 interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  
-  // Search
   searchQuery: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   searchPlaceholder?: string;
-
-  // Filter (Optional)
-  filterContent?: React.ReactNode; // Isi dropdown filter
+  filterContent?: React.ReactNode;
   isFilterActive?: boolean;
   onResetFilter?: () => void;
-  
-  // Add Action (Optional)
   onAdd?: () => void;
   addLabel?: string;
-
-  // Pagination
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  
-  // Data Info for Footer
   startIndex: number;
   endIndex: number;
   totalItems: number;
@@ -85,10 +66,9 @@ export function DataTable<T>({
   
   return (
     <div className="space-y-4">
-      {/* --- TOOLBAR SECTION --- */}
+      {/* TOOLBAR */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* SEARCH INPUT */}
           <div className="relative flex-1 sm:w-72">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -99,7 +79,6 @@ export function DataTable<T>({
             />
           </div>
 
-          {/* FILTER BUTTON (Jika ada filterContent) */}
           {filterContent && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -123,7 +102,6 @@ export function DataTable<T>({
           )}
         </div>
 
-        {/* ADD BUTTON (Jika ada onAdd) */}
         {onAdd && (
           <Button 
             onClick={onAdd} 
@@ -135,7 +113,7 @@ export function DataTable<T>({
         )}
       </div>
 
-      {/* --- TABLE SECTION --- */}
+      {/* TABLE */}
       <div className="rounded-md border min-h-[300px]">
         <Table>
           <TableHeader>
@@ -153,7 +131,6 @@ export function DataTable<T>({
                 <TableRow key={rowIndex} className="group hover:bg-muted/30 transition-colors">
                   {columns.map((col, colIndex) => (
                     <TableCell key={colIndex} className={col.className}>
-                      {/* Prioritaskan render function, jika tidak ada gunakan accessorKey */}
                       {col.render 
                         ? col.render(row, rowIndex) 
                         : col.accessorKey 
@@ -186,7 +163,7 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      {/* --- PAGINATION FOOTER --- */}
+      {/* PAGINATION */}
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">
           {data.length > 0 ? (

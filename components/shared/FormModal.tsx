@@ -7,19 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface FormModalProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
   title: string;
   description?: string;
-  onSubmit: (e: React.FormEvent) => void;
   children: React.ReactNode;
-  submitLabel?: string;
-  cancelLabel?: string;
   maxWidth?: string; // misal: "sm:max-w-[600px]"
 }
 
@@ -28,10 +23,7 @@ export function FormModal({
   onClose,
   title,
   description,
-  onSubmit,
   children,
-  submitLabel = "Simpan Data",
-  cancelLabel = "Batal",
   maxWidth = "sm:max-w-[500px]",
 }: FormModalProps) {
   return (
@@ -44,28 +36,10 @@ export function FormModal({
           )}
         </DialogHeader>
         
-        <form onSubmit={onSubmit}>
-          {/* AREA FORM INPUT (CHILDREN) */}
-          <div className="grid gap-5 py-4">
-            {children}
-          </div>
+        {/* HAPUS form wrapper & footer bawaan. 
+            Biarkan children (StudentForm/CourseForm) yang render form & buttonnya sendiri. */}
+        {children}
 
-          <DialogFooter className="mt-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onClose(false)}
-            >
-              {cancelLabel}
-            </Button>
-            <Button 
-              type="submit" 
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              {submitLabel}
-            </Button>
-          </DialogFooter>
-        </form>
       </DialogContent>
     </Dialog>
   );

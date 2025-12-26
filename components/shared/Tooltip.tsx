@@ -65,9 +65,7 @@ export default function Tooltip({
         }
       })}
 
-      {/* PERBAIKAN: Tambahkan 'hidden lg:block' 
-         Agar tooltip tidak pernah muncul di mobile 
-      */}
+      {/* Tooltip hanya muncul di Desktop (lg:block) */}
       {show && enabled && typeof document !== "undefined" && createPortal(
         <div 
           className="fixed z-[9999] px-3 py-2 bg-slate-800 text-white text-[11px] font-medium rounded shadow-xl pointer-events-none whitespace-nowrap transition-opacity duration-200 hidden lg:block"

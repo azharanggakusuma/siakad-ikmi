@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Lock, Save } from "lucide-react";
+// UPDATE: Tambahkan import 'Info'
+import { User, Lock, Save, Info } from "lucide-react"; 
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,6 @@ interface ProfileFormProps {
 export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   
-  // State form menggunakan 'username'
   const [formData, setFormData] = useState({
     nama: user.name || "",
     username: user.username || "", 
@@ -37,7 +37,6 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
     setIsSaving(true);
 
     try {
-      // Kirim username LAMA (user.username) dan data BARU ke server
       await updateUserSettings(user.username, {
         nama: formData.nama,
         username: formData.username,
@@ -90,7 +89,6 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                 <Input
                   id="username"
                   value={formData.username}
-                  // Input aktif HANYA untuk Admin
                   disabled={user.role !== "admin"} 
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
@@ -101,20 +99,12 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                       : "bg-slate-50 text-slate-500"
                   }`}
                 />
-                {/* Icon Gembok hanya untuk User Biasa */}
                 {user.role !== "admin" && (
                   <div className="absolute right-3 top-2.5">
                     <Lock size={14} className="text-slate-400" />
                   </div>
                 )}
               </div>
-              
-              {/* UPDATE: Keterangan hanya muncul jika BUKAN admin */}
-              {user.role !== "admin" && (
-                <p className="text-[11px] text-slate-400 italic">
-                  *Username dikelola oleh administrator dan tidak dapat diubah.
-                </p>
-              )}
             </div>
 
             {/* Nama Lengkap */}
@@ -131,22 +121,36 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
               />
             </div>
 
-            {/* Alamat (Hanya untuk mahasiswa) */}
+            {/* Bagian Khusus Mahasiswa */}
             {user?.role === "mahasiswa" && (
-              <div className="space-y-2">
-                <Label htmlFor="alamat" className="text-slate-700">
-                  Alamat Domisili
-                </Label>
-                <Textarea
-                  id="alamat"
-                  rows={3}
-                  className="resize-none"
-                  value={formData.alamat}
-                  onChange={(e) =>
-                    setFormData({ ...formData, alamat: e.target.value })
-                  }
-                />
-              </div>
+              <>
+                {/* Alamat */}
+                <div className="space-y-2">
+                  <Label htmlFor="alamat" className="text-slate-700">
+                    Alamat Domisili
+                  </Label>
+                  <Textarea
+                    id="alamat"
+                    rows={3}
+                    className="resize-none"
+                    value={formData.alamat}
+                    onChange={(e) =>
+                      setFormData({ ...formData, alamat: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* UPDATE: Keterangan / Note khusus Mahasiswa */}
+                <div className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-md text-blue-700 text-xs mt-2">
+                    <Info className="shrink-0 mt-0.5" size={16} />
+                    <div className="space-y-1">
+                        <p className="font-semibold">Informasi Sinkronisasi</p>
+                        <p className="opacity-90 leading-relaxed">
+                            Perubahan pada <strong>Nama Lengkap</strong> dan <strong>Alamat Domisili</strong> akan secara otomatis memperbarui data Akun dan data induk Mahasiswa.
+                        </p>
+                    </div>
+                </div>
+              </>
             )}
           </CardContent>
 

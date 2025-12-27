@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-// UPDATE: Tambahkan import 'Info'
 import { User, Lock, Save, Info } from "lucide-react"; 
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -105,6 +104,12 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                   </div>
                 )}
               </div>
+              {/* Keterangan username untuk mahasiswa */}
+              {user.role === "mahasiswa" && (
+                <p className="text-[11px] text-slate-400 italic">
+                  *Username dikelola oleh administrator dan tidak dapat diubah.
+                </p>
+              )}
             </div>
 
             {/* Nama Lengkap */}
@@ -121,10 +126,9 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
               />
             </div>
 
-            {/* Bagian Khusus Mahasiswa */}
+            {/* Bagian Khusus Mahasiswa (Alamat & Note Sinkronisasi) */}
             {user?.role === "mahasiswa" && (
               <>
-                {/* Alamat */}
                 <div className="space-y-2">
                   <Label htmlFor="alamat" className="text-slate-700">
                     Alamat Domisili
@@ -140,7 +144,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                   />
                 </div>
 
-                {/* UPDATE: Keterangan / Note khusus Mahasiswa */}
+                {/* Note khusus Mahasiswa */}
                 <div className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-md text-blue-700 text-xs mt-2">
                     <Info className="shrink-0 mt-0.5" size={16} />
                     <div className="space-y-1">

@@ -26,14 +26,19 @@ export function LoginForm() {
     try {
       const result = await authenticate(formData);
 
-      if (result.success) {
+      if (result?.success) {
+        // === BAGIAN INI YANG DIUBAH ===
         toast.success("Login Berhasil", {
-          description: `Selamat datang kembali, ${result.user?.name}!`,
+            // Menggunakan nama dari result server action, atau fallback ke "Sobat"
+            description: `Selamat datang kembali, ${result.name}! Semoga harimu menyenangkan.`,
+            duration: 3000,
         });
+        
         router.push("/");
+        router.refresh();
       } else {
         toast.error("Login Gagal", {
-          description: result.error || "Periksa kembali username dan password Anda.",
+          description: result?.error || "Periksa kembali username dan password Anda.",
         });
         setLoading(false);
       }
@@ -48,6 +53,8 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-[460px] animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* ... (SISA KODE UI KE BAWAH TETAP SAMA SEPERTI SEBELUMNYA) ... */}
+      
       {/* Header Mobile */}
       <div className="lg:hidden flex flex-col items-center space-y-4 mb-10">
         <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-white shadow-lg border border-slate-100 p-3">
@@ -142,7 +149,6 @@ export function LoginForm() {
                   )}
                 </button>
               </div>
-              {/* Link Lupa Password Mobile */}
               <div className="flex justify-end lg:hidden mt-1">
                 <a href="#" className="text-xs font-medium text-blue-600">
                   Lupa password?

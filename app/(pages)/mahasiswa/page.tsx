@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react"; 
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +21,13 @@ import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
 import { StudentForm, type StudentFormValues } from "@/components/features/mahasiswa/StudentForm";
 
-import { students as initialData, type StudentData, type StudentProfile } from "@/lib/data";
+import { type StudentData } from "@/lib/data";
+import { getStudents, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
 export default function MahasiswaPage() {
-  const [dataList, setDataList] = useState<StudentData[]>(initialData);
+  const [dataList, setDataList] = useState<StudentData[]>([]);
+  const [isLoading, setIsLoading] = useState(true); 
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [prodiFilter, setProdiFilter] = useState<string>("ALL");
   const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
@@ -34,14 +37,28 @@ export default function MahasiswaPage() {
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // State untuk Delete & Edit
-  // ID di sini adalah ID System (1, 2, dst), BUKAN NIM.
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null); 
-  
   const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
+
+  // === FETCH DATA ===
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const students = await getStudents();
+      setDataList(students);
+    } catch (error) {
+      toast.error("Gagal memuat data", { description: "Cek koneksi internet Anda." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // --- LOGIC FILTER ---
   const filteredData = useMemo(() => {
@@ -56,7 +73,7 @@ export default function MahasiswaPage() {
     });
   }, [dataList, searchQuery, prodiFilter, semesterFilter]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
@@ -70,7 +87,6 @@ export default function MahasiswaPage() {
   };
 
   const handleOpenEdit = (student: StudentData) => {
-    // Kita simpan ID System (1, 2...) untuk referensi update
     setEditId(student.id); 
     setFormData({
       nim: student.profile.nim,
@@ -84,78 +100,36 @@ export default function MahasiswaPage() {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (values: StudentFormValues) => {
-    // 1. Validasi Input Dasar
-    if (!values.nim || !values.nama || !values.prodi || !values.jenjang || values.semester === "") {
-      toast.error("Gagal menyimpan", { description: "Data wajib belum lengkap." });
+  const handleFormSubmit = async (values: StudentFormValues) => {
+    if (!values.nim || !values.nama) {
+      toast.error("Gagal", { description: "Data wajib belum lengkap." });
       return;
     }
-
-    if (isEditing && editId) {
-      // --- LOGIC UPDATE ---
-      
-      // Cek Duplikasi NIM saat Edit (Kecuali punya diri sendiri)
-      const isDuplicate = dataList.some(
-        (s) => s.profile.nim === values.nim && s.id !== editId
-      );
-
-      if (isDuplicate) {
-        toast.error("Gagal Update", { description: `NIM ${values.nim} sudah digunakan mahasiswa lain.` });
-        return;
+    try {
+      if (isEditing && editId) {
+        await updateStudent(editId, values);
+        toast.success("Berhasil Update", { description: `Data ${values.nama} diperbarui.` });
+      } else {
+        await createStudent(values);
+        toast.success("Berhasil", { description: `Mahasiswa ${values.nama} ditambahkan.` });
       }
-
-      setDataList((prev) => prev.map((item) => {
-        if (item.id === editId) {
-          const updatedProfile: StudentProfile = {
-             ...item.profile,
-             ...values,
-             semester: Number(values.semester),
-             id: Number(editId) // ID System tetap sama
-          };
-          // Update data, termasuk NIM jika berubah
-          return { ...item, profile: updatedProfile };
-        }
-        return item;
-      }));
-      toast.success("Berhasil Update", { description: `Data ${values.nama} diperbarui.` });
-
-    } else {
-      // --- LOGIC CREATE ---
-      
-      // Cek Duplikasi NIM Baru
-      if (dataList.some((s) => s.profile.nim === values.nim)) {
-        toast.error("Gagal", { description: "NIM sudah terdaftar." });
-        return;
-      }
-
-      // Generate ID Baru (Auto Increment Manual)
-      const maxId = dataList.reduce((max, item) => Math.max(max, Number(item.id)), 0);
-      const newId = maxId + 1;
-
-      const newProfile: StudentProfile = {
-        id: newId,
-        ...values,
-        semester: Number(values.semester),
-      };
-
-      const newStudent: StudentData = {
-        id: newId.toString(),
-        profile: newProfile,
-        transcript: [] 
-      };
-
-      setDataList((prev) => [newStudent, ...prev]);
-      toast.success("Berhasil", { description: `Mahasiswa ${values.nama} ditambahkan.` });
+      await fetchData(); 
+      setIsFormOpen(false);
+    } catch (error: any) {
+      toast.error("Terjadi Kesalahan", { description: error.message });
     }
-    setIsFormOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      // Hapus berdasarkan ID System, bukan NIM
-      setDataList((prev) => prev.filter((item) => item.id !== deleteId));
-      if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
-      toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
+      try {
+        await deleteStudent(deleteId);
+        toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
+        if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
+        await fetchData();
+      } catch (error: any) {
+        toast.error("Gagal Hapus", { description: error.message });
+      }
     }
     setIsDeleteOpen(false);
   };
@@ -171,7 +145,6 @@ export default function MahasiswaPage() {
     },
     {
       header: "NIM",
-      // accessorKey dihapus agar tidak error, kita pakai render
       className: "w-[120px]",
       render: (row: StudentData) => (
         <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
@@ -257,6 +230,9 @@ export default function MahasiswaPage() {
           <DataTable
             data={currentData}
             columns={columns}
+            // Passing status loading ke DataTable
+            isLoading={isLoading} 
+            
             searchQuery={searchQuery}
             onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             searchPlaceholder="Cari Nama atau NIM..."
@@ -283,7 +259,6 @@ export default function MahasiswaPage() {
         maxWidth="sm:max-w-[600px]"
       >
         <StudentForm 
-            // Menggunakan editId (ID System) sebagai key untuk re-render saat ganti mode
             key={isEditing && editId ? `edit-${editId}` : "add-new"}
             initialData={formData}
             isEditing={isEditing}

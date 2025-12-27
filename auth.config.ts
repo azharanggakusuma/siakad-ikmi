@@ -18,37 +18,31 @@ export const authConfig = {
       if (isPublicAsset) return true;
 
       if (isOnLogin) {
-        // Jika sudah login tapi buka /login, redirect ke dashboard
         if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
         return true;
       }
 
-      // Default: Harus login untuk akses halaman lain
       return isLoggedIn;
     },
     async session({ session, token }) {
       if (token.sub && session.user) {
-        // Mapping data dari token ke session client-side
-        // @ts-expect-error property custom
-        session.user.role = token.role;
-        // @ts-expect-error property custom
-        session.user.username = token.username;
-        // @ts-expect-error property custom
+        // Langsung assign saja tanpa @ts-expect-error
+        // Jika nanti muncul error merah (Property does not exist),
+        // solusinya ada di langkah nomor 2 di bawah.
+        session.user.role = token.role as string;
+        session.user.username = token.username as string;
         session.user.id = token.sub;
       }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
-        // Simpan data user ke token saat login awal
-        // @ts-expect-error property custom
         token.role = user.role;
-        // @ts-expect-error property custom
         token.username = user.username;
         token.sub = user.id;
       }
       return token;
     },
   },
-  providers: [], // Diisi di auth.ts
+  providers: [], 
 } satisfies NextAuthConfig;

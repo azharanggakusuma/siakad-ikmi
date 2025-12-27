@@ -2,7 +2,7 @@
 
 import { signIn, signOut, auth } from "@/auth";
 import { AuthError } from "next-auth";
-import users from "@/lib/users.json"; // Import data user untuk ambil nama
+import users from "@/lib/users.json";
 
 export type UserSession = {
   username: string;
@@ -15,17 +15,15 @@ export async function authenticate(formData: FormData) {
     const data = Object.fromEntries(formData);
     const username = data.username as string;
 
-    // Cari nama user untuk pesan sapaan (hanya visual)
+    // Cari nama user untuk pesan sapaan
     const userFound = users.find((u) => u.username === username);
     const name = userFound?.name || "Pengguna";
 
-    // Lakukan Login
     await signIn("credentials", { 
       ...data, 
       redirect: false 
     });
     
-    // Kembalikan success: true BESERTA nama user
     return { success: true, name: name };
 
   } catch (error) {
@@ -47,13 +45,15 @@ export async function logout() {
 
 export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
+  
   if (!session?.user) return null;
   
+  // Mapping session NextAuth kembali ke struktur UserSession aplikasi Anda
   return {
-    // @ts-expect-error property custom
+    // HAPUS @ts-expect-error DI SINI
     username: session.user.username || "",
     name: session.user.name || "",
-    // @ts-expect-error property custom
+    // HAPUS @ts-expect-error DI SINI
     role: session.user.role || "mahasiswa",
   };
 }

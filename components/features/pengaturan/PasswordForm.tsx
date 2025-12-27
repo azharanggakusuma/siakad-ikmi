@@ -162,7 +162,7 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
                 size={18}
               />
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-rose-900">
+                <p className="text-xs font-semibold text-rose-900">
                   Perhatian
                 </p>
                 <p className="text-xs text-rose-700 leading-relaxed">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -23,28 +23,49 @@ import { toast } from "sonner";
 
 import { CourseForm, type CourseFormValues } from "@/components/features/matakuliah/CourseForm";
 
-// Import list yang baru (Array)
-import { coursesList, type CourseData, type CourseCategory } from "@/lib/data";
+// Import tipe data saja
+import { type CourseData, type CourseCategory } from "@/lib/data";
+// Import Server Actions
+import { getCourses, createCourse, updateCourse, deleteCourse } from "@/app/actions/courses";
 
 export default function MataKuliahPage() {
-  const [courses, setCourses] = useState<CourseData[]>(coursesList);
+  const [courses, setCourses] = useState<CourseData[]>([]); // Data dari DB
+  const [isLoading, setIsLoading] = useState(true); // Status Loading
+
   const [searchQuery, setSearchQuery] = useState("");
-  
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | CourseCategory>("ALL");
   const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Modal States
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  // State Edit & Delete menggunakan ID (Number/String)
+  // State Edit & Delete
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<CourseFormValues | undefined>(undefined);
+
+  // === 1. FETCH DATA DARI SUPABASE ===
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getCourses();
+      setCourses(data);
+    } catch (error) {
+      toast.error("Gagal memuat data", { description: "Cek koneksi internet Anda." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // --- LOGIC FILTER ---
   const filteredCourses = courses.filter((course) => {
@@ -56,7 +77,7 @@ export default function MataKuliahPage() {
     return matchSearch && matchCategory && matchSemester;
   });
 
-  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredCourses.slice(startIndex, endIndex);
@@ -87,79 +108,52 @@ export default function MataKuliahPage() {
     setIsDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
+  // === 2. HAPUS DATA KE DATABASE ===
+  const confirmDelete = async () => {
     if (deleteId) {
-      setCourses((prev) => prev.filter((item) => item.id !== deleteId));
-      if (currentData.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
+      try {
+        await deleteCourse(deleteId);
+        toast.success("Berhasil Dihapus", { description: "Data mata kuliah telah dihapus." });
+        
+        if (currentData.length === 1 && currentPage > 1) {
+          setCurrentPage((prev) => prev - 1);
+        }
+        await fetchData();
+
+      } catch (error: any) {
+        toast.error("Gagal Hapus", { description: error.message });
       }
-      toast.success("Berhasil Dihapus", { description: "Data mata kuliah telah dihapus." });
     }
     setIsDeleteOpen(false);
   };
 
-  const handleFormSubmit = (values: CourseFormValues) => {
-    // Validasi Kelengkapan
-    if (!values.kode || !values.matkul || values.sks === "" || values.smt_default === "" || values.kategori === "") {
+  // === 3. SIMPAN / UPDATE KE DATABASE ===
+  const handleFormSubmit = async (values: CourseFormValues) => {
+    if (!values.kode || !values.matkul) {
       toast.error("Gagal Menyimpan", { description: "Mohon lengkapi semua data mata kuliah." });
       return;
     }
 
-    if (isEditing && editId) {
-      // --- LOGIC UPDATE ---
+    try {
+      if (isEditing && editId) {
+        // Update
+        await updateCourse(editId, values);
+        toast.success("Data Diperbarui", { description: `Mata kuliah ${values.matkul} berhasil diupdate.` });
+      } else {
+        // Create
+        await createCourse(values);
+        toast.success("Berhasil Ditambahkan", { description: `Mata kuliah baru ${values.matkul} telah disimpan.` });
+      }
       
-      // Cek Duplikasi Kode MK (Kecuali punya sendiri)
-      const isDuplicate = courses.some(
-        (c) => c.kode === values.kode && c.id !== editId
-      );
-      if (isDuplicate) {
-        toast.error("Gagal Update", { description: `Kode MK ${values.kode} sudah digunakan!` });
-        return;
-      }
+      await fetchData();
+      setIsDialogOpen(false);
 
-      setCourses((prev) => prev.map((item) => {
-        if (item.id === editId) {
-          return {
-            ...item,
-            kode: values.kode,
-            matkul: values.matkul,
-            sks: Number(values.sks),
-            smt_default: Number(values.smt_default),
-            kategori: values.kategori as CourseCategory,
-          };
-        }
-        return item;
-      }));
-      toast.success("Data Diperbarui", { description: `Mata kuliah ${values.matkul} berhasil diupdate.` });
-
-    } else {
-      // --- LOGIC CREATE ---
-
-      // Cek Duplikasi Kode MK
-      if (courses.some((c) => c.kode === values.kode)) {
-        toast.error("Gagal Menambahkan", { description: `Kode MK ${values.kode} sudah terdaftar!` });
-        return;
-      }
-
-      // Generate Auto-Increment ID
-      const maxId = courses.reduce((max, item) => Math.max(max, item.id), 0);
-      const newId = maxId + 1;
-
-      const newCourse: CourseData = {
-        id: newId,
-        kode: values.kode,
-        matkul: values.matkul,
-        sks: Number(values.sks),
-        smt_default: Number(values.smt_default),
-        kategori: values.kategori as CourseCategory,
-      };
-
-      setCourses((prev) => [...prev, newCourse]);
-      toast.success("Berhasil Ditambahkan", { description: `Mata kuliah baru ${values.matkul} telah disimpan.` });
+    } catch (error: any) {
+      toast.error("Terjadi Kesalahan", { description: error.message });
     }
-    setIsDialogOpen(false);
   };
 
+  // --- COLUMNS ---
   const columns: Column<CourseData>[] = [
     { header: "#", className: "w-[50px] text-center", render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span> },
     { header: "Kode MK", accessorKey: "kode", className: "font-medium" },
@@ -214,6 +208,9 @@ export default function MataKuliahPage() {
           <DataTable 
             data={currentData}
             columns={columns}
+            // Aktifkan Skeleton Loading
+            isLoading={isLoading}
+
             searchQuery={searchQuery}
             onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             onAdd={handleOpenAdd}

@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { updateUserSettings, logout } from "@/app/actions/auth";
+import { updateUserSettings, logout } from "@/app/actions/auth"; //
 
 interface PasswordFormProps {
   user: any;
@@ -45,20 +45,19 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
     }
 
     setIsSaving(true);
-    
-    // Flag untuk menandai apakah update berhasil
-    let updateSuccess = false;
 
     try {
-      // 1. Lakukan update password
       await updateUserSettings(user.username, {
         password: passwordData.newPassword,
         role: user.role,
       });
 
-      // 2. Jika sampai baris ini, berarti update SUKSES
+      // Tentukan durasi toast (misalnya 2000ms / 2 detik)
+      const TOAST_DURATION = 2000;
+
       toast.success("Kata sandi berhasil diubah", {
-        description: "Anda akan diarahkan ke halaman login...",
+        description: "Sesi akan berakhir otomatis. Anda akan diarahkan ke halaman login...",
+        duration: TOAST_DURATION, // Atur durasi tampil toast
       });
       
       setPasswordData({
@@ -67,22 +66,19 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
         confirmPassword: "",
       });
 
-      // Tandai sukses agar logout dijalankan di luar catch
-      updateSuccess = true;
-
-      // Jalankan callback (opsional, mungkin tidak sempat terlihat karena redirect)
+      // Jalankan callback (opsional)
       onUpdateSuccess(passwordData.newPassword);
 
-    } catch (error: any) {
-      // Hanya tangkap error jika updateUserSettings gagal
-      toast.error("Gagal mengubah password", { description: error.message });
-      setIsSaving(false);
-    }
+      // Gunakan setTimeout untuk menunda logout sampai toast selesai/hilang
+      setTimeout(async () => {
+        await logout();
+      }, TOAST_DURATION);
 
-    // 3. Jalankan Logout DI LUAR blok try-catch
-    // Ini mencegah "Redirect Error" dianggap sebagai error update
-    if (updateSuccess) {
-      await logout(); 
+      // Catatan: isSaving dibiarkan true agar tombol tetap loading/disabled selama menunggu logout
+
+    } catch (error: any) {
+      toast.error("Gagal mengubah password", { description: error.message });
+      setIsSaving(false); // Matikan loading hanya jika terjadi error
     }
   };
 

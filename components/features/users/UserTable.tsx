@@ -5,7 +5,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, ShieldCheck, BookOpen } from "lucide-react"; // GraduationCap dihapus
+import { Pencil, Trash2, ShieldCheck, BookOpen } from "lucide-react";
 import { type UserData } from "@/app/actions/users";
 
 interface UserTableProps {
@@ -61,8 +61,10 @@ export default function UserTable({
     },
     {
       header: "Username",
-      className: "font-mono text-slate-600",
-      render: (row) => row.username,
+      // Perubahan: Font mono dihapus, disamakan warnanya dengan teks lain
+      render: (row) => (
+        <span className="text-slate-700">{row.username}</span>
+      ),
     },
     {
       header: "Role",
@@ -79,7 +81,6 @@ export default function UserTable({
             icon = <BookOpen size={12} className="mr-1" />;
         } else if (row.role === 'mahasiswa') {
             variant = "outline";
-            // Ikon dikosongkan khusus mahasiswa
             icon = null;
         }
         

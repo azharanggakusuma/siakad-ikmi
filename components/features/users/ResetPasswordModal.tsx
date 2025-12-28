@@ -125,7 +125,7 @@ export function ResetPasswordModal({ isOpen, onClose, user, onSuccess }: ResetPa
                   setIsCopied(false);
                 }}
                 placeholder="Ketik atau generate password..."
-                className="pl-9 pr-10 font-mono tracking-wide h-10 transition-all focus:ring-2 ring-primary/20"
+                className="pl-9 pr-10 tracking-wide h-10 transition-all focus:ring-2 ring-primary/20"
                 disabled={isLoading}
                 autoFocus
               />

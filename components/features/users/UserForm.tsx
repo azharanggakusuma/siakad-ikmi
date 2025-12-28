@@ -16,7 +16,7 @@ import { Eye, EyeOff, Search, Check, Loader2 } from "lucide-react";
 import { getStudentsForSelection, type StudentOption } from "@/app/actions/users";
 
 export interface UserFormValues {
-  id?: string; // Diperlukan untuk pengecekan saat edit
+  id?: string;
   name: string;
   username: string;
   password?: string;
@@ -31,11 +31,12 @@ interface UserFormProps {
   onCancel: () => void;
 }
 
+// Default role dikosongkan agar placeholder muncul saat tambah user
 const defaultValues: UserFormValues = {
   name: "",
   username: "",
   password: "",
-  role: "mahasiswa",
+  role: "", 
   student_id: null,
 };
 
@@ -47,7 +48,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
         name: initialData.name || "",
         username: initialData.username || "",
         password: "",
-        role: initialData.role || "mahasiswa",
+        role: initialData.role || "", // Pastikan role terisi saat edit
         student_id: initialData.student_id || null,
       };
     }
@@ -69,7 +70,6 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   useEffect(() => {
     if (formData.role === "mahasiswa") {
       setIsLoadingStudents(true);
-      // Kirim ID user saat ini (jika edit) agar data dia sendiri tidak dianggap "taken"
       getStudentsForSelection(isEditing ? formData.id : undefined)
         .then((data) => {
           setStudentOptions(data);
@@ -78,7 +78,6 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     }
   }, [formData.role, isEditing, formData.id]);
 
-  // Handle klik di luar dropdown untuk menutupnya
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -89,13 +88,11 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter daftar mahasiswa berdasarkan input pencarian
   const filteredStudents = studentOptions.filter((s) =>
     s.nim.toLowerCase().includes(searchStudent.toLowerCase()) ||
     s.nama.toLowerCase().includes(searchStudent.toLowerCase())
   );
 
-  // Cari objek student yang sedang dipilih untuk ditampilkan labelnya
   const selectedStudentObj = studentOptions.find(s => s.id === formData.student_id);
 
   // --- VALIDASI ---
@@ -103,6 +100,13 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     const newErrors: Partial<Record<keyof UserFormValues, boolean>> = {};
     let isValid = true;
     const errorMessages: string[] = [];
+
+    // Validasi Role Wajib Dipilih
+    if (!formData.role) {
+      newErrors.role = true;
+      isValid = false;
+      errorMessages.push("Role wajib dipilih.");
+    }
 
     if (!formData.name.trim()) {
       newErrors.name = true;
@@ -119,8 +123,6 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
       isValid = false;
       errorMessages.push("Password minimal 6 karakter.");
     }
-
-    // Validasi Khusus Mahasiswa: Wajib pilih data mahasiswa
     if (formData.role === "mahasiswa" && !formData.student_id) {
       isValid = false;
       errorMessages.push("Harap pilih data mahasiswa untuk ditautkan.");
@@ -152,22 +154,21 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // Fungsi saat mahasiswa dipilih dari dropdown
   const handleSelectStudent = (student: StudentOption) => {
-    if (student.is_taken) return; // Mencegah pemilihan jika sudah diambil
-    
+    if (student.is_taken) return;
     setFormData(prev => ({
       ...prev,
       student_id: student.id,
-      name: student.nama, // Auto fill Nama
-      username: student.nim // Auto fill Username (NIM)
+      name: student.nama,
+      username: student.nim
     }));
     setIsDropdownOpen(false);
-    setSearchStudent(""); // Reset pencarian
+    setSearchStudent("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
+      
       {/* Role Selection */}
       <div className="grid gap-2">
         <Label htmlFor="role">Role / Peran</Label>
@@ -175,20 +176,19 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
           value={formData.role}
           onValueChange={(val) => {
             handleInputChange("role", val);
-            // Jika ganti role selain mahasiswa, hapus student_id
             if (val !== 'mahasiswa') {
               setFormData(prev => ({ ...prev, student_id: null }));
             }
           }}
         >
-          <SelectTrigger>
+          {/* Tambahkan validasi error style pada SelectTrigger */}
+          <SelectTrigger className={`w-full ${errors.role ? "border-red-500 focus:ring-0 focus:border-red-500" : ""}`}>
             <SelectValue placeholder="Pilih Role" />
           </SelectTrigger>
           <SelectContent>
+            {/* Hanya menampilkan Admin dan Mahasiswa */}
             <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
-            <SelectItem value="dosen">Dosen</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="baak">BAAK</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -266,7 +266,6 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             onChange={(e) => handleInputChange("name", e.target.value)}
             placeholder="Nama User"
             className={errors.name ? "border-red-500" : ""}
-            // Readonly jika mahasiswa sudah dipilih agar konsisten
             readOnly={formData.role === 'mahasiswa' && !!formData.student_id} 
           />
         </div>

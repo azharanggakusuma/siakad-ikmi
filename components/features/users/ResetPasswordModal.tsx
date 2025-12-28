@@ -47,7 +47,11 @@ export function ResetPasswordModal({ isOpen, onClose, user, onSuccess }: ResetPa
     if (!newPassword) return;
     navigator.clipboard.writeText(newPassword);
     setIsCopied(true);
-    toast.success("Disalin", { description: "Password berhasil disalin." });
+    
+    // Toast yang lebih bagus & informatif
+    toast.success("Password Disalin", { 
+      description: "Password telah disalin ke clipboard. Siap untuk digunakan." 
+    });
     
     // Reset icon copy setelah 2 detik
     setTimeout(() => setIsCopied(false), 2000);
@@ -143,7 +147,8 @@ export function ResetPasswordModal({ isOpen, onClose, user, onSuccess }: ResetPa
               variant="outline"
               size="icon"
               onClick={copyToClipboard}
-              className={`shrink-0 transition-all duration-300 ${isCopied ? "border-green-500 text-green-600 bg-green-50" : ""}`}
+              // Menghapus conditional coloring (hijau), hanya transisi icon saja
+              className="shrink-0 transition-all duration-300" 
               title="Salin Password"
               disabled={!newPassword}
             >

@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2, ShieldCheck, BookOpen } from "lucide-react";
 import { type UserData } from "@/app/actions/users";
+import {
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 
 interface UserTableProps {
   data: UserData[];
@@ -25,20 +31,31 @@ export default function UserTable({
 }: UserTableProps) {
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL"); // State untuk Filter Role
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // === FILTERING ===
+  // === FILTERING LOGIC ===
   const filteredData = useMemo(() => {
-    if (!searchQuery) return data;
-    const lowerQuery = searchQuery.toLowerCase();
-    return data.filter(
-      (user) =>
-        user.name.toLowerCase().includes(lowerQuery) ||
-        user.username.toLowerCase().includes(lowerQuery) ||
-        user.role.toLowerCase().includes(lowerQuery)
-    );
-  }, [data, searchQuery]);
+    let result = data;
+
+    // 1. Filter Search
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter(
+        (user) =>
+          user.name.toLowerCase().includes(lowerQuery) ||
+          user.username.toLowerCase().includes(lowerQuery)
+      );
+    }
+
+    // 2. Filter Role
+    if (roleFilter !== "ALL") {
+      result = result.filter((user) => user.role === roleFilter);
+    }
+
+    return result;
+  }, [data, searchQuery, roleFilter]);
 
   // === PAGINATION ===
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
@@ -61,7 +78,6 @@ export default function UserTable({
     },
     {
       header: "Username",
-      // Perubahan: Font mono dihapus, disamakan warnanya dengan teks lain
       render: (row) => (
         <span className="text-slate-700">{row.username}</span>
       ),
@@ -118,6 +134,26 @@ export default function UserTable({
     },
   ];
 
+  // === FILTER DROPDOWN CONTENT ===
+  const filterContent = (
+    <>
+      <DropdownMenuLabel>Filter Peran (Role)</DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <DropdownMenuRadioGroup 
+        value={roleFilter} 
+        onValueChange={(v) => { 
+          setRoleFilter(v); 
+          setCurrentPage(1); // Reset ke halaman 1 saat filter berubah
+        }}
+      >
+        <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="dosen">Dosen</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="mahasiswa">Mahasiswa</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+    </>
+  );
+
   return (
     <Card className="border-none shadow-sm ring-1 ring-gray-200">
       <CardContent className="p-6">
@@ -133,6 +169,16 @@ export default function UserTable({
           searchPlaceholder="Cari Nama atau Username..."
           onAdd={onAdd}
           addLabel="Tambah User"
+          
+          // Props Filter
+          filterContent={filterContent}
+          isFilterActive={roleFilter !== "ALL"}
+          onResetFilter={() => {
+            setRoleFilter("ALL");
+            setSearchQuery("");
+            setCurrentPage(1);
+          }}
+
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}

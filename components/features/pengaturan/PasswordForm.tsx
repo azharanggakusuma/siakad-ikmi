@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { updateUserSettings, logout } from "@/app/actions/auth"; //
+import { updateUserSettings, logout } from "@/app/actions/auth";
 
 interface PasswordFormProps {
   user: any;
@@ -40,13 +40,10 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
       return;
     }
 
-    // 2. Validasi: Password Saat Ini Benar/Salah
-    if (passwordData.currentPassword !== user?.password) {
-      toast.error("Gagal", { description: "Kata sandi saat ini salah." });
-      return;
-    }
+    // Validasi string vs hash di client dihapus karena tidak mungkin dilakukan di sini.
+    // Verifikasi dipindahkan ke server action.
 
-    // 3. Validasi: Password Baru vs Password Lama
+    // 2. Validasi: Password Baru vs Password Lama (Cek string sederhana)
     if (passwordData.newPassword === passwordData.currentPassword) {
       toast.error("Gagal memperbarui kata sandi", {
         description: "Kata sandi baru tidak boleh sama dengan kata sandi saat ini.",
@@ -57,14 +54,18 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
     setIsSaving(true);
 
     try {
-      await updateUserSettings(user.username, {
-        password: passwordData.newPassword,
-        role: user.role,
-      });
+      // Panggil server action dengan parameter ke-3: password lama
+      await updateUserSettings(
+        user.username, 
+        {
+          password: passwordData.newPassword,
+          role: user.role,
+        },
+        passwordData.currentPassword // <-- Mengirim password lama untuk verifikasi bcrypt di server
+      );
 
       const TOAST_DURATION = 2000;
 
-      // REKOMENDASI OPSI 1: Lebih profesional dan jelas
       toast.success("Kata sandi berhasil diperbarui", {
         description: "Silakan login kembali demi keamanan. Mengalihkan...",
         duration: TOAST_DURATION,
@@ -83,6 +84,7 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
       }, TOAST_DURATION);
 
     } catch (error: any) {
+      // Error seperti "Kata sandi saat ini salah" akan ditangkap di sini
       toast.error("Gagal mengubah password", { description: error.message });
       setIsSaving(false);
     }

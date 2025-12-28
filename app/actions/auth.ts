@@ -82,14 +82,42 @@ export async function getUserSettings(username: string) {
 }
 
 // === FUNGSI UPDATE USER ===
-export async function updateUserSettings(currentUsername: string, payload: any) {
+export async function updateUserSettings(
+  currentUsername: string, 
+  payload: any,
+  oldPasswordForVerification?: string // Parameter baru untuk verifikasi
+) {
   const { nama, password, alamat, role, username: newUsername } = payload;
 
   const updates: any = {};
   if (nama) updates.name = nama;
   
-  // LOGIKA HASHING: Gunakan bcryptjs untuk hash password sebelum disimpan
+  // LOGIKA HASHING: Verifikasi password lama sebelum update password baru
   if (password) {
+    // 1. Pastikan password lama dikirim
+    if (!oldPasswordForVerification) {
+      throw new Error("Password lama diperlukan untuk verifikasi.");
+    }
+
+    // 2. Ambil hash password saat ini dari database
+    const { data: userRecord, error: fetchError } = await supabase
+      .from("users")
+      .select("password")
+      .eq("username", currentUsername)
+      .single();
+
+    if (fetchError || !userRecord) {
+      throw new Error("Gagal memverifikasi user.");
+    }
+
+    // 3. Bandingkan Password Lama Inputan vs Database Hash
+    const isMatch = await bcrypt.compare(oldPasswordForVerification, userRecord.password);
+
+    if (!isMatch) {
+      throw new Error("Kata sandi saat ini salah."); 
+    }
+
+    // 4. Jika cocok, hash password baru dan masukkan ke updates
     const hashedPassword = await bcrypt.hash(password, 10);
     updates.password = hashedPassword;
   } 

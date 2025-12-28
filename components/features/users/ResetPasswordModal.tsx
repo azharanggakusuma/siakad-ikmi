@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Copy, Check, Wand2, ShieldCheck, Info } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Wand2, Key, Info } from "lucide-react"; // Import Key
 import { FormModal } from "@/components/shared/FormModal";
 import { updateUser, type UserData } from "@/app/actions/users";
 
@@ -114,7 +114,7 @@ export function ResetPasswordModal({ isOpen, onClose, user, onSuccess }: ResetPa
           <div className="relative flex items-center gap-2">
             <div className="relative flex-1 group">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <ShieldCheck size={16} />
+                <Key size={16} /> {/* Ikon diganti menjadi Key */}
               </div>
               <Input
                 id="reset-pass"
@@ -152,7 +152,7 @@ export function ResetPasswordModal({ isOpen, onClose, user, onSuccess }: ResetPa
           </div>
         </div>
 
-        {/* INFO BOX STYLE HALAMAN PENGATURAN (Alert Style) */}
+        {/* INFO BOX ALERT STYLE */}
         <div className="rounded-md bg-amber-50 border border-amber-200 p-3 flex items-start gap-3">
            <Info className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
            <p className="text-[12px] text-amber-800 leading-relaxed">

@@ -117,3 +117,31 @@ export interface UserProfile {
   alamat?: string;
   password?: string;
 }
+
+// --- Grades / Nilai ---
+export type Grade = {
+  id: number;
+  student_id: number;
+  course_id: number;
+  hm: string; // Huruf Mutu
+};
+
+// Tipe data untuk ditampilkan di Tabel (Join result)
+export type GradeData = Grade & {
+  student: {
+    nim: string;
+    nama: string;
+    prodi: string;
+  };
+  course: {
+    kode: string;
+    matkul: string;
+    sks: number;
+  };
+};
+
+export type GradeFormValues = {
+  student_id: string; // Menggunakan string untuk value select
+  course_id: string;
+  hm: string;
+};

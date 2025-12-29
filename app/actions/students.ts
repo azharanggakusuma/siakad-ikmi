@@ -3,7 +3,36 @@
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
-// --- TYPES ---
+// --- EXPORT TYPES (Agar bisa diimport di page lain) ---
+export interface TranscriptItem {
+  no: number;
+  course_id: number;
+  kode: string;
+  matkul: string;
+  smt: number;
+  sks: number;
+  hm: string;
+  am: number;
+  nm: number;
+}
+
+export interface StudentProfile {
+  id: number;
+  nim: string;
+  nama: string;
+  alamat: string;
+  prodi: string;
+  jenjang: string;
+  semester: number;
+}
+
+export interface StudentData {
+  id: string;
+  profile: StudentProfile;
+  transcript: TranscriptItem[];
+}
+
+// Internal Interface untuk Response DB
 interface Course {
   id: number;
   kode: string;
@@ -15,7 +44,7 @@ interface Course {
 interface Grade {
   id: number;
   hm: string;
-  courses: Course | null; // Bisa null jika relasi tidak ditemukan
+  courses: Course | null;
 }
 
 interface StudentResponse {
@@ -35,8 +64,7 @@ const getAM = (hm: string): number => {
   return map[hm] || 0;
 };
 
-export async function getStudents() {
-  // Query join: students -> grades -> courses
+export async function getStudents(): Promise<StudentData[]> {
   const { data, error } = await supabase
     .from('students')
     .select(`
@@ -60,12 +88,12 @@ export async function getStudents() {
     return [];
   }
 
-  // Casting data ke tipe yang sudah kita definisikan
+  // Casting data dari DB ke tipe internal
   const students = data as unknown as StudentResponse[];
 
+  // Mapping ke tipe StudentData yang bersih
   return students.map((s) => {
-    // Mapping Grades ke format Transcript
-    const transcript = (s.grades || [])
+    const transcript: TranscriptItem[] = (s.grades || [])
       .map((g, index) => {
         const course = g.courses;
         const am = getAM(g.hm);
@@ -74,7 +102,7 @@ export async function getStudents() {
 
         return {
           no: index + 1,
-          course_id: course?.id,
+          course_id: course?.id || 0,
           kode: course?.kode || "CODE",
           matkul: course?.matkul || "Unknown",
           smt: course?.smt_default || 1,

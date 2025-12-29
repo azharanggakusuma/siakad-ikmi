@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-// GANTI import static menjadi server action
-import { getStudents } from "@/app/actions/students";
+// Import tipe StudentData
+import { getStudents, type StudentData } from "@/app/actions/students";
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 
 import PageHeader from "@/components/layout/PageHeader";
 import DocumentHeader from "@/components/features/document/DocumentHeader";
@@ -13,12 +13,12 @@ import DocumentFooter from "@/components/features/document/DocumentFooter";
 import ControlPanel from "@/components/features/document/ControlPanel";
 
 export default function SuratKeteranganPage() {
-  // --- STATE DATA MAHASISWA (DYNAMIC) ---
-  const [studentsData, setStudentsData] = useState<any[]>([]);
+  // Gunakan tipe StudentData[]
+  const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // --- STATE FORM SURAT (MANUAL INPUT) ---
+  // State Form lainnya...
   const [nomorSurat, setNomorSurat] = useState(""); 
   const [tahunAkademik, setTahunAkademik] = useState("");
   const [tempatLahir, setTempatLahir] = useState("");
@@ -32,7 +32,6 @@ export default function SuratKeteranganPage() {
   const paperRef = useRef<HTMLDivElement>(null);
   const [totalPages, setTotalPages] = useState(1);
 
-  // FETCH DATA DARI SUPABASE
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -49,7 +48,7 @@ export default function SuratKeteranganPage() {
 
   const currentStudent = useMemo(() => studentsData[selectedIndex], [studentsData, selectedIndex]);
 
-  // UPDATE STATE ALAMAT OTOMATIS SAAT MAHASISWA DIGANTI
+  // Update Alamat saat mahasiswa berganti
   useEffect(() => {
     if (currentStudent?.profile?.alamat) {
       setAlamat(currentStudent.profile.alamat);
@@ -58,6 +57,7 @@ export default function SuratKeteranganPage() {
     }
   }, [currentStudent]);
 
+  // Observer
   useEffect(() => {
     if (!paperRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -68,12 +68,10 @@ export default function SuratKeteranganPage() {
     });
     observer.observe(paperRef.current);
     return () => observer.disconnect();
-  }, [currentStudent, alamat]); // Dependency update jika konten berubah
+  }, [currentStudent, alamat]);
 
-  // HELPER FORMAT SURAT
   const getRomanMonth = () => ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][new Date().getMonth()];
   const fullNomorSurat = `${nomorSurat || "..."}/A/S.KET/STMIK-IKMI/${getRomanMonth()}/${new Date().getFullYear()}`;
-
   const terbilangSemester = (num: number) => ["Nol", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas", "Dua Belas", "Tiga Belas", "Empat Belas"][num] || num.toString();
 
   const labelStyle = { width: '150px', verticalAlign: 'top', padding: '1px 0' };
@@ -81,164 +79,99 @@ export default function SuratKeteranganPage() {
   const valueStyle = { verticalAlign: 'top', padding: '1px 20px 1px 4px' }; 
 
   const renderPaperContent = () => {
-    if (loading) {
-      // === SKELETON LOADING SESUAI BENTUK SURAT ===
+      if (loading) {
+          return (
+            <div className="animate-pulse flex flex-col h-full">
+               <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
+                   <div className="flex items-center gap-3">
+                       <Skeleton className="w-[80px] h-[80px]" /> 
+                       <div className="flex flex-col gap-2">
+                           <Skeleton className="h-3 w-48" />
+                           <Skeleton className="h-8 w-32" />
+                           <Skeleton className="h-4 w-24" />
+                       </div>
+                   </div>
+                   <Skeleton className="w-[250px] h-[78px]" />
+               </div>
+               <div className="space-y-4 mt-8 px-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+               </div>
+            </div>
+          )
+      }
+
+      if (!currentStudent) {
+        return (
+            <div className="flex flex-col h-full items-center justify-center text-slate-400">
+            <p>Data Mahasiswa Kosong</p>
+            </div>
+        );
+      }
+
       return (
-        <div className="animate-pulse flex flex-col h-full">
-          {/* Header Skeleton */}
-          <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
-              <div className="flex items-center gap-3">
-                  <Skeleton className="w-[80px] h-[80px]" /> 
-                  <div className="flex flex-col gap-2">
-                      <Skeleton className="h-3 w-48" />
-                      <Skeleton className="h-8 w-32" />
-                      <Skeleton className="h-4 w-24" />
-                  </div>
-              </div>
-              <Skeleton className="w-[250px] h-[78px]" />
-          </div>
-          <Skeleton className="h-[26px] w-full mt-1" />
-          <Skeleton className="h-[26px] w-full mt-1" />
-
-          {/* Judul Surat Skeleton */}
-          <div className="flex flex-col items-center my-8 space-y-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-32" />
-          </div>
-
-          {/* Body Skeleton */}
-          <div className="space-y-6 px-4">
-            {/* Pihak 1 */}
-            <div>
-              <Skeleton className="h-3 w-48 mb-2" />
-              <div className="ml-4 space-y-2">
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
+        <>
+            <DocumentHeader title="" />
+            <div className="text-center mt-[-10px] mb-8 font-['Cambria'] text-black leading-snug">
+            <h2 className="font-bold text-[14px] underline uppercase mb-0">SURAT KETERANGAN</h2>
+            <p className="text-[11px]">Nomor : {fullNomorSurat}</p>
             </div>
 
-            {/* Pihak 2 (Mahasiswa) */}
-            <div>
-              <Skeleton className="h-3 w-40 mb-2" />
-              <div className="ml-4 space-y-2">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
-                <Skeleton className="h-3 w-2/3" />
-                <Skeleton className="h-3 w-full" />
-              </div>
+            <div className="text-[11px] font-['Cambria'] text-black px-4 min-h-[450px]">
+            <p className="mb-2">Yang bertanda tangan di bawah ini :</p>
+            <div className="ml-4 mb-4">
+                <table className="w-full" style={{ tableLayout: 'fixed' }}>
+                <tbody>
+                    <tr><td style={labelStyle}>Nama</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold break-words">YUDHISTIRA ARIE WIJAYA, M.Kom</td></tr>
+                    <tr><td style={labelStyle}>NIDN</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">0401047103</td></tr>
+                </tbody>
+                </table>
             </div>
 
-            {/* Orang Tua */}
-            <div>
-              <Skeleton className="h-3 w-56 mb-2" />
-              <div className="ml-4 space-y-2">
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
+            <p className="mb-2">Menerangkan bahwa :</p>
+            <div className="ml-4 mb-4">
+                <table className="w-full" style={{ tableLayout: 'fixed' }}>
+                <tbody>
+                    <tr><td style={labelStyle}>Nama</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold uppercase break-words">{currentStudent.profile.nama.toUpperCase()}</td></tr>
+                    <tr><td style={labelStyle}>NIM</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{currentStudent.profile.nim}</td></tr>
+                    <tr><td style={labelStyle}>Tempat, tanggal lahir</td><td style={colonStyle}>:</td><td style={valueStyle} className="capitalize break-words">{tempatLahir || "..."} , {tanggalLahir || "..."}</td></tr>
+                    <tr>
+                    <td style={labelStyle}>Jurusan</td>
+                    <td style={colonStyle}>:</td>
+                    <td style={valueStyle} className="break-words">
+                        {currentStudent.profile.prodi} {currentStudent.profile.jenjang ? `(${currentStudent.profile.jenjang})` : ""}
+                    </td>
+                    </tr>
+                    <tr><td style={labelStyle}>Semester</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{currentStudent.profile.semester} ({terbilangSemester(currentStudent.profile.semester)})</td></tr>
+                    <tr><td style={labelStyle}>Tahun Akademik</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{tahunAkademik || "..."}</td></tr>
+                    <tr><td style={labelStyle}>Alamat</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words whitespace-pre-wrap text-justify">{alamat || "..."}</td></tr>
+                </tbody>
+                </table>
             </div>
 
-            {/* Paragraf Penutup */}
-            <div className="space-y-2 mt-4">
-               <Skeleton className="h-3 w-full" />
-               <Skeleton className="h-3 w-full" />
-               <Skeleton className="h-3 w-2/3" />
+            <p className="mb-2">Dan orang tua dari mahasiswa tersebut adalah :</p>
+            <div className="ml-4 mb-4">
+                <table className="w-full" style={{ tableLayout: 'fixed' }}>
+                <tbody>
+                    <tr><td style={labelStyle}>Nama Orang Tua</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold break-words">{namaOrangTua || "..."}</td></tr>
+                    <tr><td style={labelStyle}>Pekerjaan</td><td style={colonStyle}>:</td><td style={valueStyle} className="capitalize break-words">{pekerjaanOrangTua || "..."}</td></tr>
+                </tbody>
+                </table>
             </div>
-            <div className="space-y-2 mt-4">
-               <Skeleton className="h-3 w-full" />
-               <Skeleton className="h-3 w-full" />
-            </div>
-          </div>
 
-           {/* Footer Skeleton */}
-           <div className="flex justify-end mt-12 pr-8">
-              <div className="flex flex-col items-center gap-1 w-[200px]">
-                    <Skeleton className="h-3 w-32" />
-                    <Skeleton className="h-3 w-40" />
-                    <Skeleton className="h-20 w-32 my-2" />
-                    <Skeleton className="h-3 w-40" />
-                    <Skeleton className="h-3 w-32" />
-              </div>
-           </div>
-        </div>
+            <p className="mb-3 text-justify leading-relaxed">
+                Dengan ini menerangkan bahwa mahasiswa yang namanya tersebut di atas adalah benar-benar tercatat sebagai mahasiswa aktif di Sekolah Tinggi Manajemen Informatika dan Komputer (STMIK) IKMI Cirebon. Pada saat surat ini diterbitkan, yang bersangkutan sedang menempuh kegiatan perkuliahan secara aktif pada semester {currentStudent.profile.semester} ({terbilangSemester(currentStudent.profile.semester)}) Tahun Akademik {tahunAkademik || "..."}.
+            </p>
+
+            <p className="mb-8 text-justify leading-relaxed">
+                Surat Keterangan ini dibuat dan diberikan kepada yang bersangkutan untuk dapat dipergunakan sebagai bukti keaktifan kuliah dan keperluan administrasi lainnya sebagaimana mestinya. Demikian surat keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sesuai dengan ketentuan yang berlaku.
+            </p>
+            </div>
+
+            <DocumentFooter signatureType={signatureType} signatureBase64={secureImage} mode="surat" />
+        </>
       );
-    }
-
-    if (!currentStudent) {
-      return (
-        <div className="flex flex-col h-full items-center justify-center text-slate-400">
-          <p>Data Mahasiswa Kosong</p>
-        </div>
-      );
-    }
-
-    // === KONTEN SURAT REAL ===
-    return (
-      <>
-        <DocumentHeader title="" />
-
-        <div className="text-center mt-[-10px] mb-8 font-['Cambria'] text-black leading-snug">
-          <h2 className="font-bold text-[14px] underline uppercase mb-0">SURAT KETERANGAN</h2>
-          <p className="text-[11px]">Nomor : {fullNomorSurat}</p>
-        </div>
-
-        <div className="text-[11px] font-['Cambria'] text-black px-4 min-h-[450px]">
-          
-          <p className="mb-2">Yang bertanda tangan di bawah ini :</p>
-          <div className="ml-4 mb-4">
-            <table className="w-full" style={{ tableLayout: 'fixed' }}>
-              <tbody>
-                <tr><td style={labelStyle}>Nama</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold break-words">YUDHISTIRA ARIE WIJAYA, M.Kom</td></tr>
-                <tr><td style={labelStyle}>NIDN</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">0401047103</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="mb-2">Menerangkan bahwa :</p>
-          <div className="ml-4 mb-4">
-            <table className="w-full" style={{ tableLayout: 'fixed' }}>
-              <tbody>
-                <tr><td style={labelStyle}>Nama</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold uppercase break-words">{currentStudent.profile.nama.toUpperCase()}</td></tr>
-                <tr><td style={labelStyle}>NIM</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{currentStudent.profile.nim}</td></tr>
-                <tr><td style={labelStyle}>Tempat, tanggal lahir</td><td style={colonStyle}>:</td><td style={valueStyle} className="capitalize break-words">{tempatLahir || "..."} , {tanggalLahir || "..."}</td></tr>
-                <tr>
-                  <td style={labelStyle}>Jurusan</td>
-                  <td style={colonStyle}>:</td>
-                  <td style={valueStyle} className="break-words">
-                    {currentStudent.profile.prodi} {currentStudent.profile.jenjang ? `(${currentStudent.profile.jenjang})` : ""}
-                  </td>
-                </tr>
-
-                <tr><td style={labelStyle}>Semester</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{currentStudent.profile.semester} ({terbilangSemester(currentStudent.profile.semester)})</td></tr>
-                <tr><td style={labelStyle}>Tahun Akademik</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{tahunAkademik || "..."}</td></tr>
-                <tr><td style={labelStyle}>Alamat</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words whitespace-pre-wrap text-justify">{alamat || "..."}</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="mb-2">Dan orang tua dari mahasiswa tersebut adalah :</p>
-          <div className="ml-4 mb-4">
-            <table className="w-full" style={{ tableLayout: 'fixed' }}>
-              <tbody>
-                <tr><td style={labelStyle}>Nama Orang Tua</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold break-words">{namaOrangTua || "..."}</td></tr>
-                <tr><td style={labelStyle}>Pekerjaan</td><td style={colonStyle}>:</td><td style={valueStyle} className="capitalize break-words">{pekerjaanOrangTua || "..."}</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="mb-3 text-justify leading-relaxed">
-            Dengan ini menerangkan bahwa mahasiswa yang namanya tersebut di atas adalah benar-benar tercatat sebagai mahasiswa aktif di Sekolah Tinggi Manajemen Informatika dan Komputer (STMIK) IKMI Cirebon. Pada saat surat ini diterbitkan, yang bersangkutan sedang menempuh kegiatan perkuliahan secara aktif pada semester {currentStudent.profile.semester} ({terbilangSemester(currentStudent.profile.semester)}) Tahun Akademik {tahunAkademik || "..."}.
-          </p>
-
-          <p className="mb-8 text-justify leading-relaxed">
-            Surat Keterangan ini dibuat dan diberikan kepada yang bersangkutan untuk dapat dipergunakan sebagai bukti keaktifan kuliah dan keperluan administrasi lainnya sebagaimana mestinya. Demikian surat keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sesuai dengan ketentuan yang berlaku.
-          </p>
-        </div>
-
-        <DocumentFooter signatureType={signatureType} signatureBase64={secureImage} mode="surat" />
-      </>
-    );
   };
 
   return (

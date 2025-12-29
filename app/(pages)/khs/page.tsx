@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { getStudents } from "@/app/actions/students";
+// Import tipe data yang sudah kita export tadi
+import { getStudents, type StudentData, type TranscriptItem } from "@/app/actions/students";
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,7 @@ import ControlPanel from "@/components/features/document/ControlPanel";
 import GradeTable from "@/components/features/transkrip/GradeTable";
 
 export default function KhsPage() {
-  const [studentsData, setStudentsData] = useState<any[]>([]);
+  const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -53,16 +54,16 @@ export default function KhsPage() {
     return () => observer.disconnect();
   }, [currentStudent, selectedSemester]);
 
-  // === PERBAIKAN DI SINI ===
-  // Menambahkan generic <number[]> pada useMemo dan casting yang lebih aman
+  // === PERBAIKAN LOGIC ===
+  
   const availableSemesters = useMemo<number[]>(() => {
-    if (!currentStudent || !currentStudent.transcript) return [];
+    if (!currentStudent?.transcript) return [];
     
-    // Ambil semester dari transkrip dan pastikan tipenya number
-    const smts = (currentStudent.transcript as any[]).map((t) => Number(t.smt));
+    // Tambahkan tipe eksplisit (t: TranscriptItem)
+    const smts = currentStudent.transcript.map((t: TranscriptItem) => Number(t.smt));
     
-    // Filter unik dan sort
-    return Array.from(new Set(smts)).sort((a, b) => a - b);
+    // Tambahkan tipe eksplisit (a: number, b: number)
+    return Array.from(new Set(smts)).sort((a: number, b: number) => a - b);
   }, [currentStudent]);
 
   useEffect(() => {
@@ -71,33 +72,29 @@ export default function KhsPage() {
         setSelectedSemester(availableSemesters[0]);
       }
     }
-  }, [selectedIndex, availableSemesters]);
+  }, [selectedIndex, availableSemesters, selectedSemester]);
 
   const semesterData = useMemo(() => {
-    if (!currentStudent) return [];
-    // @ts-ignore
-    return currentStudent.transcript.filter((t) => t.smt === selectedSemester);
+    if (!currentStudent?.transcript) return [];
+    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === selectedSemester);
   }, [currentStudent, selectedSemester]);
 
   const cumulativeData = useMemo(() => {
-    if (!currentStudent) return [];
-    // @ts-ignore
-    return currentStudent.transcript.filter((t) => t.smt <= selectedSemester);
+    if (!currentStudent?.transcript) return [];
+    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= selectedSemester);
   }, [currentStudent, selectedSemester]);
 
   const ips = useMemo(() => {
-    // @ts-ignore
-    const totalSKS = semesterData.reduce((acc, row) => acc + row.sks, 0);
-    // @ts-ignore
-    const totalNM = semesterData.reduce((acc, row) => acc + row.nm, 0);
+    // Tambahkan tipe eksplisit (acc: number, row: TranscriptItem)
+    const totalSKS = semesterData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
+    const totalNM = semesterData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
     return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
   }, [semesterData]);
 
   const ipk = useMemo(() => {
-    // @ts-ignore
-    const totalSKS = cumulativeData.reduce((acc, row) => acc + row.sks, 0);
-    // @ts-ignore
-    const totalNM = cumulativeData.reduce((acc, row) => acc + row.nm, 0);
+    // Tambahkan tipe eksplisit (acc: number, row: TranscriptItem)
+    const totalSKS = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
+    const totalNM = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
     return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
   }, [cumulativeData]);
 
@@ -108,6 +105,7 @@ export default function KhsPage() {
       </div>
 
       <div className="flex flex-col xl:flex-row items-stretch justify-start gap-6 min-h-screen">
+        {/* AREA KERTAS */}
         <div className={`
             hidden xl:flex print:flex print:w-full print:justify-center
             shrink-0 justify-start w-full transition-all duration-300
@@ -123,10 +121,9 @@ export default function KhsPage() {
             `}>
             
             {loading ? (
-              // === LOADING SKELETON ===
               <div className="animate-pulse flex flex-col h-full">
-                {/* Header Skeleton */}
-                <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
+                 {/* Skeleton Code (Sama seperti sebelumnya) */}
+                 <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
                     <div className="flex items-center gap-3">
                         <Skeleton className="w-[80px] h-[80px]" /> 
                         <div className="flex flex-col gap-2">
@@ -137,55 +134,15 @@ export default function KhsPage() {
                     </div>
                     <Skeleton className="w-[250px] h-[78px]" />
                 </div>
-
-                <Skeleton className="h-[26px] w-full mt-1" />
-                <Skeleton className="h-[26px] w-full mt-1" />
-
-                <div className="flex justify-center my-6">
-                    <Skeleton className="h-6 w-48" />
-                </div>
-
-                {/* Info Mahasiswa Skeleton */}
-                <div className="grid grid-cols-[120px_10px_1fr] gap-y-2 mb-6">
-                    <Skeleton className="h-3 w-full" /> <div/> <Skeleton className="h-3 w-48" />
-                    <Skeleton className="h-3 w-full" /> <div/> <Skeleton className="h-3 w-32" />
-                    <Skeleton className="h-3 w-full" /> <div/> <Skeleton className="h-3 w-56" />
-                    <Skeleton className="h-3 w-full" /> <div/> <Skeleton className="h-3 w-16" />
-                </div>
-
-                {/* Tabel Skeleton */}
-                <div className="space-y-1 mb-4">
-                    <Skeleton className="h-6 w-full bg-slate-200" />
-                    {Array.from({ length: 12 }).map((_, i) => (
-                        <Skeleton key={i} className="h-4 w-full" />
-                    ))}
-                    <div className="pt-2 space-y-1">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                    </div>
-                </div>
-
-                {/* Footer Skeleton */}
-                <div className="flex justify-between items-start mt-8">
-                    <div className="space-y-2">
-                         <Skeleton className="h-3 w-20 mb-2" />
-                         <Skeleton className="h-2 w-32" />
-                         <Skeleton className="h-2 w-32" />
-                         <Skeleton className="h-2 w-32" />
-                    </div>
-                    <div className="flex flex-col items-center gap-1 w-[200px]">
-                         <Skeleton className="h-3 w-32" />
-                         <Skeleton className="h-3 w-40" />
-                         <Skeleton className="h-20 w-32 my-2" />
-                         <Skeleton className="h-3 w-40" />
-                         <Skeleton className="h-3 w-32" />
-                    </div>
+                <div className="space-y-4 mt-4">
+                     <Skeleton className="h-4 w-full" />
+                     <Skeleton className="h-4 w-3/4" />
+                     <Skeleton className="h-40 w-full" />
                 </div>
               </div>
             ) : !currentStudent ? (
               <div className="flex flex-col h-full items-center justify-center text-slate-400">
-                <p>Data Mahasiswa Kosong</p>
+                <p>Data Mahasiswa Tidak Ditemukan</p>
               </div>
             ) : (
               <>
@@ -198,6 +155,7 @@ export default function KhsPage() {
           </div>
         </div>
 
+        {/* SIDEBAR */}
         <div className="w-full flex-1 print:hidden z-10 pb-10 xl:pb-0">
           {loading ? (
              <div className="space-y-4">

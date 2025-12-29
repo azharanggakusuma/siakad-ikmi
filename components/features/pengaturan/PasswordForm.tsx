@@ -15,9 +15,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { updateUserSettings, logout } from "@/app/actions/auth";
+import { type UserProfile } from "@/app/(pages)/pengaturan/page";
 
 interface PasswordFormProps {
-  user: any;
+  user: UserProfile | null;
   onUpdateSuccess: (newPassword: string) => void;
 }
 
@@ -29,63 +30,44 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
     confirmPassword: "",
   });
 
+  if (!user) return null;
+
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Validasi: Password Baru vs Konfirmasi
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Gagal memperbarui kata sandi", {
-        description: "Konfirmasi kata sandi tidak cocok.",
-      });
+      toast.error("Gagal", { description: "Konfirmasi kata sandi tidak cocok." });
       return;
     }
 
-    // Validasi string vs hash di client dihapus karena tidak mungkin dilakukan di sini.
-    // Verifikasi dipindahkan ke server action.
-
-    // 2. Validasi: Password Baru vs Password Lama (Cek string sederhana)
     if (passwordData.newPassword === passwordData.currentPassword) {
-      toast.error("Gagal memperbarui kata sandi", {
-        description: "Kata sandi baru tidak boleh sama dengan kata sandi saat ini.",
-      });
+      toast.error("Gagal", { description: "Kata sandi baru tidak boleh sama dengan yang lama." });
       return;
     }
 
     setIsSaving(true);
 
     try {
-      // Panggil server action dengan parameter ke-3: password lama
       await updateUserSettings(
         user.username, 
         {
           password: passwordData.newPassword,
           role: user.role,
         },
-        passwordData.currentPassword // <-- Mengirim password lama untuk verifikasi bcrypt di server
+        passwordData.currentPassword 
       );
 
-      const TOAST_DURATION = 2000;
-
-      toast.success("Kata sandi berhasil diperbarui", {
-        description: "Silakan login kembali demi keamanan. Mengalihkan...",
-        duration: TOAST_DURATION,
-      });
+      toast.success("Berhasil", { description: "Silakan login kembali. Mengalihkan..." });
       
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       onUpdateSuccess(passwordData.newPassword);
 
       setTimeout(async () => {
         await logout();
-      }, TOAST_DURATION);
+      }, 2000);
 
     } catch (error: any) {
-      // Error seperti "Kata sandi saat ini salah" akan ditangkap di sini
-      toast.error("Gagal mengubah password", { description: error.message });
+      toast.error("Gagal", { description: error.message });
       setIsSaving(false);
     }
   };
@@ -100,9 +82,7 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
             </div>
             <CardTitle className="text-lg">Keamanan Akun</CardTitle>
           </div>
-          <CardDescription>
-            Perbarui kata sandi Anda secara berkala untuk melindungi akun.
-          </CardDescription>
+          <CardDescription>Perbarui kata sandi Anda secara berkala.</CardDescription>
         </CardHeader>
 
         <form onSubmit={handlePasswordUpdate} className="flex flex-col flex-1">
@@ -112,15 +92,9 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
               <Input
                 id="current_password"
                 type="password"
-                placeholder="••••••••"
                 required
                 value={passwordData.currentPassword}
-                onChange={(e) =>
-                  setPasswordData({
-                    ...passwordData,
-                    currentPassword: e.target.value,
-                  })
-                }
+                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
               />
             </div>
 
@@ -132,12 +106,7 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
                   type="password"
                   required
                   value={passwordData.newPassword}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      newPassword: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                 />
               </div>
 
@@ -148,41 +117,24 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
                   type="password"
                   required
                   value={passwordData.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="rounded-lg bg-rose-50 p-4 border border-rose-200 mt-2 flex items-start gap-3">
-              <AlertTriangle
-                className="text-rose-600 shrink-0 mt-0.5"
-                size={18}
-              />
+              <AlertTriangle className="text-rose-600 shrink-0 mt-0.5" size={18} />
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-rose-900">
-                  Perhatian
-                </p>
+                <p className="text-xs font-semibold text-rose-900">Perhatian</p>
                 <p className="text-xs text-rose-700 leading-relaxed">
-                  Pastikan Anda menggunakan kombinasi karakter unik. Setelah
-                  kata sandi diubah, Anda harus login ulang untuk verifikasi
-                  keamanan.
+                  Setelah kata sandi diubah, Anda wajib login ulang.
                 </p>
               </div>
             </div>
           </CardContent>
 
           <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-4 mt-auto">
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={isSaving}
-              className="w-full sm:w-auto ml-auto gap-2"
-            >
+            <Button type="submit" variant="destructive" disabled={isSaving} className="w-full sm:w-auto ml-auto gap-2">
               <Lock size={16} />
               {isSaving ? "Memproses..." : "Ganti Kata Sandi"}
             </Button>

@@ -310,7 +310,7 @@ export function StudentGradeForm({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" /> Simpan
+                Simpan Nilai
               </>
             )}
           </Button>
@@ -321,7 +321,7 @@ export function StudentGradeForm({
         isOpen={showConfirm}
         onClose={setShowConfirm}
         onConfirm={handleConfirmSave}
-        title={`Simpan Nilai ${student.profile.nama}?`}
+        title={`Simpan Nilai?`}
         description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan data nilai sudah sesuai dan benar.`}
         confirmLabel="Ya, Simpan"
         cancelLabel="Batal"

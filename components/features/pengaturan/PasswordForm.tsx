@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { updateUserSettings, logout } from "@/app/actions/auth";
-import { type UserProfile } from "@/app/(pages)/pengaturan/page";
+import { type UserProfile } from "@/lib/types"; 
 
 interface PasswordFormProps {
   user: UserProfile | null;

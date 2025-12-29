@@ -9,15 +9,7 @@ import { getSession, getUserSettings } from "@/app/actions/auth";
 import SettingsSkeleton from "@/components/features/pengaturan/SettingsSkeleton";
 import ProfileForm from "@/components/features/pengaturan/ProfileForm";
 import PasswordForm from "@/components/features/pengaturan/PasswordForm";
-
-// Definisi tipe data user di pengaturan
-export interface UserProfile {
-  name: string;
-  username: string;
-  role: string;
-  alamat?: string;
-  password?: string;
-}
+import { UserProfile } from "@/lib/types"; 
 
 export default function PengaturanPage() {
   const router = useRouter();

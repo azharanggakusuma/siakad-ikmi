@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { updateUserSettings } from "@/app/actions/auth";
-import { type UserProfile } from "@/app/(pages)/pengaturan/page";
+import { type UserProfile } from "@/lib/types";
 
 interface ProfileFormProps {
   user: UserProfile | null;
@@ -32,7 +32,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
     alamat: user?.alamat || "",
   });
 
-  if (!user) return null; // Handle jika data belum siap
+  if (!user) return null; 
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();

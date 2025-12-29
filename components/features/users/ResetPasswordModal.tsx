@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Copy, Check, Wand2, Key, Info } from "lucide-react";
 import { FormModal } from "@/components/shared/FormModal";
-import Tooltip from "@/components/shared/Tooltip"; // PERBAIKAN: Menggunakan default import (tanpa kurung kurawal)
-import { updateUser, type UserData } from "@/app/actions/users";
+import Tooltip from "@/components/shared/Tooltip";
+import { updateUser } from "@/app/actions/users";
+// PERBAIKAN: Import dari lib/types
+import { type UserData } from "@/lib/types"; 
 
 interface ResetPasswordModalProps {
   isOpen: boolean;

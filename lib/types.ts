@@ -18,7 +18,6 @@ export interface Course {
   kategori: CourseCategory | string;
 }
 
-// Digunakan untuk Payload API & State Form
 export interface CourseFormValues {
   kode: string;
   matkul: string;
@@ -27,7 +26,6 @@ export interface CourseFormValues {
   kategori: CourseCategory | "";
 }
 
-// Alias untuk kompatibilitas dengan existing code
 export type CoursePayload = CourseFormValues; 
 
 // =========================================
@@ -43,7 +41,6 @@ export interface StudentProfile {
   semester: number;
 }
 
-// Digunakan untuk Form Input & Update Mahasiswa
 export interface StudentFormValues {
   nim: string;
   nama: string;
@@ -63,13 +60,12 @@ export interface TranscriptItem {
   matkul: string;
   smt: number;
   sks: number;
-  hm: string;      // Huruf Mutu (A, B, C...)
-  am: number;      // Angka Mutu (4, 3, 2...)
-  nm: number;      // Nilai Mutu (am * sks)
+  hm: string;
+  am: number;
+  nm: number;
   kategori?: CourseCategory; 
 }
 
-// Struktur Data Utama Dashboard Mahasiswa
 export interface StudentData {
   id: string; 
   profile: StudentProfile;
@@ -87,7 +83,6 @@ export interface UserData {
   student_id?: number | null;
 }
 
-// Payload untuk Create/Update User
 export interface UserPayload {
   name: string;
   username: string;
@@ -96,7 +91,6 @@ export interface UserPayload {
   student_id?: number | null;
 }
 
-// Digunakan di Form User
 export interface UserFormValues {
   id?: string;
   name: string;
@@ -106,10 +100,20 @@ export interface UserFormValues {
   student_id?: number | null;
 }
 
-// Opsi dropdown saat memilih mahasiswa untuk ditautkan ke user
 export interface StudentOption {
   id: number;
   nim: string;
   nama: string;
   is_taken: boolean;
+}
+
+// =========================================
+// SETTINGS (PENGATURAN)
+// =========================================
+export interface UserProfile {
+  name: string;
+  username: string;
+  role: string;
+  alamat?: string;
+  password?: string;
 }

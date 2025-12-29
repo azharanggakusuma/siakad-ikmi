@@ -1,5 +1,5 @@
 import React from "react";
-import { StudentProfile } from "@/lib/data";
+import { StudentProfile } from "@/lib/types";
 
 interface StudentInfoProps {
   profile: StudentProfile;

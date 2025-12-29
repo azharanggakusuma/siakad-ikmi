@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { StudentData } from "@/lib/types";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import Tooltip from "@/components/shared/Tooltip"; // Import Tooltip Custom
 import { RotateCcw, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -106,10 +107,7 @@ export function StudentGradeForm({
   };
 
   const handleConfirmSave = async () => {
-    // 1. Langsung tutup modal konfirmasi agar terasa responsif
     setShowConfirm(false);
-    
-    // 2. Set loading state (untuk disable interaksi form)
     setLoading(true);
 
     try {
@@ -118,7 +116,6 @@ export function StudentGradeForm({
         hm: hm,
       }));
 
-      // 3. Gunakan toast.promise dengan pesan yang lebih bagus
       await toast.promise(
         onSubmit(parseInt(student.id), payload),
         {
@@ -128,12 +125,10 @@ export function StudentGradeForm({
         }
       );
 
-      // 4. Tutup form utama (modal besar) setelah sukses
       onCancel();
 
     } catch (error) {
       console.error(error);
-      // Jika gagal, matikan loading agar admin bisa mencoba lagi
       setLoading(false);
     }
   };
@@ -222,7 +217,6 @@ export function StudentGradeForm({
                             key={course.id}
                             className={cn(
                               "group relative flex items-center justify-between py-3 px-5 transition-colors duration-200",
-                              // Indikator Clean: Garis biru di kiri, background subtle
                               isModified
                                 ? "bg-muted/30 border-l-4 border-l-primary" 
                                 : "hover:bg-muted/20 border-l-4 border-l-transparent"
@@ -234,7 +228,6 @@ export function StudentGradeForm({
                                 {course.matkul}
                               </p>
                               <div className="flex items-center gap-2 mt-1.5">
-                                {/* Kode Matkul Rounded Badge */}
                                 <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-mono font-normal text-muted-foreground border-border">
                                   {course.kode}
                                 </Badge>
@@ -246,18 +239,20 @@ export function StudentGradeForm({
 
                             {/* Kontrol Nilai */}
                             <div className="flex items-center gap-3">
-                              {/* Tombol Reset */}
+                              {/* Tombol Reset (Menggunakan Custom Tooltip) */}
                               {isModified && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-                                  onClick={() => handleResetRow(course.id)}
-                                  title="Reset Nilai"
-                                  disabled={loading}
-                                >
-                                  <RotateCcw className="h-3.5 w-3.5" />
-                                </Button>
+                                <Tooltip content="Kembalikan nilai awal" position="top">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                                    onClick={() => handleResetRow(course.id)}
+                                    // title="Reset Nilai" <-- DIHAPUS, diganti Tooltip
+                                    disabled={loading}
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                  </Button>
+                                </Tooltip>
                               )}
 
                               <Select
@@ -306,11 +301,10 @@ export function StudentGradeForm({
             className="min-w-[100px]"
           >
             {loading ? (
-              // Loading Spinner Saja
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                Simpan Nilai
+                <Save className="mr-2 h-4 w-4" /> Simpan
               </>
             )}
           </Button>
@@ -321,7 +315,7 @@ export function StudentGradeForm({
         isOpen={showConfirm}
         onClose={setShowConfirm}
         onConfirm={handleConfirmSave}
-        title={`Simpan Nilai?`}
+        title={`Simpan Nilai ${student.profile.nama}?`}
         description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan data nilai sudah sesuai dan benar.`}
         confirmLabel="Ya, Simpan"
         cancelLabel="Batal"

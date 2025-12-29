@@ -151,16 +151,17 @@ export default function MahasiswaPage() {
     },
     { 
       header: "Program Studi", 
+      className: "w-[150px]",
       render: (row) => <span className="text-gray-600">{row.profile.prodi}</span>
     },
     {
       header: "Jenjang",
-      className: "text-center w-[80px]",
+      className: "text-center w-[150px]",
       render: (row) => <Badge variant="outline" className="bg-slate-50 text-slate-700">{row.profile.jenjang}</Badge>
     },
     { 
-      header: "Smt", 
-      className: "text-center w-[60px]", 
+      header: "Semester", 
+      className: "text-center w-[150px]", 
       render: (row) => row.profile.semester 
     },
     {

@@ -3,20 +3,40 @@
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
+// --- TYPES ---
+interface Course {
+  id: number;
+  kode: string;
+  matkul: string;
+  sks: number;
+  smt_default: number;
+}
+
+interface Grade {
+  id: number;
+  hm: string;
+  courses: Course | null; // Bisa null jika relasi tidak ditemukan
+}
+
+interface StudentResponse {
+  id: number;
+  nim: string;
+  nama: string;
+  alamat: string;
+  prodi: string;
+  jenjang: string;
+  semester: number;
+  grades: Grade[];
+}
+
 // Helper konversi nilai huruf ke angka
-const getAM = (hm: string) => {
-  switch (hm) {
-    case 'A': return 4;
-    case 'B': return 3;
-    case 'C': return 2;
-    case 'D': return 1;
-    default: return 0;
-  }
+const getAM = (hm: string): number => {
+  const map: Record<string, number> = { 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+  return map[hm] || 0;
 };
 
 export async function getStudents() {
   // Query join: students -> grades -> courses
-  // PERBAIKAN: Menggunakan 'matkul' dan 'smt_default' sesuai nama kolom database
   const { data, error } = await supabase
     .from('students')
     .select(`
@@ -36,32 +56,35 @@ export async function getStudents() {
     .order('id', { ascending: true });
 
   if (error) {
-    console.error("Gagal ambil mahasiswa:", error); // Log error agar terlihat di terminal
+    console.error("Error fetching students:", error.message);
     return [];
   }
 
-  // Format data agar sesuai dengan UI yang sudah ada
-  return data.map((s) => {
-    // Mapping Grades ke format Transcript
-    // @ts-ignore
-    const transcript = s.grades ? s.grades.map((g: any, index: number) => {
-      const course = g.courses;
-      const am = getAM(g.hm);
-      const nm = am * (course?.sks || 0);
+  // Casting data ke tipe yang sudah kita definisikan
+  const students = data as unknown as StudentResponse[];
 
-      return {
-        no: index + 1,
-        course_id: course?.id,
-        // Mapping kolom DB ke properti UI
-        kode: course?.kode || "CODE",
-        matkul: course?.matkul || "Unknown",     // Ambil dari 'matkul'
-        smt: course?.smt_default || 1,           // Ambil dari 'smt_default'
-        sks: course?.sks || 0,
-        hm: g.hm,
-        am: am,
-        nm: nm
-      };
-    }).sort((a: any, b: any) => a.smt - b.smt || a.kode.localeCompare(b.kode)) : [];
+  return students.map((s) => {
+    // Mapping Grades ke format Transcript
+    const transcript = (s.grades || [])
+      .map((g, index) => {
+        const course = g.courses;
+        const am = getAM(g.hm);
+        const sks = course?.sks || 0;
+        const nm = am * sks;
+
+        return {
+          no: index + 1,
+          course_id: course?.id,
+          kode: course?.kode || "CODE",
+          matkul: course?.matkul || "Unknown",
+          smt: course?.smt_default || 1,
+          sks: sks,
+          hm: g.hm,
+          am: am,
+          nm: nm
+        };
+      })
+      .sort((a, b) => a.smt - b.smt || a.kode.localeCompare(b.kode));
 
     return {
       id: String(s.id),
@@ -79,22 +102,41 @@ export async function getStudents() {
   });
 }
 
-// --- CREATE, UPDATE, DELETE TETAP SAMA ---
+// --- CRUD OPERATIONS ---
 
-export async function createStudent(values: any) {
+interface StudentValues {
+  nim: string;
+  nama: string;
+  prodi: string;
+  jenjang: string;
+  semester: number | string;
+  alamat: string;
+}
+
+export async function createStudent(values: StudentValues) {
   const { error } = await supabase.from('students').insert([{
-      nim: values.nim, nama: values.nama, prodi: values.prodi,
-      jenjang: values.jenjang, semester: Number(values.semester), alamat: values.alamat
+    nim: values.nim,
+    nama: values.nama,
+    prodi: values.prodi,
+    jenjang: values.jenjang,
+    semester: Number(values.semester),
+    alamat: values.alamat
   }]);
+  
   if (error) throw new Error(error.message);
   revalidatePath('/mahasiswa'); 
 }
 
-export async function updateStudent(id: string | number, values: any) {
+export async function updateStudent(id: string | number, values: StudentValues) {
   const { error } = await supabase.from('students').update({
-      nim: values.nim, nama: values.nama, prodi: values.prodi,
-      jenjang: values.jenjang, semester: Number(values.semester), alamat: values.alamat
+    nim: values.nim,
+    nama: values.nama,
+    prodi: values.prodi,
+    jenjang: values.jenjang,
+    semester: Number(values.semester),
+    alamat: values.alamat
   }).eq('id', Number(id));
+
   if (error) throw new Error(error.message);
   revalidatePath('/mahasiswa');
 }

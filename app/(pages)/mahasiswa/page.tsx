@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react"; 
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,13 +13,11 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
 import { StudentForm, type StudentFormValues } from "@/components/features/mahasiswa/StudentForm";
-
 import { type StudentData } from "@/lib/data";
 import { getStudents, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
@@ -28,6 +25,7 @@ export default function MahasiswaPage() {
   const [dataList, setDataList] = useState<StudentData[]>([]);
   const [isLoading, setIsLoading] = useState(true); 
   
+  // Filters & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [prodiFilter, setProdiFilter] = useState<string>("ALL");
   const [semesterFilter, setSemesterFilter] = useState<string>("ALL");
@@ -39,8 +37,7 @@ export default function MahasiswaPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null); 
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
 
   // === FETCH DATA ===
@@ -48,9 +45,9 @@ export default function MahasiswaPage() {
     setIsLoading(true);
     try {
       const students = await getStudents();
-      setDataList(students);
+      setDataList(students as unknown as StudentData[]);
     } catch (error) {
-      toast.error("Gagal memuat data", { description: "Cek koneksi internet Anda." });
+      toast.error("Gagal Memuat Data", { description: "Terjadi kesalahan koneksi ke server." });
     } finally {
       setIsLoading(false);
     }
@@ -60,34 +57,38 @@ export default function MahasiswaPage() {
     fetchData();
   }, []);
 
-  // --- LOGIC FILTER ---
+  // --- FILTER LOGIC ---
   const filteredData = useMemo(() => {
     return dataList.filter((student) => {
       const query = searchQuery.toLowerCase();
       const matchSearch =
         student.profile.nama.toLowerCase().includes(query) ||
         student.profile.nim.toLowerCase().includes(query);
+      
       const matchProdi = prodiFilter === "ALL" || student.profile.prodi === prodiFilter;
-      const matchSemester = semesterFilter === "ALL" || student.profile.semester.toString() === semesterFilter;
+      const matchSemester = semesterFilter === "ALL" || String(student.profile.semester) === semesterFilter;
+      
       return matchSearch && matchProdi && matchSemester;
     });
   }, [dataList, searchQuery, prodiFilter, semesterFilter]);
 
+  // Pagination Logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
+  // --- PERBAIKAN: Definisi endIndex ditambahkan kembali ---
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
   // --- HANDLERS ---
   const handleOpenAdd = () => {
     setFormData(undefined);
-    setEditId(null);
+    setSelectedId(null);
     setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (student: StudentData) => {
-    setEditId(student.id); 
+    setSelectedId(student.id); 
     setFormData({
       nim: student.profile.nim,
       nama: student.profile.nama,
@@ -101,31 +102,31 @@ export default function MahasiswaPage() {
   };
 
   const handleFormSubmit = async (values: StudentFormValues) => {
-    if (!values.nim || !values.nama) {
-      toast.error("Gagal", { description: "Data wajib belum lengkap." });
-      return;
-    }
     try {
-      if (isEditing && editId) {
-        await updateStudent(editId, values);
-        toast.success("Berhasil Update", { description: `Data ${values.nama} diperbarui.` });
+      if (isEditing && selectedId) {
+        await updateStudent(selectedId, values);
+        toast.success("Berhasil Update", { description: `Data ${values.nama} berhasil diperbarui.` });
       } else {
         await createStudent(values);
-        toast.success("Berhasil", { description: `Mahasiswa ${values.nama} ditambahkan.` });
+        toast.success("Berhasil Tambah", { description: `Mahasiswa ${values.nama} berhasil ditambahkan.` });
       }
       await fetchData(); 
       setIsFormOpen(false);
     } catch (error: any) {
-      toast.error("Terjadi Kesalahan", { description: error.message });
+      toast.error("Terjadi Kesalahan", { description: error.message || "Gagal menyimpan data." });
     }
   };
 
   const handleDelete = async () => {
-    if (deleteId) {
+    if (selectedId) {
       try {
-        await deleteStudent(deleteId);
-        toast.success("Dihapus", { description: "Data mahasiswa dihapus permanen." });
-        if (currentData.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
+        await deleteStudent(selectedId);
+        toast.success("Berhasil Hapus", { description: "Data mahasiswa telah dihapus permanen." });
+        
+        // Adjust pagination if needed
+        if (currentData.length === 1 && currentPage > 1) {
+          setCurrentPage((p) => p - 1);
+        }
         await fetchData();
       } catch (error: any) {
         toast.error("Gagal Hapus", { description: error.message });
@@ -139,61 +140,40 @@ export default function MahasiswaPage() {
     {
       header: "#",
       className: "w-[50px] text-center",
-      render: (_: StudentData, index: number) => (
-        <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
-      )
+      render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
     {
       header: "NIM",
       className: "w-[120px]",
-      render: (row: StudentData) => (
-        <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
-      )
+      render: (row) => <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
     },
     { 
       header: "Nama Lengkap", 
-      render: (row: StudentData) => (
-        <span className="font-semibold text-gray-800">{row.profile.nama}</span>
-      ) 
+      render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span>
     },
     { 
       header: "Program Studi", 
-      render: (row: StudentData) => (
-        <span className="text-gray-600">{row.profile.prodi}</span>
-      ) 
+      render: (row) => <span className="text-gray-600">{row.profile.prodi}</span>
     },
     {
       header: "Jenjang",
       className: "text-center w-[80px]",
-      render: (row: StudentData) => (
-        <Badge variant="outline" className="bg-slate-50 text-slate-700">{row.profile.jenjang}</Badge>
-      )
+      render: (row) => <Badge variant="outline" className="bg-slate-50 text-slate-700">{row.profile.jenjang}</Badge>
     },
     { 
-      header: "Semester", 
+      header: "Smt", 
       className: "text-center w-[60px]", 
-      render: (row: StudentData) => row.profile.semester 
-    },
-    {
-      header: "Alamat",
-      className: "max-w-[250px]", 
-      render: (row: StudentData) => (
-        <Tooltip content={row.profile.alamat} position="top">
-          <div className="truncate text-gray-600 cursor-default">
-            {row.profile.alamat}
-          </div>
-        </Tooltip>
-      )
+      render: (row) => row.profile.semester 
     },
     {
       header: "Aksi",
       className: "text-center w-[100px]",
-      render: (row: StudentData) => (
+      render: (row) => (
         <div className="flex justify-center gap-2">
           <Button variant="ghost" size="icon" className="text-yellow-600 hover:bg-yellow-50 h-8 w-8" onClick={() => handleOpenEdit(row)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 h-8 w-8" onClick={() => { setDeleteId(row.id); setIsDeleteOpen(true); }}>
+          <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 h-8 w-8" onClick={() => { setSelectedId(row.id); setIsDeleteOpen(true); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -206,11 +186,9 @@ export default function MahasiswaPage() {
       <DropdownMenuLabel>Program Studi</DropdownMenuLabel>
       <DropdownMenuRadioGroup value={prodiFilter} onValueChange={(v) => { setProdiFilter(v); setCurrentPage(1); }}>
         <DropdownMenuRadioItem value="ALL">Semua</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Teknik Informatika">Teknik Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Sistem Informasi">Sistem Informasi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Manajemen Informatika">Manajemen Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</DropdownMenuRadioItem>
+        {["Teknik Informatika", "Sistem Informasi", "Manajemen Informatika", "Komputerisasi Akuntansi", "Rekayasa Perangkat Lunak"].map(p => (
+           <DropdownMenuRadioItem key={p} value={p}>{p}</DropdownMenuRadioItem>
+        ))}
       </DropdownMenuRadioGroup>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>Semester</DropdownMenuLabel>
@@ -230,11 +208,9 @@ export default function MahasiswaPage() {
           <DataTable
             data={currentData}
             columns={columns}
-            // Passing status loading ke DataTable
-            isLoading={isLoading} 
-            
+            isLoading={isLoading}
             searchQuery={searchQuery}
-            onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
             addLabel="Tambah Data"
@@ -245,7 +221,7 @@ export default function MahasiswaPage() {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             startIndex={startIndex}
-            endIndex={endIndex}
+            endIndex={endIndex} // === Sekarang variabel ini sudah terdefinisi ===
             totalItems={filteredData.length}
           />
         </CardContent>
@@ -255,11 +231,11 @@ export default function MahasiswaPage() {
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
-        description={isEditing ? `Edit data untuk NIM ${formData?.nim}` : "Pastikan data mahasiswa yang dimasukkan sudah benar."}
+        description={isEditing ? `Perbarui informasi untuk NIM ${formData?.nim}` : "Pastikan data yang dimasukkan valid."}
         maxWidth="sm:max-w-[600px]"
       >
         <StudentForm 
-            key={isEditing && editId ? `edit-${editId}` : "add-new"}
+            key={isEditing && selectedId ? `edit-${selectedId}` : "add-new"}
             initialData={formData}
             isEditing={isEditing}
             onSubmit={handleFormSubmit}
@@ -271,8 +247,8 @@ export default function MahasiswaPage() {
         isOpen={isDeleteOpen}
         onClose={setIsDeleteOpen}
         onConfirm={handleDelete}
-        title="Hapus Data?"
-        description={`Yakin hapus data mahasiswa ini?`}
+        title="Hapus Data Mahasiswa?"
+        description="Data yang dihapus tidak dapat dikembalikan lagi. Apakah Anda yakin?"
         confirmLabel="Hapus Permanen"
         variant="destructive"
       />

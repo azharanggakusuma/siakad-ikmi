@@ -31,13 +31,8 @@ interface UserFormProps {
   onCancel: () => void;
 }
 
-// Default role dikosongkan agar placeholder muncul saat tambah user
 const defaultValues: UserFormValues = {
-  name: "",
-  username: "",
-  password: "",
-  role: "", 
-  student_id: null,
+  name: "", username: "", password: "", role: "", student_id: null,
 };
 
 export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFormProps) {
@@ -47,8 +42,8 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
         id: initialData.id,
         name: initialData.name || "",
         username: initialData.username || "",
-        password: "",
-        role: initialData.role || "", // Pastikan role terisi saat edit
+        password: "", // Password tidak ditampilkan saat edit
+        role: initialData.role || "",
         student_id: initialData.student_id || null,
       };
     }
@@ -58,7 +53,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof UserFormValues, boolean>>>({});
 
-  // --- STATE UNTUK SEARCHABLE SELECT ---
+  // --- STATE PENCARIAN MAHASISWA ---
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [searchStudent, setSearchStudent] = useState("");
@@ -66,28 +61,28 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // FETCH DATA MAHASISWA SAAT ROLE = MAHASISWA
+  // Load Data Mahasiswa jika role = mahasiswa
   useEffect(() => {
     if (formData.role === "mahasiswa") {
       setIsLoadingStudents(true);
       getStudentsForSelection(isEditing ? formData.id : undefined)
-        .then((data) => {
-          setStudentOptions(data);
-        })
+        .then(setStudentOptions)
         .finally(() => setIsLoadingStudents(false));
     }
   }, [formData.role, isEditing, formData.id]);
 
+  // Klik di luar dropdown untuk menutupnya
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
-    }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Filter list mahasiswa
   const filteredStudents = studentOptions.filter((s) =>
     s.nim.toLowerCase().includes(searchStudent.toLowerCase()) ||
     s.nama.toLowerCase().includes(searchStudent.toLowerCase())
@@ -98,45 +93,37 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   // --- VALIDASI ---
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof UserFormValues, boolean>> = {};
-    let isValid = true;
     const errorMessages: string[] = [];
+    let isValid = true;
 
-    // Validasi Role Wajib Dipilih
     if (!formData.role) {
       newErrors.role = true;
-      isValid = false;
       errorMessages.push("Role wajib dipilih.");
     }
-
     if (!formData.name.trim()) {
       newErrors.name = true;
-      isValid = false;
       errorMessages.push("Nama wajib diisi.");
     }
     if (!formData.username.trim()) {
       newErrors.username = true;
-      isValid = false;
       errorMessages.push("Username wajib diisi.");
     }
+    // Password wajib diisi hanya saat tambah user baru
     if (!isEditing && (!formData.password || formData.password.length < 6)) {
       newErrors.password = true;
-      isValid = false;
       errorMessages.push("Password minimal 6 karakter.");
     }
+    // Jika role mahasiswa, wajib pilih data mahasiswa
     if (formData.role === "mahasiswa" && !formData.student_id) {
-      isValid = false;
+      newErrors.student_id = true; // Error flag custom (bisa dipakai untuk styling border dropdown)
       errorMessages.push("Harap pilih data mahasiswa untuk ditautkan.");
     }
 
-    setErrors(newErrors);
-
-    if (!isValid) {
+    if (errorMessages.length > 0) {
+      setErrors(newErrors);
+      isValid = false;
       toast.error("Validasi Gagal", {
-        description: (
-          <ul className="list-disc pl-4 space-y-1 text-sm">
-            {errorMessages.map((msg, i) => <li key={i}>{msg}</li>)}
-          </ul>
-        )
+        description: <ul className="list-disc pl-4">{errorMessages.map((m, i) => <li key={i}>{m}</li>)}</ul>
       });
     }
     return isValid;
@@ -144,27 +131,32 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(formData);
-    }
+    if (validate()) onSubmit(formData);
   };
 
-  const handleInputChange = (field: keyof UserFormValues, value: any) => {
+  const handleInputChange = (field: keyof UserFormValues, value: string | number | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleSelectStudent = (student: StudentOption) => {
     if (student.is_taken) return;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       student_id: student.id,
-      name: student.nama,
-      username: student.nim
+      name: student.nama, // Auto-fill nama
+      username: student.nim // Auto-fill username
     }));
     setIsDropdownOpen(false);
     setSearchStudent("");
+    
+    // Clear errors terkait
+    if (errors.name) setErrors(prev => ({...prev, name: undefined}));
+    if (errors.username) setErrors(prev => ({...prev, username: undefined}));
   };
+
+  const errorClass = (field: keyof UserFormValues) => 
+    errors[field] ? "border-red-500 focus-visible:ring-red-500" : "";
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
@@ -176,33 +168,30 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
           value={formData.role}
           onValueChange={(val) => {
             handleInputChange("role", val);
-            if (val !== 'mahasiswa') {
-              setFormData(prev => ({ ...prev, student_id: null }));
-            }
+            if (val !== 'mahasiswa') handleInputChange("student_id", null);
           }}
         >
-          {/* Tambahkan validasi error style pada SelectTrigger */}
-          <SelectTrigger className={`w-full ${errors.role ? "border-red-500 focus:ring-0 focus:border-red-500" : ""}`}>
+          <SelectTrigger className={`w-full ${errorClass("role")}`}>
             <SelectValue placeholder="Pilih Role" />
           </SelectTrigger>
           <SelectContent>
-            {/* Hanya menampilkan Admin dan Mahasiswa */}
             <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="dosen">Dosen</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* --- FITUR DROPDOWN MAHASISWA --- */}
+      {/* --- DROPDOWN MAHASISWA (Custom Searchable) --- */}
       {formData.role === "mahasiswa" && (
         <div className="grid gap-2 relative" ref={dropdownRef}>
-          <Label className="flex justify-between">
+          <Label className="flex justify-between items-center">
             Tautkan Data Mahasiswa
             {isLoadingStudents && <Loader2 className="animate-spin h-3 w-3 text-muted-foreground" />}
           </Label>
           
           <div 
-            className={`flex items-center justify-between w-full rounded-md border px-3 py-2 text-sm ring-offset-background cursor-pointer hover:bg-slate-50 
+            className={`flex items-center justify-between w-full rounded-md border px-3 py-2 text-sm ring-offset-background cursor-pointer hover:bg-slate-50 transition-colors
               ${!formData.student_id ? 'text-muted-foreground' : 'text-foreground font-medium'} 
               ${errors.student_id ? "border-red-500" : "border-input"}`}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -213,13 +202,12 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             <Search size={14} className="opacity-50" />
           </div>
 
-          {/* Isi Dropdown */}
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 w-full mt-1 z-50 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95 bg-white">
-              <div className="p-2 border-b sticky top-0 bg-white z-10">
+            <div className="absolute top-full left-0 w-full mt-1 z-50 rounded-md border bg-white shadow-lg animate-in fade-in-0 zoom-in-95">
+              <div className="p-2 border-b sticky top-0 bg-white z-10 rounded-t-md">
                 <Input 
                   placeholder="Cari NIM atau Nama..." 
-                  className="h-8 text-xs"
+                  className="h-8 text-xs focus-visible:ring-1"
                   autoFocus
                   value={searchStudent}
                   onChange={(e) => setSearchStudent(e.target.value)}
@@ -227,7 +215,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
               </div>
               <div className="max-h-[200px] overflow-y-auto p-1">
                 {filteredStudents.length === 0 ? (
-                  <p className="text-xs text-center p-2 text-muted-foreground">Data tidak ditemukan.</p>
+                  <p className="text-xs text-center p-3 text-muted-foreground">Data tidak ditemukan.</p>
                 ) : (
                   filteredStudents.map((s) => (
                     <div
@@ -250,7 +238,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
               </div>
             </div>
           )}
-           <p className="text-[10px] text-muted-foreground">
+           <p className="text-[10px] text-muted-foreground mt-1">
              *Memilih mahasiswa akan otomatis mengisi Nama & Username.
            </p>
         </div>
@@ -265,7 +253,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
             placeholder="Nama User"
-            className={errors.name ? "border-red-500" : ""}
+            className={errorClass("name")}
             readOnly={formData.role === 'mahasiswa' && !!formData.student_id} 
           />
         </div>
@@ -277,13 +265,13 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             value={formData.username}
             onChange={(e) => handleInputChange("username", e.target.value)}
             placeholder="Username login"
-            className={errors.username ? "border-red-500" : ""}
+            className={errorClass("username")}
           />
         </div>
       </div>
 
       {/* Password */}
-      <div className="grid gap-2 relative">
+      <div className="grid gap-2">
         <Label htmlFor="password">
           {isEditing ? "Password Baru (Opsional)" : "Password"}
         </Label>
@@ -293,31 +281,23 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             type={showPassword ? "text" : "password"}
             value={formData.password}
             onChange={(e) => handleInputChange("password", e.target.value)}
-            placeholder={isEditing ? "Kosongkan jika tidak ingin mengubah" : "******"}
-            className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+            placeholder={isEditing ? "Biarkan kosong jika tetap" : "******"}
+            className={`pr-10 ${errorClass("password")}`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+            tabIndex={-1}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        {isEditing && (
-          <p className="text-[10px] text-muted-foreground">
-            *Biarkan kosong jika tetap menggunakan password lama.
-          </p>
-        )}
       </div>
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Batal
-        </Button>
-        <Button type="submit">
-          {isEditing ? "Simpan Perubahan" : "Buat User"}
-        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>Batal</Button>
+        <Button type="submit">{isEditing ? "Simpan Perubahan" : "Buat User"}</Button>
       </div>
     </form>
   );

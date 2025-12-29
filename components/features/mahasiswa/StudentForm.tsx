@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; 
@@ -33,88 +33,83 @@ const defaultValues: StudentFormValues = {
 };
 
 export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: StudentFormProps) {
-  const [formData, setFormData] = useState<StudentFormValues>(() => {
-    if (initialData) {
-      const raw = initialData as any;
-      return {
-        nim: raw.nim || "",
-        nama: raw.nama || "",
-        prodi: (raw.prodi || raw.program_studi || "").toString().trim(),
-        jenjang: (raw.jenjang || raw.strata || "").toString().trim(),
-        semester: raw.semester || "",
-        alamat: raw.alamat || ""
-      };
-    }
-    return defaultValues;
-  });
-
+  const [formData, setFormData] = useState<StudentFormValues>(defaultValues);
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormValues, boolean>>>({});
 
-  // --- FUNGSI VALIDASI ---
+  // Reset form saat initialData berubah (penting jika modal dibuka ulang)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        nim: initialData.nim || "",
+        nama: initialData.nama || "",
+        prodi: String(initialData.prodi || "").trim(),
+        jenjang: String(initialData.jenjang || "").trim(),
+        semester: initialData.semester || "",
+        alamat: initialData.alamat || ""
+      });
+    } else {
+      setFormData(defaultValues);
+    }
+  }, [initialData]);
+
+  // --- HANDLERS ---
+  const handleInputChange = (field: keyof StudentFormValues, value: string | number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Handler khusus input angka untuk mengurangi logika inline di JSX
+  const handleNumericInput = (field: keyof StudentFormValues, value: string, maxLength: number) => {
+    if (/^\d*$/.test(value) && value.length <= maxLength) {
+      handleInputChange(field, value);
+    }
+  };
+
+  // --- VALIDASI ---
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof StudentFormValues, boolean>> = {};
     const errorMessages: string[] = [];
     let isValid = true;
 
     // 1. Validasi NIM
-    const nimRegex = /^\d{8}$/;
     if (!formData.nim) {
       newErrors.nim = true;
       errorMessages.push("NIM wajib diisi.");
-      isValid = false;
-    } else if (!nimRegex.test(formData.nim)) {
+    } else if (!/^\d{8}$/.test(formData.nim)) {
       newErrors.nim = true;
       errorMessages.push("NIM harus 8 digit angka.");
-      isValid = false;
     }
 
     // 2. Validasi Semester
-    const semesterVal = parseInt(formData.semester.toString());
+    const sem = Number(formData.semester);
     if (!formData.semester) {
       newErrors.semester = true;
       errorMessages.push("Semester wajib diisi.");
-      isValid = false;
-    } else if (isNaN(semesterVal) || semesterVal < 1 || semesterVal > 14) {
+    } else if (isNaN(sem) || sem < 1 || sem > 14) {
       newErrors.semester = true;
-      errorMessages.push("Semester harus antara 1 sampai 14.");
-      isValid = false;
+      errorMessages.push("Semester harus antara 1 - 14.");
     }
 
     // 3. Validasi Nama
-    const nameHasNumber = /\d/;
-    if (!formData.nama) {
+    if (!formData.nama.trim()) {
       newErrors.nama = true;
       errorMessages.push("Nama wajib diisi.");
-      isValid = false;
-    } else if (nameHasNumber.test(formData.nama)) {
+    } else if (/\d/.test(formData.nama)) {
       newErrors.nama = true;
       errorMessages.push("Nama tidak boleh mengandung angka.");
-      isValid = false;
     }
 
-    // 4. Validasi Prodi & Jenjang
-    if (!formData.prodi) {
-      newErrors.prodi = true;
-      errorMessages.push("Program studi wajib dipilih.");
-      isValid = false;
-    }
-    if (!formData.jenjang) {
-      newErrors.jenjang = true;
-      errorMessages.push("Jenjang wajib dipilih.");
-      isValid = false;
-    }
+    // 4. Lainnya
+    if (!formData.prodi) { newErrors.prodi = true; errorMessages.push("Prodi wajib dipilih."); }
+    if (!formData.jenjang) { newErrors.jenjang = true; errorMessages.push("Jenjang wajib dipilih."); }
 
-    setErrors(newErrors);
-
-    if (!isValid) {
+    if (errorMessages.length > 0) {
+      setErrors(newErrors);
+      isValid = false;
       toast.error("Validasi Gagal", {
-        description: (
-          <ul className="list-disc pl-4 mt-1 space-y-1">
-            {errorMessages.map((msg, index) => (
-              <li key={index}>{msg}</li>
-            ))}
-          </ul>
-        ),
+        description: <ul className="list-disc pl-4">{errorMessages.map((m, i) => <li key={i}>{m}</li>)}</ul>
       });
     }
 
@@ -123,24 +118,14 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(formData);
-    }
+    if (validate()) onSubmit(formData);
   };
 
-  const handleInputChange = (field: keyof StudentFormValues, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const getErrorClass = (isError?: boolean) => 
-    isError ? "border-red-500 focus-visible:ring-0 focus-visible:border-red-500" : "";
+  const errorClass = (field: keyof StudentFormValues) => 
+    errors[field] ? "border-red-500 focus-visible:ring-red-500" : "";
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      
       {/* Baris 1: NIM & Semester */}
       <div className="grid grid-cols-5 gap-4">
         <div className="grid gap-2 col-span-3">
@@ -148,40 +133,25 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
           <Input
             id="nim"
             value={formData.nim}
-            onChange={(e) => {
-               const val = e.target.value;
-               // Validasi input hanya angka dan max 8 digit
-               if (/^\d*$/.test(val) && val.length <= 8) {
-                 handleInputChange("nim", val);
-               }
-            }}
-            // --- PERBAIKAN: disabled={isEditing} dihapus agar bisa diedit ---
+            onChange={(e) => handleNumericInput("nim", e.target.value, 8)}
             placeholder="Contoh: 4121001"
-            className={getErrorClass(errors.nim)}
+            className={errorClass("nim")}
+            disabled={isEditing} // Biasanya NIM tidak boleh diedit (Primary Key), tapi bisa dihapus jika memang boleh
           />
         </div>
-
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="semester">Semester</Label>
           <Input
             id="semester"
-            type="number"
-            min={1}
-            max={14}
             value={formData.semester}
-            onChange={(e) => {
-               const val = e.target.value;
-               if (/^\d*$/.test(val) && val.length <= 2) {
-                  handleInputChange("semester", val);
-               }
-            }}
+            onChange={(e) => handleNumericInput("semester", e.target.value, 2)}
             placeholder="1"
-            className={getErrorClass(errors.semester)}
+            className={errorClass("semester")}
           />
         </div>
       </div>
 
-      {/* Baris 2: Nama Lengkap */}
+      {/* Baris 2: Nama */}
       <div className="grid gap-2">
         <Label htmlFor="nama">Nama Lengkap</Label>
         <Input
@@ -189,38 +159,29 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
           value={formData.nama}
           onChange={(e) => handleInputChange("nama", e.target.value)}
           placeholder="Contoh: Budi Santoso"
-          className={getErrorClass(errors.nama)}
+          className={errorClass("nama")}
         />
       </div>
 
-      {/* Baris 3: Program Studi & Jenjang */}
+      {/* Baris 3: Prodi & Jenjang */}
       <div className="grid grid-cols-5 gap-4">
         <div className="grid gap-2 col-span-3"> 
           <Label htmlFor="prodi">Program Studi</Label>
-          <Select 
-            value={formData.prodi} 
-            onValueChange={(val) => handleInputChange("prodi", val)}
-          >
-            <SelectTrigger className={`w-full ${errors.prodi ? "border-red-500 focus:ring-0 focus:border-red-500" : ""}`}>
+          <Select value={formData.prodi} onValueChange={(v) => handleInputChange("prodi", v)}>
+            <SelectTrigger className={errorClass("prodi")}>
                <SelectValue placeholder="Pilih Prodi" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Teknik Informatika">Teknik Informatika</SelectItem>
-              <SelectItem value="Sistem Informasi">Sistem Informasi</SelectItem>
-              <SelectItem value="Manajemen Informatika">Manajemen Informatika</SelectItem>
-              <SelectItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</SelectItem>
-              <SelectItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</SelectItem>
+              {["Teknik Informatika", "Sistem Informasi", "Manajemen Informatika", "Komputerisasi Akuntansi", "Rekayasa Perangkat Lunak"].map(p => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="jenjang">Jenjang</Label>
-          <Select 
-            value={formData.jenjang} 
-            onValueChange={(val) => handleInputChange("jenjang", val)}
-          >
-            <SelectTrigger className={`w-full ${errors.jenjang ? "border-red-500 focus:ring-0 focus:border-red-500" : ""}`}>
+          <Select value={formData.jenjang} onValueChange={(v) => handleInputChange("jenjang", v)}>
+            <SelectTrigger className={errorClass("jenjang")}>
                <SelectValue placeholder="Pilih" />
             </SelectTrigger>
             <SelectContent>
@@ -238,8 +199,8 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
           id="alamat"
           value={formData.alamat}
           onChange={(e) => handleInputChange("alamat", e.target.value)}
-          placeholder="Contoh: Jl. Perjuangan No. 1, Cirebon"
-          className={`min-h-[80px] ${getErrorClass(errors.alamat)}`}
+          placeholder="Jl. Perjuangan No. 1, Cirebon"
+          className={`min-h-[80px] ${errorClass("alamat")}`}
         />
       </div>
 

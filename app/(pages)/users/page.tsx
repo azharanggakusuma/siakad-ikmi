@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { toast } from "sonner";
-
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { UserForm, type UserFormValues } from "@/components/features/users/UserForm";
 import UserTable from "@/components/features/users/UserTable";
-import { ResetPasswordModal } from "@/components/features/users/ResetPasswordModal"; // Import komponen baru
+import { ResetPasswordModal } from "@/components/features/users/ResetPasswordModal"; 
 import { getUsers, createUser, updateUser, deleteUser, type UserData } from "@/app/actions/users";
 
 export default function UsersPage() {
@@ -75,7 +74,7 @@ export default function UsersPage() {
       setIsFormOpen(false);
       await fetchData();
     } catch (error: any) {
-      toast.error("Gagal", { description: error.message });
+      toast.error("Gagal Menyimpan", { description: error.message || "Terjadi kesalahan sistem." });
     }
   };
 
@@ -86,7 +85,7 @@ export default function UsersPage() {
         toast.success("Dihapus", { description: "User berhasil dihapus." });
         await fetchData();
       } catch (error: any) {
-        toast.error("Gagal Hapus", { description: error.message });
+        toast.error("Gagal Hapus", { description: error.message || "Gagal menghapus data." });
       }
     }
     setIsDeleteOpen(false);
@@ -123,7 +122,6 @@ export default function UsersPage() {
                   username: selectedUser.username,
                   role: selectedUser.role,
                   student_id: selectedUser.student_id,
-                  password: "",
                 }
               : undefined
           }
@@ -144,7 +142,7 @@ export default function UsersPage() {
         variant="destructive"
       />
 
-      {/* MODAL RESET PASSWORD (KOMPONEN BARU) */}
+      {/* MODAL RESET PASSWORD */}
       <ResetPasswordModal 
         isOpen={isResetOpen}
         onClose={setIsResetOpen}

@@ -5,33 +5,40 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
 // --- KONFIGURASI SUPABASE ADMIN ---
-// Menggunakan Service Role Key untuk bypass RLS (Wajib untuk manajemen user)
+// Service Role Key diperlukan untuk manajemen user (bypass RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || "", {
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
   },
 });
 
-// Tipe Data User
-export type UserData = {
+// --- TYPES ---
+export interface UserData {
   id: string;
   name: string;
   username: string;
-  role: string;
-  student_id?: number | null; // ID Mahasiswa yang tertaut
-};
+  role: "admin" | "dosen" | "mahasiswa" | string;
+  student_id?: number | null;
+}
 
-// Tipe Data untuk Dropdown Pilihan Mahasiswa
-export type StudentOption = {
+export interface UserPayload {
+  name: string;
+  username: string;
+  password?: string;
+  role: string;
+  student_id?: number | null;
+}
+
+export interface StudentOption {
   id: number;
   nim: string;
   nama: string;
-  is_taken: boolean; // True jika mahasiswa ini sudah punya akun user lain
-};
+  is_taken: boolean;
+}
 
 // === GET USERS ===
 export async function getUsers() {
@@ -40,23 +47,24 @@ export async function getUsers() {
     .select("id, name, username, role, student_id")
     .order("name", { ascending: true });
 
-  if (error) return [];
+  if (error) {
+    console.error("Error fetching users:", error.message);
+    return [];
+  }
   return data as UserData[];
 }
 
 // === HELPER: GET STUDENTS FOR SELECTION ===
-// Mengambil semua mahasiswa & menandai mana yang sudah punya akun
 export async function getStudentsForSelection(excludeUserId?: string) {
-  // 1. Ambil semua data students dari database
-  const { data: students, error: errStudent } = await supabaseAdmin
+  // 1. Ambil data mahasiswa
+  const { data: students, error } = await supabaseAdmin
     .from("students")
     .select("id, nim, nama")
     .order("nim", { ascending: true });
 
-  if (errStudent || !students) return [];
+  if (error || !students) return [];
 
-  // 2. Ambil semua student_id yang sudah dipakai di tabel users
-  //    Jika sedang edit user (excludeUserId ada), jangan anggap student milik user tersebut sebagai "taken"
+  // 2. Cek student_id yang sudah terpakai di tabel users
   let query = supabaseAdmin.from("users").select("student_id").not("student_id", "is", null);
   
   if (excludeUserId) {
@@ -64,11 +72,9 @@ export async function getStudentsForSelection(excludeUserId?: string) {
   }
 
   const { data: usedUsers } = await query;
-  
-  // Buat Set agar pencarian lebih cepat
   const usedStudentIds = new Set(usedUsers?.map((u) => u.student_id));
 
-  // 3. Mapping data mahasiswa + status is_taken
+  // 3. Map status 'is_taken'
   return students.map((s) => ({
     id: s.id,
     nim: s.nim,
@@ -78,25 +84,21 @@ export async function getStudentsForSelection(excludeUserId?: string) {
 }
 
 // === CREATE USER ===
-export async function createUser(values: any) {
+export async function createUser(values: UserPayload) {
   const { name, username, password, role, student_id } = values;
-  
-  // Hash password sebelum disimpan
+
+  // Validasi password wajib ada saat create
+  if (!password) throw new Error("Password wajib diisi untuk user baru.");
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const payload: any = {
+  const payload: Partial<UserPayload> = {
     name,
     username,
     password: hashedPassword,
     role: role || "mahasiswa",
+    student_id: (role === "mahasiswa" && student_id) ? Number(student_id) : null
   };
-
-  // Hanya simpan student_id jika role mahasiswa dan ada nilainya
-  if (role === "mahasiswa" && student_id) {
-    payload.student_id = Number(student_id);
-  } else {
-    payload.student_id = null;
-  }
 
   const { error } = await supabaseAdmin.from("users").insert([payload]);
 
@@ -109,26 +111,20 @@ export async function createUser(values: any) {
 }
 
 // === UPDATE USER ===
-export async function updateUser(id: string, values: any) {
+export async function updateUser(id: string, values: UserPayload) {
   const { name, username, password, role, student_id } = values;
 
-  const updates: any = {
+  const updates: Partial<UserPayload> = {
     name,
     username,
     role,
+    // Jika role bukan mahasiswa, hapus relasi student_id
+    student_id: (role === "mahasiswa" && student_id) ? Number(student_id) : null
   };
 
-  // Update password hanya jika diisi
+  // Hanya update password jika diisi
   if (password && password.trim() !== "") {
     updates.password = await bcrypt.hash(password, 10);
-  }
-
-  // Logika update student_id
-  if (role === "mahasiswa") {
-    updates.student_id = student_id ? Number(student_id) : null;
-  } else {
-    // Jika role diubah jadi admin/dosen, lepas relasi student
-    updates.student_id = null; 
   }
 
   const { error } = await supabaseAdmin

@@ -3,6 +3,24 @@
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
+// --- TYPES ---
+export interface CourseData {
+  id: number;
+  kode: string;
+  matkul: string;
+  sks: number;
+  smt_default: number;
+  kategori: "Reguler" | "MBKM";
+}
+
+export interface CoursePayload {
+  kode: string;
+  matkul: string;
+  sks: number | string;
+  smt_default: number | string;
+  kategori: string;
+}
+
 // Ambil semua mata kuliah
 export async function getCourses() {
   const { data, error } = await supabase
@@ -10,12 +28,15 @@ export async function getCourses() {
     .select('*')
     .order('id', { ascending: true });
 
-  if (error) return [];
-  return data;
+  if (error) {
+    console.error("Error fetching courses:", error.message);
+    return [];
+  }
+  return data as CourseData[];
 }
 
 // Tambah mata kuliah baru
-export async function createCourse(values: any) {
+export async function createCourse(values: CoursePayload) {
   const { error } = await supabase
     .from('courses')
     .insert([{
@@ -31,7 +52,7 @@ export async function createCourse(values: any) {
 }
 
 // Update mata kuliah
-export async function updateCourse(id: number, values: any) {
+export async function updateCourse(id: number, values: CoursePayload) {
   const { error } = await supabase
     .from('courses')
     .update({

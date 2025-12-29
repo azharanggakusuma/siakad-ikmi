@@ -5,10 +5,12 @@ import PageHeader from "@/components/layout/PageHeader";
 import { toast } from "sonner";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import { UserForm, type UserFormValues } from "@/components/features/users/UserForm";
+import { UserForm } from "@/components/features/users/UserForm";
 import UserTable from "@/components/features/users/UserTable";
 import { ResetPasswordModal } from "@/components/features/users/ResetPasswordModal"; 
-import { getUsers, createUser, updateUser, deleteUser, type UserData } from "@/app/actions/users";
+// PERBAIKAN IMPORT
+import { type UserData, type UserFormValues } from "@/lib/types";
+import { getUsers, createUser, updateUser, deleteUser } from "@/app/actions/users";
 
 export default function UsersPage() {
   const [dataList, setDataList] = useState<UserData[]>([]);

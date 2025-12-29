@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound } from "lucide-react";
-import { type UserData } from "@/app/actions/users";
+import { UserData } from "@/lib/types"; // Import diperbarui
 import {
   DropdownMenuLabel,
   DropdownMenuSeparator,

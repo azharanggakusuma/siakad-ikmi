@@ -2,21 +2,10 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import { StudentData, TranscriptItem, StudentFormValues } from "@/lib/types";
 
-// --- EXPORT TYPES (Agar bisa diimport di page lain) ---
-export interface TranscriptItem {
-  no: number;
-  course_id: number;
-  kode: string;
-  matkul: string;
-  smt: number;
-  sks: number;
-  hm: string;
-  am: number;
-  nm: number;
-}
-
-export interface StudentProfile {
+// Internal Interface untuk Response DB (Mapping hasil join)
+interface DBResponseStudent {
   id: number;
   nim: string;
   nama: string;
@@ -24,38 +13,17 @@ export interface StudentProfile {
   prodi: string;
   jenjang: string;
   semester: number;
-}
-
-export interface StudentData {
-  id: string;
-  profile: StudentProfile;
-  transcript: TranscriptItem[];
-}
-
-// Internal Interface untuk Response DB
-interface Course {
-  id: number;
-  kode: string;
-  matkul: string;
-  sks: number;
-  smt_default: number;
-}
-
-interface Grade {
-  id: number;
-  hm: string;
-  courses: Course | null;
-}
-
-interface StudentResponse {
-  id: number;
-  nim: string;
-  nama: string;
-  alamat: string;
-  prodi: string;
-  jenjang: string;
-  semester: number;
-  grades: Grade[];
+  grades: {
+    id: number;
+    hm: string;
+    courses: {
+      id: number;
+      kode: string;
+      matkul: string;
+      sks: number;
+      smt_default: number;
+    } | null;
+  }[];
 }
 
 // Helper konversi nilai huruf ke angka
@@ -89,7 +57,7 @@ export async function getStudents(): Promise<StudentData[]> {
   }
 
   // Casting data dari DB ke tipe internal
-  const students = data as unknown as StudentResponse[];
+  const students = data as unknown as DBResponseStudent[];
 
   // Mapping ke tipe StudentData yang bersih
   return students.map((s) => {
@@ -132,16 +100,7 @@ export async function getStudents(): Promise<StudentData[]> {
 
 // --- CRUD OPERATIONS ---
 
-interface StudentValues {
-  nim: string;
-  nama: string;
-  prodi: string;
-  jenjang: string;
-  semester: number | string;
-  alamat: string;
-}
-
-export async function createStudent(values: StudentValues) {
+export async function createStudent(values: StudentFormValues) {
   const { error } = await supabase.from('students').insert([{
     nim: values.nim,
     nama: values.nama,
@@ -155,7 +114,7 @@ export async function createStudent(values: StudentValues) {
   revalidatePath('/mahasiswa'); 
 }
 
-export async function updateStudent(id: string | number, values: StudentValues) {
+export async function updateStudent(id: string | number, values: StudentFormValues) {
   const { error } = await supabase.from('students').update({
     nim: values.nim,
     nama: values.nama,

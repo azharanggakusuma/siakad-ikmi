@@ -2,24 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
-
-// --- TYPES ---
-export interface CourseData {
-  id: number;
-  kode: string;
-  matkul: string;
-  sks: number;
-  smt_default: number;
-  kategori: "Reguler" | "MBKM";
-}
-
-export interface CoursePayload {
-  kode: string;
-  matkul: string;
-  sks: number | string;
-  smt_default: number | string;
-  kategori: string;
-}
+import { Course, CoursePayload } from "@/lib/types";
 
 // Ambil semua mata kuliah
 export async function getCourses() {
@@ -32,7 +15,7 @@ export async function getCourses() {
     console.error("Error fetching courses:", error.message);
     return [];
   }
-  return data as CourseData[];
+  return data as Course[];
 }
 
 // Tambah mata kuliah baru

@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-// Import tipe StudentData
-import { getStudents, type StudentData } from "@/app/actions/students";
+// PERBAIKAN IMPORT
+import { getStudents } from "@/app/actions/students";
+import { type StudentData } from "@/lib/types";
+
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +17,6 @@ import ControlPanel from "@/components/features/document/ControlPanel";
 import GradeTable from "@/components/features/transkrip/GradeTable";
 
 export default function TranskripPage() {
-  // Gunakan tipe StudentData[]
   const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   

@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { UserData, UserPayload, StudentOption } from "@/lib/types";
 
 // --- KONFIGURASI SUPABASE ADMIN ---
 // Service Role Key diperlukan untuk manajemen user (bypass RLS)
@@ -15,30 +16,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     persistSession: false,
   },
 });
-
-// --- TYPES ---
-export interface UserData {
-  id: string;
-  name: string;
-  username: string;
-  role: "admin" | "dosen" | "mahasiswa" | string;
-  student_id?: number | null;
-}
-
-export interface UserPayload {
-  name: string;
-  username: string;
-  password?: string;
-  role: string;
-  student_id?: number | null;
-}
-
-export interface StudentOption {
-  id: number;
-  nim: string;
-  nama: string;
-  is_taken: boolean;
-}
 
 // === GET USERS ===
 export async function getUsers() {

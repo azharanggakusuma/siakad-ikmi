@@ -13,16 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Eye, EyeOff, Search, Check, Loader2 } from "lucide-react";
-import { getStudentsForSelection, type StudentOption } from "@/app/actions/users";
-
-export interface UserFormValues {
-  id?: string;
-  name: string;
-  username: string;
-  password?: string;
-  role: string;
-  student_id?: number | null;
-}
+import { getStudentsForSelection } from "@/app/actions/users";
+import { UserFormValues, StudentOption } from "@/lib/types";
 
 interface UserFormProps {
   initialData?: UserFormValues;
@@ -115,7 +107,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     }
     // Jika role mahasiswa, wajib pilih data mahasiswa
     if (formData.role === "mahasiswa" && !formData.student_id) {
-      newErrors.student_id = true; // Error flag custom (bisa dipakai untuk styling border dropdown)
+      newErrors.student_id = true;
       errorMessages.push("Harap pilih data mahasiswa untuk ditautkan.");
     }
 

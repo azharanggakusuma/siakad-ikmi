@@ -17,9 +17,10 @@ import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
 import { toast } from "sonner";
-import { CourseForm, type CourseFormValues } from "@/components/features/matakuliah/CourseForm";
-import { type CourseCategory } from "@/lib/data";
-import { getCourses, createCourse, updateCourse, deleteCourse, type CourseData } from "@/app/actions/courses";
+import { CourseForm } from "@/components/features/matakuliah/CourseForm";
+// PERBAIKAN IMPORT:
+import { type Course as CourseData, type CourseFormValues, type CourseCategory } from "@/lib/types";
+import { getCourses, createCourse, updateCourse, deleteCourse } from "@/app/actions/courses";
 
 export default function MataKuliahPage() {
   const [courses, setCourses] = useState<CourseData[]>([]); 
@@ -73,7 +74,6 @@ export default function MataKuliahPage() {
   // Pagination Logic
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  // --- FIX ERROR: Definisi endIndex harus ada di sini ---
   const endIndex = startIndex + itemsPerPage; 
   const currentData = filteredCourses.slice(startIndex, endIndex);
 
@@ -92,7 +92,7 @@ export default function MataKuliahPage() {
       matkul: course.matkul,
       sks: course.sks,
       smt_default: course.smt_default,
-      kategori: course.kategori
+      kategori: course.kategori as CourseCategory // Casting explicit jika perlu
     });
     setIsEditing(true);
     setIsDialogOpen(true);
@@ -223,7 +223,7 @@ export default function MataKuliahPage() {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             startIndex={startIndex}
-            endIndex={endIndex} // === Variable ini sekarang sudah terdefinisi ===
+            endIndex={endIndex} 
             totalItems={filteredCourses.length}
           />
         </CardContent>

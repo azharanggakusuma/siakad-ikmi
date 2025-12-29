@@ -11,15 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-export interface StudentFormValues {
-  nim: string;
-  nama: string;
-  prodi: string;
-  jenjang: string;
-  semester: string | number;
-  alamat: string;
-}
+import { StudentFormValues } from "@/lib/types";
 
 interface StudentFormProps {
   initialData?: StudentFormValues;
@@ -36,7 +28,7 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
   const [formData, setFormData] = useState<StudentFormValues>(defaultValues);
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormValues, boolean>>>({});
 
-  // Reset form saat initialData berubah (penting jika modal dibuka ulang)
+  // Reset form saat initialData berubah
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -60,7 +52,6 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
     }
   };
 
-  // Handler khusus input angka untuk mengurangi logika inline di JSX
   const handleNumericInput = (field: keyof StudentFormValues, value: string, maxLength: number) => {
     if (/^\d*$/.test(value) && value.length <= maxLength) {
       handleInputChange(field, value);
@@ -136,7 +127,7 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
             onChange={(e) => handleNumericInput("nim", e.target.value, 8)}
             placeholder="Contoh: 4121001"
             className={errorClass("nim")}
-            disabled={isEditing} // Biasanya NIM tidak boleh diedit (Primary Key), tapi bisa dihapus jika memang boleh
+            disabled={isEditing} 
           />
         </div>
         <div className="grid gap-2 col-span-2">

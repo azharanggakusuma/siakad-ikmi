@@ -10,15 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { type CourseCategory } from "@/lib/data"; // Pastikan import type
-
-export interface CourseFormValues {
-  kode: string;
-  matkul: string;
-  sks: number | string;
-  smt_default: number | string;
-  kategori: CourseCategory | "";
-}
+import { CourseFormValues } from "@/lib/types";
 
 interface CourseFormProps {
   initialData?: CourseFormValues;

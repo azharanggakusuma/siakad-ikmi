@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-// Import tipe data yang sudah kita export tadi
-import { getStudents, type StudentData, type TranscriptItem } from "@/app/actions/students";
+import { getStudents } from "@/app/actions/students";
+// PERBAIKAN IMPORT: Ambil type dari lib/types
+import { type StudentData, type TranscriptItem } from "@/lib/types";
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,15 +55,13 @@ export default function KhsPage() {
     return () => observer.disconnect();
   }, [currentStudent, selectedSemester]);
 
-  // === PERBAIKAN LOGIC ===
-  
+  // Logic Semesters
   const availableSemesters = useMemo<number[]>(() => {
     if (!currentStudent?.transcript) return [];
     
-    // Tambahkan tipe eksplisit (t: TranscriptItem)
+    // Explicit Type Casting untuk menghindari error 'unknown'
     const smts = currentStudent.transcript.map((t: TranscriptItem) => Number(t.smt));
     
-    // Tambahkan tipe eksplisit (a: number, b: number)
     return Array.from(new Set(smts)).sort((a: number, b: number) => a - b);
   }, [currentStudent]);
 
@@ -85,14 +84,12 @@ export default function KhsPage() {
   }, [currentStudent, selectedSemester]);
 
   const ips = useMemo(() => {
-    // Tambahkan tipe eksplisit (acc: number, row: TranscriptItem)
     const totalSKS = semesterData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
     const totalNM = semesterData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
     return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
   }, [semesterData]);
 
   const ipk = useMemo(() => {
-    // Tambahkan tipe eksplisit (acc: number, row: TranscriptItem)
     const totalSKS = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
     const totalNM = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
     return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
@@ -122,7 +119,6 @@ export default function KhsPage() {
             
             {loading ? (
               <div className="animate-pulse flex flex-col h-full">
-                 {/* Skeleton Code (Sama seperti sebelumnya) */}
                  <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
                     <div className="flex items-center gap-3">
                         <Skeleton className="w-[80px] h-[80px]" /> 

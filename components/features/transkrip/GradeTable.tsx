@@ -1,5 +1,5 @@
 import React from "react";
-import { TranscriptItem } from "@/lib/data";
+import { TranscriptItem } from "@/lib/types";
 
 interface GradeTableProps {
   data: TranscriptItem[];

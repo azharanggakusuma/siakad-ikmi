@@ -16,9 +16,9 @@ import {
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import Tooltip from "@/components/shared/Tooltip";
-import { StudentForm, type StudentFormValues } from "@/components/features/mahasiswa/StudentForm";
-import { type StudentData } from "@/lib/data";
+import { StudentForm } from "@/components/features/mahasiswa/StudentForm";
+// PERBAIKAN IMPORT: Ambil type dari lib/types
+import { type StudentData, type StudentFormValues } from "@/lib/types";
 import { getStudents, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
 export default function MahasiswaPage() {
@@ -45,7 +45,7 @@ export default function MahasiswaPage() {
     setIsLoading(true);
     try {
       const students = await getStudents();
-      setDataList(students as unknown as StudentData[]);
+      setDataList(students); // Typescript sekarang sudah happy karena tipe cocok
     } catch (error) {
       toast.error("Gagal Memuat Data", { description: "Terjadi kesalahan koneksi ke server." });
     } finally {
@@ -75,7 +75,6 @@ export default function MahasiswaPage() {
   // Pagination Logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  // --- PERBAIKAN: Definisi endIndex ditambahkan kembali ---
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
@@ -123,7 +122,6 @@ export default function MahasiswaPage() {
         await deleteStudent(selectedId);
         toast.success("Berhasil Hapus", { description: "Data mahasiswa telah dihapus permanen." });
         
-        // Adjust pagination if needed
         if (currentData.length === 1 && currentPage > 1) {
           setCurrentPage((p) => p - 1);
         }
@@ -221,7 +219,7 @@ export default function MahasiswaPage() {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             startIndex={startIndex}
-            endIndex={endIndex} // === Sekarang variabel ini sudah terdefinisi ===
+            endIndex={endIndex} 
             totalItems={filteredData.length}
           />
         </CardContent>

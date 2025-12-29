@@ -26,11 +26,9 @@ export const authConfig = {
     },
     async session({ session, token }) {
       if (token.sub && session.user) {
-        // Langsung assign saja tanpa @ts-expect-error
-        // Jika nanti muncul error merah (Property does not exist),
-        // solusinya ada di langkah nomor 2 di bawah.
-        session.user.role = token.role as string;
-        session.user.username = token.username as string;
+        // Assign data ke session user (sudah type-safe berkat next-auth.d.ts)
+        session.user.role = token.role;
+        session.user.username = token.username;
         session.user.id = token.sub;
       }
       return session;

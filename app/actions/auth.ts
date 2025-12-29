@@ -4,7 +4,7 @@ import { signIn, signOut, auth } from "@/auth";
 import { AuthError } from "next-auth";
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs"; // Menggunakan bcryptjs
+import bcrypt from "bcryptjs"; 
 
 export type UserSession = {
   username: string;
@@ -52,10 +52,12 @@ export async function logout() {
 export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
   if (!session?.user) return null;
+  
+  // Perubahan: Menghapus 'as any' karena tipe data sudah didefinisikan di next-auth.d.ts
   return {
-    username: (session.user as any).username || "",
+    username: session.user.username || "",
     name: session.user.name || "",
-    role: (session.user as any).role || "mahasiswa",
+    role: session.user.role || "mahasiswa",
   };
 }
 
@@ -85,7 +87,7 @@ export async function getUserSettings(username: string) {
 export async function updateUserSettings(
   currentUsername: string, 
   payload: any,
-  oldPasswordForVerification?: string // Parameter baru untuk verifikasi
+  oldPasswordForVerification?: string 
 ) {
   const { nama, password, alamat, role, username: newUsername } = payload;
 

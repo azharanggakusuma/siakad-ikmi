@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { StudentData } from "@/lib/types";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import { RotateCcw, Save, X, Loader2 } from "lucide-react"; // Tambah Loader2
+import { RotateCcw, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CourseRaw {
@@ -106,35 +106,34 @@ export function StudentGradeForm({
   };
 
   const handleConfirmSave = async () => {
-    // 1. Langsung tutup modal konfirmasi
+    // 1. Langsung tutup modal konfirmasi agar terasa responsif
     setShowConfirm(false);
     
-    // 2. Set loading state (untuk disable tombol form)
+    // 2. Set loading state (untuk disable interaksi form)
     setLoading(true);
 
     try {
-      // Siapkan payload
       const payload = Object.entries(gradeChanges).map(([cId, hm]) => ({
         course_id: parseInt(cId),
         hm: hm,
       }));
 
-      // 3. Gunakan toast.promise untuk indikator loading yang "bagus"
+      // 3. Gunakan toast.promise dengan pesan yang lebih bagus
       await toast.promise(
         onSubmit(parseInt(student.id), payload),
         {
-          loading: 'Menyimpan perubahan nilai...',
-          success: `Nilai mahasiswa atas nama ${student.profile.nama} berhasil diperbarui.`,
-          error: 'Gagal menyimpan perubahan nilai.',
+          loading: 'Sedang memproses penyimpanan data akademik...',
+          success: `Transkrip nilai atas nama ${student.profile.nama} berhasil diperbarui.`,
+          error: 'Gagal menyimpan perubahan. Silakan periksa koneksi Anda dan coba lagi.',
         }
       );
 
-      // 4. Tutup form utama hanya jika sukses
+      // 4. Tutup form utama (modal besar) setelah sukses
       onCancel();
 
     } catch (error) {
       console.error(error);
-      // Jika gagal, matikan loading agar user bisa coba lagi
+      // Jika gagal, matikan loading agar admin bisa mencoba lagi
       setLoading(false);
     }
   };
@@ -307,7 +306,7 @@ export function StudentGradeForm({
             className="min-w-[100px]"
           >
             {loading ? (
-              // Loading Bagus: Spinner Icon Only
+              // Loading Spinner Saja
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
@@ -323,7 +322,7 @@ export function StudentGradeForm({
         onClose={setShowConfirm}
         onConfirm={handleConfirmSave}
         title={`Simpan Nilai ${student.profile.nama}?`}
-        description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan nilai yang diinput sudah sesuai.`}
+        description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan data nilai sudah sesuai dan benar.`}
         confirmLabel="Ya, Simpan"
         cancelLabel="Batal"
       />

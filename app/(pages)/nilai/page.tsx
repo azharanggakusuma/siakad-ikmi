@@ -12,7 +12,7 @@ import { getStudents } from "@/app/actions/students";
 import { getAllCourses, saveStudentGrades } from "@/app/actions/grades";
 import { StudentData } from "@/lib/types";
 import { StudentGradeForm } from "@/components/features/nilai/StudentGradeForm";
-import { StudentTable } from "@/components/features/nilai/StudentTable"; // Pastikan komponen ini sudah dibuat
+import { StudentTable } from "@/components/features/nilai/StudentTable";
 
 export default function NilaiPage() {
   const [studentList, setStudentList] = useState<StudentData[]>([]);
@@ -82,11 +82,10 @@ export default function NilaiPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
-      <PageHeader title="Data Mahasiswa" breadcrumb={["SIAKAD", "Nilai"]} />
+      <PageHeader title="Nilai Mahasiswa" breadcrumb={["SIAKAD", "Nilai"]} />
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
         <CardContent className="p-6">
-          {/* Menggunakan Komponen StudentTable yang sudah dipisah */}
           <StudentTable 
             data={currentData}
             isLoading={isLoading}
@@ -105,7 +104,6 @@ export default function NilaiPage() {
       <FormModal
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
-        // UPDATE: Judul modal dibuat lebih general
         title="Kelola Nilai Mahasiswa"
         description="Input atau update nilai mata kuliah mahasiswa."
         maxWidth="sm:max-w-[600px]"

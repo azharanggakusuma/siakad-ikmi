@@ -159,8 +159,9 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
         <div className="grid gap-2 col-span-3"> 
           <Label htmlFor="prodi">Program Studi</Label>
           <Select value={formData.prodi} onValueChange={(v) => handleInputChange("prodi", v)}>
-            <SelectTrigger className={errorClass("prodi")}>
-               <SelectValue placeholder="Pilih Prodi" />
+
+            <SelectTrigger className={`w-full ${errorClass("prodi")}`}>
+              <SelectValue placeholder="Pilih Prodi" />
             </SelectTrigger>
             <SelectContent>
               {["Teknik Informatika", "Sistem Informasi", "Manajemen Informatika", "Komputerisasi Akuntansi", "Rekayasa Perangkat Lunak"].map(p => (
@@ -172,8 +173,9 @@ export function StudentForm({ initialData, isEditing, onSubmit, onCancel }: Stud
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="jenjang">Jenjang</Label>
           <Select value={formData.jenjang} onValueChange={(v) => handleInputChange("jenjang", v)}>
-            <SelectTrigger className={errorClass("jenjang")}>
-               <SelectValue placeholder="Pilih" />
+
+            <SelectTrigger className={`w-full ${errorClass("jenjang")}`}>
+              <SelectValue placeholder="Pilih" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="D3">D3</SelectItem>

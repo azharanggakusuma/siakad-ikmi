@@ -1,4 +1,4 @@
-import { StudentData, TranscriptItem } from "@/lib/data";
+import { StudentData, TranscriptItem } from "@/lib/types";
 
 export function calculateIPK(transcript: TranscriptItem[]) {
   const totalSKS = transcript.reduce((acc, curr) => acc + curr.sks, 0);
@@ -60,6 +60,7 @@ export function calculateGradeDistribution(allStudents: StudentData[]) {
 
   allStudents.forEach((student) => {
     student.transcript.forEach((item) => {
+      // Pastikan casting key aman
       const grade = item.hm as keyof typeof counts;
       if (counts[grade] !== undefined) {
         counts[grade]++;

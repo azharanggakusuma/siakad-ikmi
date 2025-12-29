@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { type StudentData } from "@/lib/data";
+// PERBAIKAN: Import dari types, bukan data
+import { type StudentData } from "@/lib/types";
 import {
   calculateIPK,
   calculateSemesterTrend,
@@ -39,7 +40,7 @@ export default function DashboardPage() {
           getCourses(),
         ]);
 
-        // Casting agar sesuai dengan tipe data di lib/data.ts
+        // Casting agar sesuai dengan tipe data
         setStudentData(studentsRes as unknown as StudentData[]);
         setCourseCount(coursesRes ? coursesRes.length : 0);
       } catch (error) {
@@ -58,7 +59,6 @@ export default function DashboardPage() {
       return {
         statData: [],
         trendData: [],
-        // PERBAIKAN: Menginisialisasi counts dengan nilai 0 untuk semua key
         gradeDistData: {
           counts: { A: 0, B: 0, C: 0, D: 0, E: 0 },
           totalGrades: 0,
@@ -128,18 +128,17 @@ export default function DashboardPage() {
       {/* ===== STAT GRID ===== */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {isLoading
-          ? // Skeleton untuk StatCard
-            Array.from({ length: 4 }).map((_, i) => (
+          ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className="rounded-xl border border-border bg-card p-6 shadow-sm flex items-start justify-between h-[130px]"
               >
                 <div className="flex flex-col gap-3">
-                  <Skeleton className="h-4 w-24" /> {/* Label */}
-                  <Skeleton className="h-8 w-16" /> {/* Value */}
-                  <Skeleton className="h-3 w-32" /> {/* Description */}
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-3 w-32" />
                 </div>
-                <Skeleton className="h-12 w-12 rounded-xl" /> {/* Icon Box */}
+                <Skeleton className="h-12 w-12 rounded-xl" />
               </div>
             ))
           : statData.map((s) => <StatCard key={s.label} {...s} />)}
@@ -149,15 +148,11 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-7">
         {isLoading ? (
           <>
-            {/* Skeleton untuk SemesterBarChart (Kiri) */}
             <div className="lg:col-span-4 rounded-xl border border-border bg-card shadow-sm flex flex-col h-[450px] overflow-hidden">
-              {/* Header Skeleton */}
               <div className="px-6 py-5 border-b border-border bg-muted/40">
                 <Skeleton className="h-6 w-48" />
               </div>
-              {/* Bar Chart Area Skeleton */}
               <div className="p-6 flex-1 flex items-end justify-between gap-4">
-                {/* Meniru 8 batang diagram dengan tinggi acak */}
                 {[40, 70, 50, 80, 60, 90, 55, 75].map((h, idx) => (
                   <Skeleton
                     key={idx}
@@ -168,18 +163,12 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Skeleton untuk GradeDonutChart (Kanan) */}
             <div className="lg:col-span-3 rounded-xl border border-border bg-card shadow-sm flex flex-col h-[450px] overflow-hidden">
-              {/* Header Skeleton */}
               <div className="px-6 py-5 border-b border-border bg-muted/40">
                 <Skeleton className="h-6 w-48" />
               </div>
-              {/* Donut Chart Area Skeleton */}
               <div className="p-6 flex-1 flex flex-col items-center justify-center">
-                {/* Lingkaran Donut */}
                 <Skeleton className="h-52 w-52 rounded-full mb-8" />
-
-                {/* Legend Grid */}
                 <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full px-4">
                   {[1, 2, 3, 4].map((_, idx) => (
                     <div

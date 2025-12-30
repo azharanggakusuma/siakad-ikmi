@@ -13,11 +13,19 @@ export interface StudyProgram {
   jenjang: string;
 }
 
-// Interface baru untuk Tahun Akademik
 export interface AcademicYear {
   id: number;
-  nama: string;      // Contoh: "2023/2024"
-  semester: string;  // Contoh: "Ganjil"
+  nama: string;
+  semester: string;
+  is_active: boolean;
+}
+
+// Interface baru untuk Pejabat (Official)
+export interface Official {
+  id: number;
+  nama: string;
+  nidn: string | null;
+  jabatan: string;
   is_active: boolean;
 }
 

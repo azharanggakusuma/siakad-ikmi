@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-// Import getActiveAcademicYear
-import { getStudents, getActiveAcademicYear } from "@/app/actions/students";
-import { type StudentData } from "@/lib/types";
+// Import getActiveOfficial
+import { getStudents, getActiveAcademicYear, getActiveOfficial } from "@/app/actions/students";
+import { type StudentData, type Official } from "@/lib/types";
 
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -19,9 +19,12 @@ export default function SuratKeteranganPage() {
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   
+  // State Data Dinamis
+  const [official, setOfficial] = useState<Official | null>(null); // State pejabat
+  
   // State Form
   const [nomorSurat, setNomorSurat] = useState(""); 
-  const [tahunAkademik, setTahunAkademik] = useState(""); // Akan otomatis terisi
+  const [tahunAkademik, setTahunAkademik] = useState(""); 
   const [tempatLahir, setTempatLahir] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [alamat, setAlamat] = useState("");
@@ -36,15 +39,16 @@ export default function SuratKeteranganPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Students & Active Academic Year secara paralel
-        const [students, activeYear] = await Promise.all([
+        // Fetch Students, Tahun Akademik, dan Pejabat secara paralel
+        const [students, activeYear, activeOfficial] = await Promise.all([
             getStudents(),
-            getActiveAcademicYear()
+            getActiveAcademicYear(),
+            getActiveOfficial()
         ]);
 
         setStudentsData(students);
+        setOfficial(activeOfficial); // Simpan data pejabat
 
-        // Otomatis set tahun akademik jika ada yang aktif
         if (activeYear) {
             setTahunAkademik(activeYear.nama);
         }
@@ -121,7 +125,6 @@ export default function SuratKeteranganPage() {
         );
       }
 
-      // Ambil data prodi & jenjang dari relasi
       const prodiNama = currentStudent.profile.study_program?.nama || "-";
       const prodiJenjang = currentStudent.profile.study_program?.jenjang || "";
 
@@ -138,8 +141,21 @@ export default function SuratKeteranganPage() {
             <div className="ml-4 mb-4">
                 <table className="w-full" style={{ tableLayout: 'fixed' }}>
                 <tbody>
-                    <tr><td style={labelStyle}>Nama</td><td style={colonStyle}>:</td><td style={valueStyle} className="font-bold break-words">YUDHISTIRA ARIE WIJAYA, M.Kom</td></tr>
-                    <tr><td style={labelStyle}>NIDN</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">0401047103</td></tr>
+                    {/* Menggunakan Data Pejabat dari Database */}
+                    <tr>
+                        <td style={labelStyle}>Nama</td>
+                        <td style={colonStyle}>:</td>
+                        <td style={valueStyle} className="font-bold break-words uppercase">
+                            {official ? official.nama : "..."}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style={labelStyle}>NIDN</td>
+                        <td style={colonStyle}>:</td>
+                        <td style={valueStyle} className="break-words">
+                            {official ? official.nidn || "-" : "..."}
+                        </td>
+                    </tr>
                 </tbody>
                 </table>
             </div>
@@ -152,7 +168,6 @@ export default function SuratKeteranganPage() {
                     <tr><td style={labelStyle}>NIM</td><td style={colonStyle}>:</td><td style={valueStyle} className="break-words">{currentStudent.profile.nim}</td></tr>
                     <tr><td style={labelStyle}>Tempat, tanggal lahir</td><td style={colonStyle}>:</td><td style={valueStyle} className="capitalize break-words">{tempatLahir || "..."} , {tanggalLahir || "..."}</td></tr>
                     
-                    {/* Jurusan dari relasi */}
                     <tr>
                     <td style={labelStyle}>Jurusan</td>
                     <td style={colonStyle}>:</td>

@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
-import { StudentData, TranscriptItem, StudentFormValues, StudyProgram, AcademicYear } from "@/lib/types";
+import { StudentData, TranscriptItem, StudentFormValues, StudyProgram, AcademicYear, Official } from "@/lib/types";
 
 // Internal Interface untuk Response DB (Mapping hasil join)
 interface DBResponseStudent {
@@ -33,7 +33,6 @@ const getAM = (hm: string): number => {
 
 // --- READ OPERATIONS ---
 
-// Ambil Daftar Program Studi
 export async function getStudyPrograms(): Promise<StudyProgram[]> {
   const { data, error } = await supabase
     .from('study_programs')
@@ -44,7 +43,6 @@ export async function getStudyPrograms(): Promise<StudyProgram[]> {
   return data as StudyProgram[];
 }
 
-// Fungsi BARU: Ambil Tahun Akademik Aktif
 export async function getActiveAcademicYear(): Promise<AcademicYear | null> {
   const { data, error } = await supabase
     .from('academic_years')
@@ -57,6 +55,21 @@ export async function getActiveAcademicYear(): Promise<AcademicYear | null> {
     return null;
   }
   return data as AcademicYear;
+}
+
+// Fungsi BARU: Ambil Pejabat Aktif
+export async function getActiveOfficial(): Promise<Official | null> {
+  const { data, error } = await supabase
+    .from('officials')
+    .select('*')
+    .eq('is_active', true)
+    .single();
+
+  if (error) {
+    console.error("Error fetching active official:", error.message);
+    return null;
+  }
+  return data as Official;
 }
 
 export async function getStudents(): Promise<StudentData[]> {

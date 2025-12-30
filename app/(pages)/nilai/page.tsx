@@ -7,15 +7,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FormModal } from "@/components/shared/FormModal";
 
 // Imports
-import { getStudents } from "@/app/actions/students";
+import { getStudents, getStudyPrograms } from "@/app/actions/students"; // Import getStudyPrograms
 import { getAllCourses, saveStudentGrades } from "@/app/actions/grades";
-import { StudentData } from "@/lib/types";
+import { StudentData, StudyProgram } from "@/lib/types"; // Import type
 import { StudentGradeForm } from "@/components/features/nilai/StudentGradeForm";
 import { StudentTable } from "@/components/features/nilai/StudentTable";
 
 export default function NilaiPage() {
   const [studentList, setStudentList] = useState<StudentData[]>([]);
   const [coursesList, setCoursesList] = useState<any[]>([]);
+  const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]); // State baru
   const [isLoading, setIsLoading] = useState(true);
 
   // Modal State
@@ -26,13 +27,15 @@ export default function NilaiPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [students, courses] = await Promise.all([
+      const [students, courses, programs] = await Promise.all([
         getStudents(),
-        getAllCourses()
+        getAllCourses(),
+        getStudyPrograms() // Ambil data prodi
       ]);
       
       setStudentList(students);
       setCoursesList(courses || []);
+      setStudyPrograms(programs || []);
     } catch (error) {
       toast.error("Gagal Memuat Data", { description: "Terjadi kesalahan koneksi." });
     } finally {
@@ -63,6 +66,7 @@ export default function NilaiPage() {
         <CardContent className="p-6">
           <StudentTable 
             data={studentList}
+            studyPrograms={studyPrograms} // Pass data ke table
             isLoading={isLoading}
             onEdit={handleOpenEdit}
           />

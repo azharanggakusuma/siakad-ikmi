@@ -5,7 +5,7 @@ import React, { useState, useMemo } from "react";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { PencilLine } from "lucide-react";
-import { StudentData } from "@/lib/types";
+import { StudentData, StudyProgram } from "@/lib/types";
 import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -15,12 +15,14 @@ import {
 
 interface StudentTableProps {
   data: StudentData[];
+  studyPrograms: StudyProgram[]; // Tambah props ini
   isLoading: boolean;
   onEdit: (student: StudentData) => void;
 }
 
 export function StudentTable({
   data,
+  studyPrograms,
   isLoading,
   onEdit,
 }: StudentTableProps) {
@@ -45,9 +47,9 @@ export function StudentTable({
       );
     }
 
-    // 2. Filter Prodi
+    // 2. Filter Prodi (Perbaikan akses data)
     if (filterProdi !== "ALL") {
-      result = result.filter((student) => student.profile.prodi === filterProdi);
+      result = result.filter((student) => student.profile.study_program?.nama === filterProdi);
     }
 
     return result;
@@ -80,12 +82,14 @@ export function StudentTable({
     {
       header: "Prodi",
       className: "w-[180px]",
-      render: (row) => <span className="text-slate-600 text-sm">{row.profile.prodi}</span>
+      // Perbaikan: Ambil nama dari relasi
+      render: (row) => <span className="text-slate-600 text-sm">{row.profile.study_program?.nama || "-"}</span>
     },
     {
       header: "Jenjang",
       className: "w-[100px] text-center",
-      render: (row) => <span className="text-slate-600 text-sm">{row.profile.jenjang}</span>
+      // Perbaikan: Ambil jenjang dari relasi
+      render: (row) => <span className="text-slate-600 text-sm">{row.profile.study_program?.jenjang || "-"}</span>
     },
     {
       header: "Semester",
@@ -106,7 +110,6 @@ export function StudentTable({
       header: "Aksi",
       className: "text-center w-[130px]",
       render: (row) => (
-        // Button tetap Primary (Default)
         <Button 
             size="sm" 
             className="h-8 w-full font-medium shadow-sm"
@@ -132,11 +135,12 @@ export function StudentTable({
         }}
       >
         <DropdownMenuRadioItem value="ALL">Semua Prodi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Teknik Informatika">Teknik Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Sistem Informasi">Sistem Informasi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Manajemen Informatika">Manajemen Informatika</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Komputerisasi Akuntansi">Komputerisasi Akuntansi</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</DropdownMenuRadioItem>
+        {/* Render dinamis dari props studyPrograms */}
+        {studyPrograms.map((p) => (
+            <DropdownMenuRadioItem key={p.id} value={p.nama}>
+                {p.nama}
+            </DropdownMenuRadioItem>
+        ))}
       </DropdownMenuRadioGroup>
     </>
   );
@@ -147,7 +151,6 @@ export function StudentTable({
       columns={columns}
       isLoading={isLoading}
       
-      // Props Pencarian Internal
       searchQuery={searchQuery}
       onSearchChange={(e) => {
         setSearchQuery(e.target.value);
@@ -155,7 +158,6 @@ export function StudentTable({
       }}
       searchPlaceholder="Cari Nama Mahasiswa / NIM..."
       
-      // Props Pagination Internal
       currentPage={currentPage}
       totalPages={totalPages}
       onPageChange={setCurrentPage}
@@ -163,7 +165,6 @@ export function StudentTable({
       endIndex={endIndex}
       totalItems={filteredData.length}
       
-      // Props Filter
       filterContent={filterContent}
       isFilterActive={filterProdi !== "ALL"}
       onResetFilter={() => {

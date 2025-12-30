@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { StudentData } from "@/lib/types";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import Tooltip from "@/components/shared/Tooltip"; // Import Tooltip Custom
+import Tooltip from "@/components/shared/Tooltip"; 
 import { RotateCcw, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -120,7 +120,7 @@ export function StudentGradeForm({
         onSubmit(parseInt(student.id), payload),
         {
           loading: 'Sedang memproses penyimpanan data akademik...',
-          success: `Transkrip nilai atas nama ${student.profile.nama} berhasil diperbarui.`,
+          success: `Nilai atas nama ${student.profile.nama} berhasil diperbarui.`,
           error: 'Gagal menyimpan perubahan. Silakan periksa koneksi Anda dan coba lagi.',
         }
       );
@@ -138,6 +138,15 @@ export function StudentGradeForm({
     (_, i) => i + 1
   );
 
+  // Helper untuk mengambil data Prodi & Jenjang dengan aman
+  const prodiInfo = student.profile.study_program 
+    ? student.profile.study_program.nama 
+    : "-";
+    
+  const jenjangInfo = student.profile.study_program 
+    ? `(${student.profile.study_program.jenjang})` 
+    : "";
+
   return (
     <>
       <Card className="flex flex-col h-[75vh] w-full border bg-background overflow-hidden shadow-sm">
@@ -154,8 +163,9 @@ export function StudentGradeForm({
               <Badge variant="outline" className="font-mono text-xs font-normal px-2 py-0.5 border-border">
                 {student.profile.nim}
               </Badge>
+              {/* PERBAIKAN DI SINI: Menggunakan data dari relasi study_program */}
               <span>
-                {student.profile.prodi} ({student.profile.jenjang})
+                {prodiInfo} {jenjangInfo}
               </span>
             </div>
           </div>
@@ -239,7 +249,7 @@ export function StudentGradeForm({
 
                             {/* Kontrol Nilai */}
                             <div className="flex items-center gap-3">
-                              {/* Tombol Reset (Menggunakan Custom Tooltip) */}
+                              {/* Tombol Reset */}
                               {isModified && (
                                 <Tooltip content="Kembalikan nilai awal" position="top">
                                   <Button
@@ -247,7 +257,6 @@ export function StudentGradeForm({
                                     size="icon"
                                     className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
                                     onClick={() => handleResetRow(course.id)}
-                                    // title="Reset Nilai" <-- DIHAPUS, diganti Tooltip
                                     disabled={loading}
                                   >
                                     <RotateCcw className="h-3.5 w-3.5" />

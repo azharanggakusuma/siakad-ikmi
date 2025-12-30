@@ -13,13 +13,21 @@ export async function getGrades(): Promise<GradeData[]> {
     .from("grades")
     .select(`
       *,
-      student:students (id, nim, nama, prodi),
+      student:students (
+        id, 
+        nim, 
+        nama, 
+        study_program:study_programs (
+           nama,
+           jenjang
+        )
+      ),
       course:courses (id, kode, matkul, sks)
     `)
     .order("id", { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data as GradeData[];
+  return data as unknown as GradeData[];
 }
 
 // 2. Ambil List Mata Kuliah LENGKAP untuk Form Bertingkat
@@ -58,11 +66,7 @@ export async function saveStudentGrades(
   studentId: number, 
   grades: { course_id: number, hm: string }[]
 ) {
-  // Kita lakukan operasi satu per satu untuk memastikan aman (cek exist -> update/insert)
-  // Ini mencegah duplikasi jika tidak ada unique constraint di database
-  
   for (const item of grades) {
-    // 1. Cek apakah nilai sudah ada untuk mahasiswa & makul ini
     const { data: existing } = await supabase
       .from("grades")
       .select("id")
@@ -71,14 +75,12 @@ export async function saveStudentGrades(
       .single();
 
     if (existing) {
-      // UPDATE jika sudah ada
       await supabase
         .from("grades")
         .update({ hm: item.hm })
         .eq("id", existing.id);
     } else {
-      // INSERT jika belum ada
-      if (item.hm) { // Hanya insert jika ada nilainya
+      if (item.hm) {
         await supabase
           .from("grades")
           .insert({
@@ -91,7 +93,7 @@ export async function saveStudentGrades(
   }
 
   revalidatePath("/nilai");
-  revalidatePath("/mahasiswa"); // Revalidate profile juga jika perlu
+  revalidatePath("/mahasiswa"); 
 }
 
 // --- CRUD SINGLE (Legacy) ---

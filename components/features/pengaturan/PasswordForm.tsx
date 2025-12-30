@@ -127,7 +127,7 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-rose-900">Perhatian</p>
                 <p className="text-xs text-rose-700 leading-relaxed">
-                  Setelah kata sandi diubah, Anda wajib login ulang.
+                  Setelah kata sandi diubah, Anda harus login ulang untuk verifikasi keamanan.
                 </p>
               </div>
             </div>

@@ -94,7 +94,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                 )}
               </div>
               {user.role === "mahasiswa" && (
-                <p className="text-[11px] text-slate-400 italic">*Username dikelola admin.</p>
+                <p className="text-[11px] text-slate-400 italic">*Username dikelola oleh sistem dan tidak dapat diubah.</p>
               )}
             </div>
 

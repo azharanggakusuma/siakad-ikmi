@@ -43,9 +43,19 @@ export function LoginForm() {
         router.push("/");
         router.refresh();
       } else {
-        toast.error("Login Gagal", {
-          description: result?.error || "Periksa kembali username dan password Anda.",
-        });
+        // [LOGIKA BARU] Cek pesan error khusus untuk Non-Aktif
+        if (result?.error && result.error.toLowerCase().includes("dinonaktifkan")) {
+           // Gunakan toast.warning agar warnanya KUNING
+           toast.warning("Akun Tidak Aktif", {
+             description: result.error, // "Akun Anda dinonaktifkan. Silahkan hubungi bagian akademik."
+             duration: 5000,
+           });
+        } else {
+           // Error biasa tetap MERAH
+           toast.error("Login Gagal", {
+             description: result?.error || "Periksa kembali username dan password Anda.",
+           });
+        }
         setLoading(false);
       }
     } catch (err) {

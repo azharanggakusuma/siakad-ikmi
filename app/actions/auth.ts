@@ -34,13 +34,32 @@ export async function authenticate(formData: FormData) {
 
   } catch (error) {
     if (error instanceof AuthError) {
+      // [LOGIKA BARU] Cek apakah error disebabkan oleh Akun Non-Aktif
+      // NextAuth membungkus error dari authorize() ke dalam 'cause'
+      const cause = error.cause as any;
+      if (cause?.err?.message === "InactiveAccount" || error.message.includes("InactiveAccount")) {
+        return { success: false, error: "Akun Anda dinonaktifkan. Silakan hubungi Administrator." };
+      }
+
       switch (error.type) {
         case "CredentialsSignin":
           return { success: false, error: "Username atau Password salah." };
+        case "CallbackRouteError":
+           // Fallback tambahan jika error tertangkap sebagai CallbackRouteError
+           if (cause?.err?.message === "InactiveAccount") {
+              return { success: false, error: "Akun Anda dinonaktifkan. Silakan hubungi Administrator." };
+           }
+           return { success: false, error: "Gagal memverifikasi akun." };
         default:
           return { success: false, error: "Terjadi kesalahan sistem." };
       }
     }
+    
+    // Cek untuk error generic (jika tidak terbungkus AuthError)
+    if ((error as Error).message.includes("InactiveAccount")) {
+        return { success: false, error: "Akun Anda dinonaktifkan. Silakan hubungi Administrator." };
+    }
+
     throw error;
   }
 }
@@ -53,7 +72,6 @@ export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
   if (!session?.user) return null;
   
-  // Perubahan: Menghapus 'as any' karena tipe data sudah didefinisikan di next-auth.d.ts
   return {
     username: session.user.username || "",
     name: session.user.name || "",
@@ -94,14 +112,11 @@ export async function updateUserSettings(
   const updates: any = {};
   if (nama) updates.name = nama;
   
-  // LOGIKA HASHING: Verifikasi password lama sebelum update password baru
   if (password) {
-    // 1. Pastikan password lama dikirim
     if (!oldPasswordForVerification) {
       throw new Error("Password lama diperlukan untuk verifikasi.");
     }
 
-    // 2. Ambil hash password saat ini dari database
     const { data: userRecord, error: fetchError } = await supabase
       .from("users")
       .select("password")
@@ -112,39 +127,35 @@ export async function updateUserSettings(
       throw new Error("Gagal memverifikasi user.");
     }
 
-    // 3. Bandingkan Password Lama Inputan vs Database Hash
     const isMatch = await bcrypt.compare(oldPasswordForVerification, userRecord.password);
 
     if (!isMatch) {
       throw new Error("Kata sandi saat ini salah."); 
     }
 
-    // 4. Jika cocok, hash password baru dan masukkan ke updates
     const hashedPassword = await bcrypt.hash(password, 10);
     updates.password = hashedPassword;
   } 
   
-  if (newUsername) updates.username = newUsername; // Update Username
+  if (newUsername) updates.username = newUsername;
 
-  // 1. Update tabel USERS
   const { error: userError } = await supabase
     .from("users")
     .update(updates)
-    .eq("username", currentUsername); // Cari pakai username LAMA
+    .eq("username", currentUsername);
 
   if (userError) throw new Error(userError.message);
 
-  // 2. Update tabel STUDENTS (Jika Mahasiswa)
   if (role === "mahasiswa") {
     const studentUpdates: any = {};
     if (alamat !== undefined) studentUpdates.alamat = alamat;
     if (nama) studentUpdates.nama = nama;
-    if (newUsername) studentUpdates.nim = newUsername; // Sinkronkan NIM
+    if (newUsername) studentUpdates.nim = newUsername; 
 
     const { error: studentError } = await supabase
       .from("students")
       .update(studentUpdates)
-      .eq("nim", currentUsername); // Cari pakai NIM LAMA
+      .eq("nim", currentUsername); 
 
     if (studentError) console.error("Gagal update tabel student:", studentError.message);
   }

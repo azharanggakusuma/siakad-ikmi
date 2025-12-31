@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { MenuFormValues } from "@/lib/types";
+import { Search, X, ChevronDown } from "lucide-react";
+// Import semua icon
+import * as LucideIcons from "lucide-react";
 
 interface MenuFormProps {
   initialData?: MenuFormValues;
@@ -25,9 +35,9 @@ interface MenuFormProps {
 const defaultValues: MenuFormValues = {
   label: "",
   href: "",
-  icon: "",
+  icon: "Circle",
   section: "Menu Utama",
-  allowed_roles: ["admin", "dosen", "mahasiswa"], // Default checked all
+  allowed_roles: ["admin", "dosen", "mahasiswa"],
   sequence: 0,
   is_active: true,
 };
@@ -38,43 +48,58 @@ const AVAILABLE_ROLES = [
   { id: "mahasiswa", label: "Mahasiswa" },
 ];
 
+// 1. Ambil daftar icon murni (exclude internal helper Lucide)
+const ICON_LIST = Object.keys(LucideIcons).filter(
+  (key) => isNaN(Number(key)) && key !== "createLucideIcon" && key !== "icons" && key !== "lucide-react"
+);
+
 export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFormProps) {
   const [formData, setFormData] = useState<MenuFormValues>(
-    initialData
-      ? { ...initialData }
-      : { ...defaultValues }
+    initialData ? { ...initialData } : { ...defaultValues }
   );
-
   const [errors, setErrors] = useState<Partial<Record<keyof MenuFormValues, boolean>>>({});
+
+  // --- STATE ICON PICKER ---
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [searchIcon, setSearchIcon] = useState("");
+  const [visibleCount, setVisibleCount] = useState(100); // Mulai dengan 100 icon
+
+  // Reset visible count saat search berubah atau modal dibuka
+  useEffect(() => {
+    if (isIconPickerOpen) setVisibleCount(100);
+  }, [isIconPickerOpen, searchIcon]);
+
+  // 2. Filter icon berdasarkan pencarian
+  const allFilteredIcons = useMemo(() => {
+    if (!searchIcon) return ICON_LIST;
+    return ICON_LIST.filter((name) =>
+      name.toLowerCase().includes(searchIcon.toLowerCase())
+    );
+  }, [searchIcon]);
+
+  // 3. Potong list sesuai jumlah visibleCount agar ringan
+  const visibleIcons = allFilteredIcons.slice(0, visibleCount);
+
+  // Helper render icon dinamis
+  const IconRender = ({ name, className }: { name: string; className?: string }) => {
+    const IconComponent = (LucideIcons as any)[name];
+    if (!IconComponent) return <X className={className} />;
+    return <IconComponent className={className} />;
+  };
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof MenuFormValues, boolean>> = {};
-    const errorMessages: string[] = [];
     let isValid = true;
 
-    if (!formData.label.trim()) {
-      newErrors.label = true;
-      errorMessages.push("Label menu wajib diisi.");
-    }
-    if (!formData.href.trim()) {
-      newErrors.href = true;
-      errorMessages.push("Href (URL) wajib diisi.");
-    }
-    if (!formData.icon.trim()) {
-      newErrors.icon = true;
-      errorMessages.push("Nama Icon wajib diisi.");
-    }
-    if (formData.allowed_roles.length === 0) {
-      newErrors.allowed_roles = true;
-      errorMessages.push("Minimal satu role harus dipilih.");
-    }
+    if (!formData.label.trim()) newErrors.label = true;
+    if (!formData.href.trim()) newErrors.href = true;
+    if (!formData.icon.trim()) newErrors.icon = true;
+    if (formData.allowed_roles.length === 0) newErrors.allowed_roles = true;
 
-    if (errorMessages.length > 0) {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       isValid = false;
-      toast.error("Validasi Gagal", {
-        description: <ul className="list-disc pl-4">{errorMessages.map((m, i) => <li key={i}>{m}</li>)}</ul>
-      });
+      toast.error("Mohon lengkapi form yang ditandai merah.");
     }
     return isValid;
   };
@@ -100,7 +125,6 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      {/* Label & Sequence */}
       <div className="grid grid-cols-4 gap-4">
         <div className="grid gap-2 col-span-3">
           <Label htmlFor="label">Label Menu</Label>
@@ -123,7 +147,6 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
         </div>
       </div>
 
-      {/* Href & Icon */}
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="href">Path / URL</Label>
@@ -135,20 +158,97 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
             className={errors.href ? "border-red-500" : ""}
           />
         </div>
+        
+        {/* === ICON PICKER UPDATE === */}
         <div className="grid gap-2">
-          <Label htmlFor="icon">Icon (Lucide Name)</Label>
-          <Input
-            id="icon"
-            placeholder="Contoh: LayoutDashboard"
-            value={formData.icon}
-            onChange={(e) => handleInputChange("icon", e.target.value)}
-            className={errors.icon ? "border-red-500" : ""}
-          />
-          <p className="text-[10px] text-muted-foreground">Gunakan nama icon dari Lucide React.</p>
+          <Label>Icon Menu</Label>
+          <Dialog open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                role="combobox"
+                className={`w-full justify-between font-normal ${!formData.icon && "text-muted-foreground"} ${errors.icon ? "border-red-500" : ""}`}
+              >
+                <span className="flex items-center gap-2">
+                   {formData.icon ? (
+                     <>
+                       <IconRender name={formData.icon} className="h-4 w-4 text-slate-600" />
+                       {formData.icon}
+                     </>
+                   ) : "Pilih Icon..."}
+                </span>
+                <Search className="h-4 w-4 opacity-50" />
+              </Button>
+            </DialogTrigger>
+            
+            {/* Lebarkan Modal agar muat lebih banyak */}
+            <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Pilih Icon ({allFilteredIcons.length})</DialogTitle>
+              </DialogHeader>
+              
+              <div className="py-2">
+                <Input 
+                  placeholder="Cari nama icon (inggris)..." 
+                  value={searchIcon}
+                  onChange={(e) => setSearchIcon(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              {/* Scrollable Container */}
+              <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-6 sm:grid-cols-8 gap-2 content-start">
+                {visibleIcons.length === 0 ? (
+                    <div className="col-span-full text-center text-sm text-muted-foreground py-10">
+                        Tidak ditemukan icon dengan nama "{searchIcon}".
+                    </div>
+                ) : (
+                    <>
+                      {visibleIcons.map((iconName) => (
+                          <div
+                              key={iconName}
+                              className={`
+                                  flex flex-col items-center justify-center gap-1 p-3 rounded-md cursor-pointer border transition-all hover:bg-slate-50
+                                  ${formData.icon === iconName ? "bg-slate-100 border-primary ring-1 ring-primary" : "border-transparent hover:border-slate-200"}
+                              `}
+                              onClick={() => {
+                                  handleInputChange("icon", iconName);
+                                  setIsIconPickerOpen(false);
+                                  setSearchIcon("");
+                              }}
+                              title={iconName}
+                          >
+                              <IconRender name={iconName} className="h-6 w-6 text-slate-700" />
+                              <span className="text-[10px] text-muted-foreground truncate w-full text-center">{iconName}</span>
+                          </div>
+                      ))}
+                      
+                      {/* Tombol Load More */}
+                      {visibleCount < allFilteredIcons.length && (
+                        <div className="col-span-full py-4 flex justify-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setVisibleCount((prev) => prev + 100)}
+                            className="text-muted-foreground"
+                          >
+                            <ChevronDown className="mr-2 h-4 w-4" />
+                            Muat Lebih Banyak
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                )}
+              </div>
+              
+              <div className="text-[10px] text-muted-foreground text-center border-t pt-2">
+                Menampilkan {visibleIcons.length} dari {allFilteredIcons.length} icon
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      {/* Section & Status */}
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
             <Label htmlFor="section">Section</Label>
@@ -176,7 +276,6 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
         </div>
       </div>
 
-      {/* Allowed Roles */}
       <div className="grid gap-3 border rounded-md p-3">
         <Label className={errors.allowed_roles ? "text-red-500" : ""}>Akses Role</Label>
         <div className="flex flex-wrap gap-4">
@@ -187,10 +286,7 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
                 checked={formData.allowed_roles.includes(role.id)}
                 onCheckedChange={() => toggleRole(role.id)}
               />
-              <Label 
-                htmlFor={`role-${role.id}`} 
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor={`role-${role.id}`} className="text-sm font-normal cursor-pointer">
                 {role.label}
               </Label>
             </div>

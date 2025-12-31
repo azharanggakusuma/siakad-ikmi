@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react"; 
+import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,7 +99,7 @@ export default function MahasiswaPage() {
       study_program_id: student.profile.study_program_id ? String(student.profile.study_program_id) : "",
       semester: student.profile.semester,
       alamat: student.profile.alamat,
-      is_active: student.profile.is_active // Ambil status existing
+      is_active: student.profile.is_active 
     });
     setIsEditing(true);
     setIsFormOpen(true);
@@ -177,15 +177,20 @@ export default function MahasiswaPage() {
       className: "text-center w-[80px]", 
       render: (row) => row.profile.semester 
     },
-    // [BARU] Kolom Status
+    // [UPDATE] Kolom Status dengan Icon
     {
         header: "Status",
-        className: "text-center w-[100px]",
+        className: "text-center w-[120px]",
         render: (row) => (
           <Badge 
             variant={row.profile.is_active ? "default" : "destructive"} 
             className={`font-normal ${row.profile.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
           >
+            {row.profile.is_active ? (
+              <CheckCircle2 className="mr-1 h-3 w-3" />
+            ) : (
+              <XCircle className="mr-1 h-3 w-3" />
+            )}
             {row.profile.is_active ? "Aktif" : "Non-Aktif"}
           </Badge>
         )

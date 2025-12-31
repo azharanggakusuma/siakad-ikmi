@@ -5,7 +5,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound } from "lucide-react";
+import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle } from "lucide-react";
 import { UserData } from "@/lib/types"; 
 import {
   DropdownMenuLabel,
@@ -108,15 +108,20 @@ export default function UserTable({
         );
       },
     },
-    // [BARU] Kolom Status User
+    // [UPDATE] Kolom Status dengan Icon
     {
         header: "Status",
-        className: "text-center w-[100px]",
+        className: "text-center w-[120px]",
         render: (row) => (
           <Badge 
             variant={row.is_active ? "default" : "destructive"} 
             className={`font-normal ${row.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
           >
+            {row.is_active ? (
+              <CheckCircle2 className="mr-1 h-3 w-3" />
+            ) : (
+              <XCircle className="mr-1 h-3 w-3" />
+            )}
             {row.is_active ? "Aktif" : "Non-Aktif"}
           </Badge>
         )

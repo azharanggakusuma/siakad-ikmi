@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-// PERBAIKAN: Import dari types, bukan data
 import { type StudentData } from "@/lib/types";
+// [!code fix] Gunakan useLayout, bukan useLayoutContext
+import { useLayout } from "@/app/context/LayoutContext"; 
 import {
   calculateIPK,
   calculateSemesterTrend,
   calculateGradeDistribution,
+  calculateTotalSKS,
+  getCurrentSemester,
 } from "@/lib/dashboard-helper";
 
-// Import Server Actions
 import { getStudents } from "@/app/actions/students";
 import { getCourses } from "@/app/actions/courses";
 
-// Import Components
 import { DashboardHeader } from "@/components/features/dashboard/DashboardHeader";
 import { StatCard } from "@/components/features/dashboard/StatCard";
 import { SemesterBarChart } from "@/components/features/dashboard/SemesterBarChart";
@@ -28,6 +29,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function DashboardPage() {
+  // [!code fix] Ambil user dari useLayout()
+  const { user } = useLayout(); 
+  
   const [studentData, setStudentData] = useState<StudentData[]>([]);
   const [courseCount, setCourseCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +44,6 @@ export default function DashboardPage() {
           getCourses(),
         ]);
 
-        // Casting agar sesuai dengan tipe data
         setStudentData(studentsRes as unknown as StudentData[]);
         setCourseCount(coursesRes ? coursesRes.length : 0);
       } catch (error) {
@@ -67,59 +70,130 @@ export default function DashboardPage() {
       };
     }
 
-    const currentStudentCount = studentData.length;
-    let totalIPK = 0;
+    // [!code fix] Definisikan tipe array secara eksplisit untuk menghindari error implicit any
+    let stats: {
+      label: string;
+      value: string;
+      description: string;
+      icon: React.ReactNode;
+      themeColor: "chart-1" | "chart-2" | "chart-3" | "chart-4";
+    }[] = [];
 
-    studentData.forEach((s) => {
-      totalIPK += calculateIPK(s.transcript);
-    });
+    let trend: { label: string; val: number; height: string }[] = [];
+    
+    let dist = { counts: { A: 0, B: 0, C: 0, D: 0, E: 0 }, totalGrades: 0, totalAM: 0 };
 
-    const avgIPK =
-      currentStudentCount > 0
-        ? (totalIPK / currentStudentCount).toFixed(2)
-        : "0.00";
-    const dist = calculateGradeDistribution(studentData);
-    const trend = calculateSemesterTrend(studentData);
-    const avgGradePoint =
-      dist.totalGrades > 0
-        ? (dist.totalAM / dist.totalGrades).toFixed(2)
-        : "0.00";
+    const isMahasiswa = user?.role === "mahasiswa";
+    const currentUsername = user?.username;
 
-    return {
-      statData: [
+    if (isMahasiswa && currentUsername) {
+      // --- VIEW MAHASISWA (PERSONAL) ---
+      // [!code fix] Akses nim via s.profile.nim sesuai tipe StudentData
+      const myData = studentData.find((s) => s.profile.nim === currentUsername);
+      
+      if (myData) {
+        const myIPK = calculateIPK(myData.transcript).toFixed(2);
+        const totalSKS = calculateTotalSKS(myData.transcript);
+        const currentSmt = getCurrentSemester(myData.transcript);
+        const totalMK = myData.transcript.length;
+
+        stats = [
+          {
+            label: "Indeks Prestasi Kumulatif",
+            value: myIPK,
+            description: "Skala Indeks 4.00",
+            icon: <AwardIcon className="w-6 h-6" />,
+            themeColor: "chart-1",
+          },
+          {
+            label: "Total SKS",
+            value: totalSKS.toString(),
+            description: "SKS Diambil",
+            icon: <LibraryIcon className="w-6 h-6" />,
+            themeColor: "chart-2",
+          },
+          {
+            label: "Total Mata Kuliah",
+            value: totalMK.toString(),
+            description: "Mata Kuliah Diambil",
+            icon: <TrendingUpIcon className="w-6 h-6" />,
+            themeColor: "chart-3",
+          },
+          {
+            label: "Semester Berjalan",
+            value: `${currentSmt}`,
+            description: "Status Akademik",
+            icon: <UsersIcon className="w-6 h-6" />, 
+            themeColor: "chart-4",
+          },
+        ];
+
+        trend = calculateSemesterTrend([myData]); 
+        dist = calculateGradeDistribution([myData]);
+      } else {
+        stats = [
+            { label: "Data Tidak Ditemukan", value: "-", description: "Hubungi Admin", icon: <UsersIcon className="w-6 h-6"/>, themeColor: "chart-1" },
+        ];
+      }
+    } else {
+      // --- VIEW ADMIN / DOSEN (GLOBAL) ---
+      const currentStudentCount = studentData.length;
+      let totalIPK = 0;
+
+      studentData.forEach((s) => {
+        totalIPK += calculateIPK(s.transcript);
+      });
+
+      const avgIPK =
+        currentStudentCount > 0
+          ? (totalIPK / currentStudentCount).toFixed(2)
+          : "0.00";
+      
+      dist = calculateGradeDistribution(studentData);
+      trend = calculateSemesterTrend(studentData);
+      const avgGradePoint =
+        dist.totalGrades > 0
+          ? (dist.totalAM / dist.totalGrades).toFixed(2)
+          : "0.00";
+
+      stats = [
         {
           label: "Total Mahasiswa",
           value: currentStudentCount.toLocaleString(),
           description: "Mahasiswa Aktif",
           icon: <UsersIcon className="w-6 h-6" />,
-          themeColor: "chart-1" as const,
+          themeColor: "chart-1",
         },
         {
           label: "Total Mata Kuliah",
           value: courseCount.toString(),
           description: "Kurikulum Berjalan",
           icon: <LibraryIcon className="w-6 h-6" />,
-          themeColor: "chart-2" as const,
+          themeColor: "chart-2",
         },
         {
           label: "Rata-rata Nilai",
           value: avgGradePoint,
           description: "Skala Indeks 4.00",
           icon: <AwardIcon className="w-6 h-6" />,
-          themeColor: "chart-3" as const,
+          themeColor: "chart-3",
         },
         {
           label: "Rata-rata IPK",
           value: avgIPK,
           description: "Performa Angkatan",
           icon: <TrendingUpIcon className="w-6 h-6" />,
-          themeColor: "chart-4" as const,
+          themeColor: "chart-4",
         },
-      ],
+      ];
+    }
+
+    return {
+      statData: stats,
       trendData: trend,
       gradeDistData: dist,
     };
-  }, [studentData, courseCount, isLoading]);
+  }, [studentData, courseCount, isLoading, user]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -141,7 +215,7 @@ export default function DashboardPage() {
                 <Skeleton className="h-12 w-12 rounded-xl" />
               </div>
             ))
-          : statData.map((s) => <StatCard key={s.label} {...s} />)}
+          : statData.map((s, idx) => <StatCard key={idx} {...s} />)}
       </div>
 
       {/* ===== GRAFIK GRID ===== */}

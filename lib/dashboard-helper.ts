@@ -7,6 +7,17 @@ export function calculateIPK(transcript: TranscriptItem[]) {
   return totalNM / totalSKS;
 }
 
+// Helper Baru: Menghitung Total SKS
+export function calculateTotalSKS(transcript: TranscriptItem[]) {
+  return transcript.reduce((acc, curr) => acc + curr.sks, 0);
+}
+
+// Helper Baru: Mengetahui Semester Terakhir/Tertinggi
+export function getCurrentSemester(transcript: TranscriptItem[]) {
+  if (!transcript || transcript.length === 0) return 1;
+  return Math.max(...transcript.map((t) => t.smt));
+}
+
 export function calculateStudentIPS(transcript: TranscriptItem[], semester: number) {
   const semesterItems = transcript.filter((t) => t.smt === semester);
   if (semesterItems.length === 0) return null;

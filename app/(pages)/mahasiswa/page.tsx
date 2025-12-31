@@ -184,7 +184,7 @@ export default function MahasiswaPage() {
         render: (row) => (
           <Badge 
             variant={row.profile.is_active ? "default" : "destructive"} 
-            className={`font-normal ${row.profile.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
+            className={`font-normal ${row.profile.is_active ? "bg-green-600" : ""}`}
           >
             {row.profile.is_active ? (
               <CheckCircle2 className="mr-1 h-3 w-3" />

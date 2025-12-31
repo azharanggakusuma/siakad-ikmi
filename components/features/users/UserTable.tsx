@@ -115,7 +115,7 @@ export default function UserTable({
         render: (row) => (
           <Badge 
             variant={row.is_active ? "default" : "destructive"} 
-            className={`font-normal ${row.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
+            className={`font-normal ${row.is_active ? "bg-green-600" : ""}`}
           >
             {row.is_active ? (
               <CheckCircle2 className="mr-1 h-3 w-3" />

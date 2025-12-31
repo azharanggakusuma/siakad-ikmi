@@ -1,78 +1,111 @@
+import React from "react";
 import { TrendingUpIcon } from "./DashboardIcons";
 
 type TrendData = { label: string; val: number; height: string };
 
+// Helper: Membuat path garis lurus (tajam/sharp)
+function createSharpPath(points: [number, number][]) {
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0][0]},${points[0][1]}`;
+
+  let d = `M ${points[0][0]},${points[0][1]}`;
+  for (let i = 1; i < points.length; i++) {
+    d += ` L ${points[i][0]},${points[i][1]}`;
+  }
+  return d;
+}
+
 export function SemesterLineChart({ data }: { data: TrendData[] }) {
-  // Konfigurasi Ukuran SVG
-  const width = 600;
-  const height = 250;
-  const paddingX = 40;
-  const paddingY = 40;
-  const graphHeight = height - paddingY * 2;
+  // --- Konfigurasi Ukuran BESAR ---
+  const width = 800;
+  const height = 350; // Tinggi canvas diperbesar
+  const paddingX = 40; // Padding samping dikurangi biar grafik makin lebar
+  
+  // Padding atas/bawah disesuaikan agar grafik memenuhi ruang (tidak ngambang)
+  const paddingTop = 20; 
+  const paddingBottom = 30; 
+  
+  const graphHeight = height - paddingTop - paddingBottom;
   const graphWidth = width - paddingX * 2;
+  const maxVal = 4; // Skala IPK Maksimal
 
-  // Nilai Maksimal IPS selalu 4.00
-  const maxVal = 4;
-
-  // Fungsi Helper untuk mendapatkan koordinat X
   const getX = (index: number) => {
-    // Jika data hanya 1, taruh di tengah
     if (data.length <= 1) return width / 2;
-    return paddingX + (index * (graphWidth / (data.length - 1)));
+    return paddingX + index * (graphWidth / (data.length - 1));
   };
 
-  // Fungsi Helper untuk mendapatkan koordinat Y (SVG y=0 ada di atas)
   const getY = (val: number) => {
-    return height - paddingY - (val / maxVal) * graphHeight;
+    return height - paddingBottom - (val / maxVal) * graphHeight;
   };
 
-  // Membuat string path untuk garis (Polyline)
-  const points = data
-    .map((d, i) => `${getX(i)},${getY(d.val)}`)
-    .join(" ");
+  const points: [number, number][] = data.map((d, i) => [getX(i), getY(d.val)]);
+  const linePath = createSharpPath(points);
+  
+  const areaPath = points.length > 1 
+    ? `${linePath} L ${getX(data.length - 1)},${height - paddingBottom} L ${getX(0)},${height - paddingBottom} Z`
+    : "";
 
   return (
-    <section className="lg:col-span-4 rounded-xl border border-border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
-      <header className="px-6 py-5 border-b border-border bg-muted/40">
+    <section className="lg:col-span-4 rounded-xl border border-border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden relative group/chart">
+      {/* Header */}
+      <header className="px-6 py-5 border-b border-border bg-transparent flex justify-between items-center">
         <h3 className="font-semibold tracking-tight text-foreground flex items-center gap-2">
-          <TrendingUpIcon className="w-4 h-4 text-primary" />
+          <TrendingUpIcon className="w-5 h-5 text-primary" />
           Tren IPS Mahasiswa
         </h3>
+        {/* Indikator Skala */}
+        {data.length > 0 && (
+           <div className="text-xs text-muted-foreground font-semibold bg-muted/30 px-2 py-1 rounded">
+             Skala 0 - 4.00
+           </div>
+        )}
       </header>
 
-      <div className="p-6 flex-1 flex items-center justify-center min-h-[300px]">
+      {/* Chart Area */}
+      <div className="p-4 flex-1 flex items-center justify-center min-h-[350px]">
         {data.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            Belum ada data nilai per semester.
+          <div className="flex flex-col items-center gap-3 text-muted-foreground">
+             <div className="bg-muted p-4 rounded-full">
+               <TrendingUpIcon className="w-10 h-10 opacity-50" />
+             </div>
+             <p className="text-lg font-medium">Belum ada data nilai.</p>
           </div>
         ) : (
-          <div className="w-full h-full overflow-hidden">
+          <div className="w-full h-full relative">
             <svg
               viewBox={`0 0 ${width} ${height}`}
-              className="w-full h-auto max-h-[300px]"
-              preserveAspectRatio="xMidYMid meet"
+              className="w-full h-auto max-h-[350px] overflow-visible"
+              preserveAspectRatio="none"
             >
-              {/* Grid Lines Horizontal (0, 1, 2, 3, 4) */}
+              <defs>
+                {/* Gradient Standar */}
+                <linearGradient id="largeGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" className="text-primary" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.0" className="text-primary" />
+                </linearGradient>
+              </defs>
+
+              {/* Grid Lines Horizontal */}
               {[0, 1, 2, 3, 4].map((gridVal) => {
                 const y = getY(gridVal);
                 return (
                   <g key={gridVal}>
-                    {/* Garis Putus-putus */}
+                    {/* Garis Grid */}
                     <line
                       x1={paddingX}
                       y1={y}
                       x2={width - paddingX}
                       y2={y}
                       stroke="currentColor"
+                      strokeWidth="1.5"
                       strokeOpacity={0.1}
-                      strokeDasharray="4 4"
                       className="text-muted-foreground"
                     />
-                    {/* Label Angka di Kiri */}
+                    {/* Label Angka Sumbu Y (Lebih Besar) */}
                     <text
-                      x={paddingX - 10}
-                      y={y + 4}
-                      className="fill-muted-foreground text-[10px]"
+                      x={paddingX - 12}
+                      y={y + 5}
+                      className="fill-muted-foreground text-[13px] font-bold"
                       textAnchor="end"
                     >
                       {gridVal}
@@ -81,87 +114,90 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                 );
               })}
 
-              {/* Definisi Gradient untuk Area di bawah garis (Opsional) */}
-              <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className="text-primary" />
-                  <stop offset="100%" stopColor="currentColor" stopOpacity="0" className="text-primary" />
-                </linearGradient>
-              </defs>
-
-              {/* Area Shader (Warna pudar di bawah garis) */}
-              {data.length > 1 && (
+              {/* Area Fill */}
+              {areaPath && (
                 <path
-                  d={`${points} L${getX(data.length - 1)},${height - paddingY} L${getX(0)},${height - paddingY} Z`}
-                  fill="url(#lineGradient)"
-                  className="text-primary"
-                  style={{ transition: 'd 0.5s ease' }}
+                  d={areaPath}
+                  fill="url(#largeGradient)"
+                  className="text-primary transition-all duration-500 ease-out"
                 />
               )}
 
-              {/* Garis Utama (Line) */}
-              <polyline
-                points={points}
+              {/* GARIS UTAMA (Tebal & Besar) */}
+              <path
+                d={linePath}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="3"
-                className="text-primary"
-                strokeLinecap="round"
+                strokeWidth="4" 
+                strokeLinecap="square"
                 strokeLinejoin="round"
-                style={{ transition: 'points 0.5s ease' }}
+                className="text-primary drop-shadow-sm"
               />
 
-              {/* Titik Data (Dots) & Tooltip */}
-              {data.map((item, idx) => {
-                const x = getX(idx);
-                const y = getY(item.val);
+              {/* Points (Titik Data Besar) */}
+              {points.map((pos, idx) => {
+                const [x, y] = pos;
+                const item = data[idx];
+                
+                if (item.val === 0) return null;
+
                 return (
-                  <g key={idx} className="group">
-                    {/* Area Hover Invisible (supaya gampang di-hover) */}
-                    <circle cx={x} cy={y} r="20" fill="transparent" className="cursor-pointer" />
+                  <g key={idx} className="group cursor-pointer">
+                    {/* Hit Area Besar */}
+                    <circle cx={x} cy={y} r="30" fill="transparent" />
                     
-                    {/* Titik Lingkaran */}
+                    {/* Garis Indikator Vertikal */}
+                    <line 
+                      x1={x} y1={y} 
+                      x2={x} y2={height - paddingBottom} 
+                      stroke="currentColor" 
+                      strokeWidth="2.5"
+                      className="text-primary opacity-0 group-hover:opacity-30 transition-opacity duration-200"
+                    />
+
+                    {/* Lingkaran Titik (Lebih Besar) */}
                     <circle
                       cx={x}
                       cy={y}
-                      r="5"
-                      className="fill-background stroke-primary stroke-[3px] transition-all duration-200 group-hover:r-6"
+                      r="6" 
+                      className="fill-background stroke-primary stroke-[3.5px] transition-all duration-200 group-hover:r-8 group-hover:stroke-[5px] shadow-sm"
                     />
 
-                    {/* Popover/Tooltip saat Hover */}
-                    <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                       {/* Background Tooltip */}
-                       <rect 
-                         x={x - 24} 
-                         y={y - 40} 
-                         width="48" 
-                         height="26" 
-                         rx="6" 
-                         className="fill-popover stroke-border stroke-1 shadow-sm" 
-                       />
-                       {/* Teks Nilai */}
-                       <text 
-                         x={x} 
-                         y={y - 23} 
-                         textAnchor="middle" 
-                         className="fill-popover-foreground text-[12px] font-bold"
-                       >
-                         {item.val}
-                       </text>
+                    {/* Tooltip */}
+                    <g className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:-translate-y-2 pointer-events-none">
+                      <rect
+                        x={x - 40}
+                        y={y - 55}
+                        width="80"
+                        height="40"
+                        rx="8"
+                        className="fill-popover stroke-border stroke-1 shadow-lg"
+                      />
+                      <text
+                        x={x}
+                        y={y - 30}
+                        textAnchor="middle"
+                        className="fill-foreground text-[14px] font-bold"
+                      >
+                        {item.val.toFixed(2)}
+                      </text>
                     </g>
-
-                    {/* Label Sumbu X (Semester) */}
-                    <text
-                      x={x}
-                      y={height - 10}
-                      textAnchor="middle"
-                      className="fill-muted-foreground text-[10px] font-medium uppercase"
-                    >
-                      {item.label.includes("Smt") ? item.label.replace("Smt ", "S") : item.label}
-                    </text>
                   </g>
                 );
               })}
+              
+              {/* Label Sumbu X (Semester) - Lebih Besar & Jelas */}
+               {points.map((pos, idx) => (
+                  <text
+                    key={`label-${idx}`}
+                    x={pos[0]}
+                    y={height - 5}
+                    textAnchor="middle"
+                    className="fill-muted-foreground text-[13px] font-semibold uppercase tracking-wide"
+                  >
+                     {data[idx].label.replace("Smt ", "S")}
+                  </text>
+               ))}
             </svg>
           </div>
         )}

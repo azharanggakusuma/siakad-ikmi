@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge"; // <--- TAMBAHKAN INI
 import {
   Select,
   SelectContent,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { MenuFormValues } from "@/lib/types";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X, Loader2, Filter } from "lucide-react";
 // Import semua icon
 import * as LucideIcons from "lucide-react";
 
@@ -48,10 +49,29 @@ const AVAILABLE_ROLES = [
   { id: "mahasiswa", label: "Mahasiswa" },
 ];
 
-// 1. Ambil daftar icon murni (exclude internal helper Lucide)
+// 1. Daftar Icon Bersih
+const IGNORED_KEYS = ["createLucideIcon", "icons", "lucide-react", "default"];
 const ICON_LIST = Object.keys(LucideIcons).filter(
-  (key) => isNaN(Number(key)) && key !== "createLucideIcon" && key !== "icons" && key !== "lucide-react"
+  (key) => isNaN(Number(key)) && !IGNORED_KEYS.includes(key)
 );
+
+// 2. Kategori Resmi Lucide (Mapped by Keywords)
+const LUCIDE_CATEGORIES = [
+  { label: "Arrows", keywords: ["arrow", "chevron", "caret", "corner", "expand", "shrink", "move", "refresh", "rotate", "undo", "redo"] },
+  { label: "Communication", keywords: ["mail", "message", "inbox", "send", "chat", "phone", "contact", "call", "signal", "wifi"] },
+  { label: "Charts & Analytics", keywords: ["chart", "bar", "line", "pie", "activity", "graph", "trend", "analytics", "presentation"] },
+  { label: "Devices", keywords: ["monitor", "laptop", "phone", "smartphone", "tablet", "watch", "tv", "camera", "printer", "battery", "cpu", "server", "hard-drive", "database", "keyboard", "mouse"] },
+  { label: "Files & Folders", keywords: ["file", "folder", "document", "paper", "sheet", "page", "archive", "box", "clipboard", "copy", "save"] },
+  { label: "Users & People", keywords: ["user", "person", "people", "group", "team", "account", "profile", "face", "smile"] },
+  { label: "Money & Shopping", keywords: ["shopping", "cart", "bag", "store", "shop", "tag", "price", "credit-card", "wallet", "gift", "dollar", "euro", "bank", "coins"] },
+  { label: "Media", keywords: ["play", "pause", "stop", "rewind", "forward", "skip", "volume", "music", "video", "film", "image", "mic", "headphones"] },
+  { label: "Security", keywords: ["lock", "unlock", "key", "shield", "protect", "security", "user-check", "fingerprint"] },
+  { label: "Design & Edit", keywords: ["pen", "pencil", "brush", "palette", "color", "crop", "layer", "layout", "grid", "ruler", "scissors", "edit", "trash"] },
+  { label: "Time & Date", keywords: ["calendar", "date", "clock", "time", "watch", "schedule", "timer", "alarm"] },
+  { label: "Weather & Nature", keywords: ["sun", "moon", "cloud", "rain", "snow", "wind", "storm", "thermometer", "umbrella", "leaf", "flower", "tree"] },
+  { label: "Navigation & Maps", keywords: ["map", "pin", "location", "globe", "compass", "flag", "landmark", "navigation", "route"] },
+  { label: "Brands", keywords: ["github", "facebook", "twitter", "instagram", "linkedin", "youtube", "twitch", "chrome", "slack", "dribbble", "codepen", "framer", "gitlab", "figma"] },
+];
 
 export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFormProps) {
   const [formData, setFormData] = useState<MenuFormValues>(
@@ -62,27 +82,58 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
   // --- STATE ICON PICKER ---
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [searchIcon, setSearchIcon] = useState("");
-  const [visibleCount, setVisibleCount] = useState(100); // Mulai dengan 100 icon
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(100);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Reset visible count saat search berubah atau modal dibuka
+  // Reset scroll saat filter berubah
   useEffect(() => {
-    if (isIconPickerOpen) setVisibleCount(100);
-  }, [isIconPickerOpen, searchIcon]);
+    if (isIconPickerOpen) {
+      setVisibleCount(100);
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    }
+  }, [isIconPickerOpen, activeCategory, searchIcon]);
 
-  // 2. Filter icon berdasarkan pencarian
-  const allFilteredIcons = useMemo(() => {
-    if (!searchIcon) return ICON_LIST;
-    return ICON_LIST.filter((name) =>
-      name.toLowerCase().includes(searchIcon.toLowerCase())
-    );
-  }, [searchIcon]);
+  // 3. Logic Filtering: Category + Search
+  const filteredIcons = useMemo(() => {
+    let result = ICON_LIST;
 
-  // 3. Potong list sesuai jumlah visibleCount agar ringan
-  const visibleIcons = allFilteredIcons.slice(0, visibleCount);
+    // Filter Category
+    if (activeCategory !== "All") {
+      const category = LUCIDE_CATEGORIES.find(c => c.label === activeCategory);
+      if (category) {
+        result = result.filter(name => 
+          category.keywords.some(k => name.toLowerCase().includes(k))
+        );
+      }
+    }
 
-  // Helper render icon dinamis
+    // Filter Search
+    if (searchIcon) {
+      const lowerSearch = searchIcon.toLowerCase();
+      result = result.filter((name) => name.toLowerCase().includes(lowerSearch));
+    }
+
+    return result;
+  }, [searchIcon, activeCategory]);
+
+  // 4. Infinite Scroll Slice
+  const visibleIcons = filteredIcons.slice(0, visibleCount);
+
+  // 5. Handle Infinite Scroll
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    // Load more jika scroll mendekati bawah (150px)
+    if (scrollHeight - scrollTop - clientHeight < 150) {
+      if (visibleCount < filteredIcons.length) {
+        setVisibleCount((prev) => prev + 100);
+      }
+    }
+  };
+
   const IconRender = ({ name, className }: { name: string; className?: string }) => {
-    const IconComponent = (LucideIcons as any)[name];
+    // @ts-ignore - Dynamic access
+    const IconComponent = LucideIcons[name];
     if (!IconComponent) return <X className={className} />;
     return <IconComponent className={className} />;
   };
@@ -90,7 +141,6 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof MenuFormValues, boolean>> = {};
     let isValid = true;
-
     if (!formData.label.trim()) newErrors.label = true;
     if (!formData.href.trim()) newErrors.href = true;
     if (!formData.icon.trim()) newErrors.icon = true;
@@ -99,7 +149,7 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       isValid = false;
-      toast.error("Mohon lengkapi form yang ditandai merah.");
+      toast.error("Mohon lengkapi data yang kurang.");
     }
     return isValid;
   };
@@ -125,6 +175,7 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
+      {/* Label & Sequence */}
       <div className="grid grid-cols-4 gap-4">
         <div className="grid gap-2 col-span-3">
           <Label htmlFor="label">Label Menu</Label>
@@ -159,7 +210,7 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
           />
         </div>
         
-        {/* === ICON PICKER UPDATE === */}
+        {/* === ICON PICKER === */}
         <div className="grid gap-2">
           <Label>Icon Menu</Label>
           <Dialog open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
@@ -172,7 +223,9 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
                 <span className="flex items-center gap-2">
                    {formData.icon ? (
                      <>
-                       <IconRender name={formData.icon} className="h-4 w-4 text-slate-600" />
+                       <div className="bg-slate-100 p-1 rounded-sm">
+                         <IconRender name={formData.icon} className="h-4 w-4 text-slate-700" />
+                       </div>
                        {formData.icon}
                      </>
                    ) : "Pilih Icon..."}
@@ -181,68 +234,96 @@ export function MenuForm({ initialData, isEditing, onSubmit, onCancel }: MenuFor
               </Button>
             </DialogTrigger>
             
-            {/* Lebarkan Modal agar muat lebih banyak */}
-            <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
-              <DialogHeader>
-                <DialogTitle>Pilih Icon ({allFilteredIcons.length})</DialogTitle>
+            <DialogContent className="sm:max-w-[700px] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+              <DialogHeader className="px-6 py-4 border-b space-y-3">
+                <DialogTitle>Pilih Icon</DialogTitle>
+                <div className="relative">
+                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                   <Input 
+                    placeholder="Cari icon (contoh: user, home, setting)..." 
+                    value={searchIcon}
+                    onChange={(e) => setSearchIcon(e.target.value)}
+                    className="pl-9 h-10 bg-slate-50 border-slate-200"
+                    autoFocus
+                  />
+                </div>
               </DialogHeader>
-              
-              <div className="py-2">
-                <Input 
-                  placeholder="Cari nama icon (inggris)..." 
-                  value={searchIcon}
-                  onChange={(e) => setSearchIcon(e.target.value)}
-                  autoFocus
-                />
+
+              {/* CATEGORY TABS (Scrollable Chips) */}
+              <div className="border-b bg-slate-50/50">
+                <div className="flex overflow-x-auto py-3 px-4 gap-2 no-scrollbar items-center">
+                   <Button 
+                      variant={activeCategory === "All" ? "default" : "outline"} 
+                      size="sm" 
+                      onClick={() => setActiveCategory("All")}
+                      className="h-8 rounded-full px-4 text-xs shadow-sm"
+                   >
+                     All Icons
+                   </Button>
+                   <div className="w-[1px] h-5 bg-slate-300 mx-1"></div>
+                   {LUCIDE_CATEGORIES.map(cat => (
+                     <Button 
+                        key={cat.label}
+                        variant={activeCategory === cat.label ? "secondary" : "ghost"} 
+                        size="sm" 
+                        onClick={() => setActiveCategory(cat.label)}
+                        className={`h-8 rounded-full px-4 text-xs whitespace-nowrap border ${activeCategory === cat.label ? "bg-slate-200 border-slate-300 text-slate-900" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}
+                     >
+                        {cat.label}
+                     </Button>
+                   ))}
+                </div>
               </div>
 
-              {/* Scrollable Container */}
-              <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-6 sm:grid-cols-8 gap-2 content-start">
-                {visibleIcons.length === 0 ? (
-                    <div className="col-span-full text-center text-sm text-muted-foreground py-10">
-                        Tidak ditemukan icon dengan nama "{searchIcon}".
+              {/* ICON GRID (Infinite Scroll) */}
+              <div 
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto p-4 bg-slate-50/30"
+                onScroll={handleScroll}
+              >
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 content-start">
+                  {visibleIcons.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground opacity-70">
+                      <Filter className="h-12 w-12 mb-3 stroke-1 text-slate-300" />
+                      <p className="font-medium">Tidak ditemukan icon</p>
+                      <p className="text-xs">Coba kata kunci atau kategori lain.</p>
                     </div>
-                ) : (
-                    <>
-                      {visibleIcons.map((iconName) => (
-                          <div
-                              key={iconName}
-                              className={`
-                                  flex flex-col items-center justify-center gap-1 p-3 rounded-md cursor-pointer border transition-all hover:bg-slate-50
-                                  ${formData.icon === iconName ? "bg-slate-100 border-primary ring-1 ring-primary" : "border-transparent hover:border-slate-200"}
-                              `}
-                              onClick={() => {
-                                  handleInputChange("icon", iconName);
-                                  setIsIconPickerOpen(false);
-                                  setSearchIcon("");
-                              }}
-                              title={iconName}
-                          >
-                              <IconRender name={iconName} className="h-6 w-6 text-slate-700" />
-                              <span className="text-[10px] text-muted-foreground truncate w-full text-center">{iconName}</span>
-                          </div>
-                      ))}
-                      
-                      {/* Tombol Load More */}
-                      {visibleCount < allFilteredIcons.length && (
-                        <div className="col-span-full py-4 flex justify-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setVisibleCount((prev) => prev + 100)}
-                            className="text-muted-foreground"
-                          >
-                            <ChevronDown className="mr-2 h-4 w-4" />
-                            Muat Lebih Banyak
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                )}
+                  ) : (
+                    visibleIcons.map((iconName) => (
+                      <div
+                        key={iconName}
+                        className={`
+                          group flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer border bg-white transition-all duration-200
+                          ${formData.icon === iconName ? "border-primary ring-2 ring-primary ring-opacity-20 bg-primary/5 z-10" : "border-slate-100 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"}
+                        `}
+                        onClick={() => {
+                          handleInputChange("icon", iconName);
+                          setIsIconPickerOpen(false);
+                        }}
+                      >
+                        <IconRender name={iconName} className={`h-6 w-6 transition-colors ${formData.icon === iconName ? "text-primary" : "text-slate-600 group-hover:text-slate-900"}`} />
+                        <span className="text-[10px] text-slate-500 truncate w-full text-center group-hover:text-slate-800 font-medium">{iconName}</span>
+                      </div>
+                    ))
+                  )}
+                  
+                  {/* Loader Infinite Scroll */}
+                  {visibleCount < filteredIcons.length && (
+                     <div className="col-span-full py-6 flex justify-center">
+                        <Loader2 className="animate-spin h-6 w-6 text-primary/50" />
+                     </div>
+                  )}
+                </div>
               </div>
               
-              <div className="text-[10px] text-muted-foreground text-center border-t pt-2">
-                Menampilkan {visibleIcons.length} dari {allFilteredIcons.length} icon
+              {/* Footer Stat */}
+              <div className="border-t p-3 px-6 bg-white flex justify-between items-center text-xs text-muted-foreground shadow-sm z-10">
+                  <div className="flex items-center gap-2">
+                    <span>Terpilih: </span>
+                    {/* Menggunakan Badge untuk tampilan label icon */}
+                    <Badge variant="outline" className="font-mono bg-slate-50">{formData.icon}</Badge>
+                  </div>
+                  <span>{visibleIcons.length} dari {filteredIcons.length} icon</span>
               </div>
             </DialogContent>
           </Dialog>

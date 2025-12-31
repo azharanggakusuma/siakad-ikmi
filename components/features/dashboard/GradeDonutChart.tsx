@@ -16,7 +16,6 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // --- 1. Persiapan Data ---
-  // Gabungkan D dan E
   const dataValues = [
     counts.A,
     counts.B,
@@ -24,29 +23,30 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
     counts.D + counts.E
   ];
 
-  // --- 2. Konfigurasi SVG ---
+  // --- 2. Konfigurasi SVG (FIXED) ---
   const size = 200;
   const strokeWidth = 20;
+  const hoverSizeIncrease = 6; // Penambahan ketebalan saat hover
   const center = size / 2;
-  const radius = (size - strokeWidth) / 2;
+  
+  // [PERBAIKAN] Radius dikurangi agar saat membesar tidak keluar dari kotak 200x200
+  const radius = (size - (strokeWidth + hoverSizeIncrease)) / 2;
+  
   const circumference = 2 * Math.PI * radius;
   
-  // [UBAH] Gap diset ke 0 agar menyatu tanpa jarak
+  // Gap = 0 (Menyatu)
   const gapAngle = 0; 
   const gapLength = (gapAngle / 360) * circumference;
 
-  let currentAngle = -90; // Mulai dari atas (jam 12)
+  let currentAngle = -90; 
 
   // --- 3. Generate Segments ---
   const segments = dataValues.map((val, index) => {
     const percentage = total > 0 ? val / total : 0;
     
-    // Hitung panjang stroke
-    // Karena gap 0, strokeLength akan penuh sesuai persentase
     const hasMultipleSegments = dataValues.filter(v => v > 0).length > 1;
     const strokeLength = (percentage * circumference) - (hasMultipleSegments ? gapLength : 0);
     
-    // Sudut putar
     const angle = (percentage * 360);
     const startAngle = currentAngle;
     currentAngle += angle;
@@ -87,7 +87,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
                 width={size} 
                 height={size} 
                 viewBox={`0 0 ${size} ${size}`} 
-                className="transform transition-all duration-300"
+                className="transform transition-all duration-300 overflow-visible"
               >
                 {/* Background Track */}
                 <circle
@@ -115,10 +115,10 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
                       r={radius}
                       fill="none"
                       stroke={seg.config.colorVar}
-                      strokeWidth={isHovered ? strokeWidth + 6 : strokeWidth} 
+                      // Saat hover, ketebalan ditambah hoverSizeIncrease
+                      strokeWidth={isHovered ? strokeWidth + hoverSizeIncrease : strokeWidth} 
                       strokeDasharray={`${seg.strokeLength} ${circumference}`}
                       strokeDashoffset={0}
-                      // Tetap 'butt' agar ujungnya rata dan menyatu sempurna
                       strokeLinecap="butt"
                       transform={`rotate(${seg.rotation} ${center} ${center})`}
                       className={cn(
@@ -143,7 +143,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
               </div>
             </div>
 
-            {/* Modern Legend Grid */}
+            {/* Legend Grid */}
             <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-3 w-full px-2">
               {segments.map((seg) => (
                 <div 

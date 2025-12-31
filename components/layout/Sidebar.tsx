@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 // Import logout action
 import { logout } from "@/app/actions/auth";
+// Import useLayout untuk mengakses data user
+import { useLayout } from "@/app/context/LayoutContext";
 
 type SidebarProps = {
   open: boolean;
@@ -30,6 +32,11 @@ type SidebarProps = {
 
 export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
+  // Ambil data user dari context layout
+  const { user } = useLayout();
+
+  // Cek apakah user adalah mahasiswa
+  const isMahasiswa = user?.role === "mahasiswa";
 
   const isActive = (path: string) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
@@ -103,14 +110,25 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
             
             <NavItem href="/" label="Dashboard" icon={<LayoutDashboard size={20} />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/nilai" label="Nilai Mahasiswa" icon={<Star size={20} />} active={isActive("/nilai")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            
+            {/* Sembunyikan menu ini jika role adalah mahasiswa */}
+            {!isMahasiswa && (
+              <>
+                <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+                <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+                <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+                <NavItem href="/nilai" label="Nilai Mahasiswa" icon={<Star size={20} />} active={isActive("/nilai")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+              </>
+            )}
+
             <NavItem href="/krs" label="Kartu Rencana Studi" icon={<ClipboardList size={20} />} active={isActive("/krs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/khs" label="Kartu Hasil Studi" icon={<FileSpreadsheet size={20} />} active={isActive("/khs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/transkrip" label="Transkrip Nilai" icon={<FileText size={20} />} active={isActive("/transkrip")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<Mail size={20} />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            
+            {/* Sembunyikan menu ini jika role adalah mahasiswa */}
+            {!isMahasiswa && (
+              <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<Mail size={20} />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            )}
           </div>
 
           <div className="space-y-1">

@@ -4,12 +4,45 @@ import { cn } from "@/lib/utils";
 
 type Counts = { A: number; B: number; C: number; D: number; E: number };
 
-// Konfigurasi Warna & Label
+// Konfigurasi Warna & Label yang Harmonis
 const CHART_CONFIG = [
-  { key: "A", label: "A (Sangat Baik)", colorVar: "var(--color-chart-2)", colorClass: "bg-chart-2" },
-  { key: "B", label: "B (Baik)", colorVar: "var(--color-chart-3)", colorClass: "bg-chart-3" },
-  { key: "C", label: "C (Cukup)", colorVar: "var(--color-chart-5)", colorClass: "bg-chart-5" },
-  { key: "D", label: "D/E (Kurang)", colorVar: "var(--color-chart-1)", colorClass: "bg-chart-1" },
+  { 
+    key: "A", 
+    label: "A (Sangat Baik)", 
+    // Menggunakan variabel CSS agar sinkron dengan tema (biasanya Hijau/Teal)
+    colorVar: "var(--color-chart-2)", 
+    // Background transparan untuk legenda
+    bgClass: "bg-chart-2/10",
+    textClass: "text-chart-2",
+    indicatorClass: "bg-chart-2" 
+  },
+  { 
+    key: "B", 
+    label: "B (Baik)", 
+    // (Biasanya Biru)
+    colorVar: "var(--color-chart-3)", 
+    bgClass: "bg-chart-3/10",
+    textClass: "text-chart-3",
+    indicatorClass: "bg-chart-3" 
+  },
+  { 
+    key: "C", 
+    label: "C (Cukup)", 
+    // (Biasanya Kuning/Oranye)
+    colorVar: "var(--color-chart-5)", 
+    bgClass: "bg-chart-5/10",
+    textClass: "text-chart-5",
+    indicatorClass: "bg-chart-5" 
+  },
+  { 
+    key: "D", 
+    label: "D/E (Kurang)", 
+    // (Biasanya Merah)
+    colorVar: "var(--color-chart-1)", 
+    bgClass: "bg-chart-1/10",
+    textClass: "text-chart-1",
+    indicatorClass: "bg-chart-1" 
+  },
 ];
 
 export function GradeDonutChart({ counts, total }: { counts: Counts; total: number }) {
@@ -23,29 +56,29 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
     counts.D + counts.E
   ];
 
-  // --- 2. Konfigurasi SVG (FIXED) ---
-  const size = 200;
-  const strokeWidth = 20;
-  const hoverSizeIncrease = 6; // Penambahan ketebalan saat hover
+  // --- 2. Konfigurasi SVG ---
+  const size = 220; // Sedikit diperbesar agar lega
+  const strokeWidth = 22; // Ketebalan donat
+  const hoverExpand = 6; // Seberapa besar membesar saat hover
+  
+  // Perhitungan Radius agar tidak terpotong (Size - MaxStroke) / 2
+  const radius = (size - (strokeWidth + hoverExpand)) / 2;
   const center = size / 2;
-  
-  // [PERBAIKAN] Radius dikurangi agar saat membesar tidak keluar dari kotak 200x200
-  const radius = (size - (strokeWidth + hoverSizeIncrease)) / 2;
-  
   const circumference = 2 * Math.PI * radius;
   
-  // Gap = 0 (Menyatu)
+  // Gap 0 agar menyatu (Solid)
   const gapAngle = 0; 
   const gapLength = (gapAngle / 360) * circumference;
 
-  let currentAngle = -90; 
+  let currentAngle = -90; // Mulai dari jam 12
 
   // --- 3. Generate Segments ---
   const segments = dataValues.map((val, index) => {
     const percentage = total > 0 ? val / total : 0;
     
-    const hasMultipleSegments = dataValues.filter(v => v > 0).length > 1;
-    const strokeLength = (percentage * circumference) - (hasMultipleSegments ? gapLength : 0);
+    // Logic: Jika hanya 1 segmen yg ada nilainya, jangan kurangi gapLength
+    const hasMultiple = dataValues.filter(v => v > 0).length > 1;
+    const strokeLength = (percentage * circumference) - (hasMultiple ? gapLength : 0);
     
     const angle = (percentage * 360);
     const startAngle = currentAngle;
@@ -63,33 +96,34 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
   });
 
   return (
-    <section className="lg:col-span-3 rounded-xl border border-border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
-      <header className="px-6 py-5 border-b border-border bg-muted/40 flex items-center justify-between">
+    <section className="lg:col-span-3 rounded-xl border border-border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden h-full">
+      <header className="px-6 py-5 border-b border-border bg-muted/20 flex items-center justify-between">
         <h3 className="font-semibold tracking-tight text-foreground flex items-center gap-2">
-          <ChartPieIcon className="w-4 h-4 text-chart-2" />
+          <ChartPieIcon className="w-4 h-4 text-primary" />
           Distribusi Nilai
         </h3>
       </header>
 
-      <div className="p-6 flex-1 flex flex-col items-center justify-center min-h-[300px]">
+      <div className="p-6 flex-1 flex flex-col items-center justify-between min-h-[320px]">
         {total === 0 ? (
-          <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center flex-1 gap-3 text-muted-foreground">
              <div className="bg-muted p-4 rounded-full">
-               <ChartPieIcon className="w-8 h-8 opacity-50" />
+               <ChartPieIcon className="w-10 h-10 opacity-30" />
              </div>
              <p className="text-sm font-medium">Belum ada data nilai.</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full animate-in fade-in zoom-in duration-500">
-            {/* SVG DONUT */}
-            <div className="relative group">
+          <div className="flex flex-col items-center w-full animate-in fade-in zoom-in duration-500 flex-1 justify-center">
+            
+            {/* --- SVG DONUT CHART --- */}
+            <div className="relative group my-4">
               <svg 
                 width={size} 
                 height={size} 
                 viewBox={`0 0 ${size} ${size}`} 
-                className="transform transition-all duration-300 overflow-visible"
+                className="overflow-visible transform transition-transform duration-300"
               >
-                {/* Background Track */}
+                {/* Track Background (Lingkaran abu-abu tipis di belakang) */}
                 <circle
                   cx={center}
                   cy={center}
@@ -97,7 +131,7 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={strokeWidth}
-                  className="text-muted/20"
+                  className="text-muted/10"
                 />
 
                 {/* Data Segments */}
@@ -115,15 +149,14 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
                       r={radius}
                       fill="none"
                       stroke={seg.config.colorVar}
-                      // Saat hover, ketebalan ditambah hoverSizeIncrease
-                      strokeWidth={isHovered ? strokeWidth + hoverSizeIncrease : strokeWidth} 
+                      strokeWidth={isHovered ? strokeWidth + hoverExpand : strokeWidth} 
                       strokeDasharray={`${seg.strokeLength} ${circumference}`}
                       strokeDashoffset={0}
-                      strokeLinecap="butt"
+                      strokeLinecap="butt" // Ujung Rata (Nyatu)
                       transform={`rotate(${seg.rotation} ${center} ${center})`}
                       className={cn(
                         "transition-all duration-300 ease-out cursor-pointer",
-                        isDimmed ? "opacity-30 blur-[1px]" : "opacity-100"
+                        isDimmed ? "opacity-20 saturate-0" : "opacity-100"
                       )}
                       onMouseEnter={() => setHoveredIndex(seg.index)}
                       onMouseLeave={() => setHoveredIndex(null)}
@@ -132,42 +165,57 @@ export function GradeDonutChart({ counts, total }: { counts: Counts; total: numb
                 })}
               </svg>
 
-              {/* Center Text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-4xl font-extrabold text-foreground tracking-tighter">
+              {/* Center Info Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                <span className={cn(
+                  "text-4xl font-black tracking-tighter transition-colors duration-200",
+                  hoveredIndex !== null ? segments[hoveredIndex].config.textClass : "text-foreground"
+                )}>
                   {hoveredIndex !== null ? segments[hoveredIndex].value : total}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5">
-                  {hoveredIndex !== null ? "Mata Kuliah" : "Total Nilai"}
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
+                  {hoveredIndex !== null ? "Mata Kuliah" : "Total MK"}
                 </span>
               </div>
             </div>
 
-            {/* Legend Grid */}
-            <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-3 w-full px-2">
+            {/* --- LEGEND GRID --- */}
+            <div className="w-full grid grid-cols-2 gap-3 mt-4">
               {segments.map((seg) => (
                 <div 
                   key={seg.index} 
                   className={cn(
-                    "flex items-center justify-between p-2 rounded-lg transition-all duration-200 cursor-default border border-transparent",
-                    hoveredIndex === seg.index ? "bg-muted border-border shadow-sm" : "hover:bg-muted/50"
+                    "flex items-center justify-between px-3 py-2 rounded-lg border border-transparent transition-all duration-200 cursor-default",
+                    // Jika di-hover, beri background warna sesuai kategori
+                    hoveredIndex === seg.index 
+                      ? `${seg.config.bgClass} border-${seg.config.textClass}/20` 
+                      : "hover:bg-muted/50 border-transparent"
                   )}
                   onMouseEnter={() => setHoveredIndex(seg.index)}
                   onMouseLeave={() => setHoveredIndex(null)}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 overflow-hidden">
+                    {/* Indikator Kotak Kecil */}
                     <span 
-                      className={cn("w-3 h-3 rounded-sm shadow-sm ring-1 ring-background", seg.config.colorClass)} 
+                      className={cn("w-2.5 h-2.5 rounded-sm flex-shrink-0", seg.config.indicatorClass)} 
                     />
-                    <span className="text-muted-foreground font-medium text-xs">
-                      {seg.config.label.split(" (")[0]} 
-                      <span className="text-[10px] opacity-70 ml-1">({seg.config.label.split(" (")[1].replace(")", "")})</span>
+                    <span className="text-muted-foreground font-medium text-xs truncate">
+                      {/* Label Pendek: Ambil huruf depannya saja (A, B, C...) */}
+                      <span className={cn("font-bold mr-1", seg.config.textClass)}>
+                        {seg.config.label.split(" ")[0]}
+                      </span>
+                      <span className="text-[10px] opacity-70">
+                        {seg.config.label.split("(")[1].replace(")", "")}
+                      </span>
                     </span>
                   </div>
-                  <span className="font-bold text-foreground text-xs">{seg.percentage}%</span>
+                  <span className="font-bold text-foreground text-xs ml-2">
+                    {seg.percentage}%
+                  </span>
                 </div>
               ))}
             </div>
+
           </div>
         )}
       </div>

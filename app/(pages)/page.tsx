@@ -171,9 +171,9 @@ export default function DashboardPage() {
           themeColor: "chart-2",
         },
         {
-          label: "Rata-rata Nilai",
+          label: "Rata-rata Nilai Mutu",
           value: avgGradePoint,
-          description: "Skala Indeks 4.00",
+          description: "Standar Mutu Akademik",
           icon: <AwardIcon className="w-6 h-6" />, 
           themeColor: "chart-3",
         },

@@ -8,7 +8,7 @@ import {
   calculateSemesterTrend,
   calculateGradeDistribution,
   calculateTotalSKS,
-  getCurrentSemester,
+  // getCurrentSemester, // <-- Hapus fungsi ini karena tidak dipakai lagi untuk penentuan semester
 } from "@/lib/dashboard-helper";
 
 // Import Server Actions
@@ -91,35 +91,39 @@ export default function DashboardPage() {
       if (myData) {
         const myIPK = calculateIPK(myData.transcript).toFixed(2);
         const totalSKS = calculateTotalSKS(myData.transcript);
-        const currentSmt = getCurrentSemester(myData.transcript);
+        
+        // [PERBAIKAN DISINI]
+        // Mengambil langsung dari profile.semester (Data Master), bukan hitungan transkrip
+        const currentSmt = myData.profile.semester; 
+        
         const totalMK = myData.transcript.length;
 
         stats = [
           {
             label: "Indeks Prestasi (IPK)",
             value: myIPK,
-            description: "Skala Indeks 4.00", // Menjelaskan skala maksimal
+            description: "Skala Indeks 4.00", 
             icon: <AwardIcon className="w-6 h-6" />,
             themeColor: "chart-1",
           },
           {
             label: "Total SKS",
             value: totalSKS.toString(),
-            description: "Akumulasi Kredit Lulus", // Menjelaskan status kredit
+            description: "Akumulasi Kredit Lulus", 
             icon: <LibraryIcon className="w-6 h-6" />,
             themeColor: "chart-2",
           },
           {
             label: "Mata Kuliah",
             value: totalMK.toString(),
-            description: "Total MK Diambil", // Menjelaskan jumlah item
+            description: "Total MK Diambil", 
             icon: <TrendingUpIcon className="w-6 h-6" />,
             themeColor: "chart-3",
           },
           {
             label: "Semester",
             value: `Smt ${currentSmt}`,
-            description: "Periode Akademik Aktif", // Menjelaskan status waktu
+            description: "Periode Akademik Aktif", 
             icon: <UsersIcon className="w-6 h-6" />, 
             themeColor: "chart-4",
           },

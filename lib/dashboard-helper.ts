@@ -64,6 +64,30 @@ export function calculateSemesterTrend(allStudents: StudentData[]) {
   return trendData;
 }
 
+// [BARU] Fungsi khusus untuk menampilkan tren per semester mahasiswa (Fixed 8 Semester)
+export function calculateStudentSemesterTrend(student: StudentData) {
+  const trendData = [];
+
+  // Loop fix dari semester 1 sampai 8
+  for (let smt = 1; smt <= 8; smt++) {
+    const ips = calculateStudentIPS(student.transcript, smt);
+    
+    // Jika IPS null (belum ada mapel diambil), set nilai ke 0
+    const val = ips !== null ? ips : 0;
+    
+    // Hitung persentase tinggi bar (Skala 4.00)
+    const heightPercentage = Math.min((val / 4) * 100, 100);
+
+    trendData.push({
+      label: `Smt ${smt}`,
+      val: Number(val.toFixed(2)),
+      height: `${heightPercentage}%`,
+    });
+  }
+
+  return trendData;
+}
+
 export function calculateGradeDistribution(allStudents: StudentData[]) {
   const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
   let totalGrades = 0;

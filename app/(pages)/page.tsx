@@ -6,6 +6,7 @@ import { useLayout } from "@/app/context/LayoutContext";
 import {
   calculateIPK,
   calculateSemesterTrend,
+  calculateStudentSemesterTrend,
   calculateGradeDistribution,
   calculateTotalSKS,
 } from "@/lib/dashboard-helper";
@@ -14,7 +15,6 @@ import {
 import { getStudents } from "@/app/actions/students";
 import { getCourses } from "@/app/actions/courses";
 
-// [1] Icon dari DashboardIcons (Digunakan untuk Admin & Mahasiswa)
 import {
   UsersIcon,
   LibraryIcon,
@@ -22,16 +22,15 @@ import {
   TrendingUpIcon,
 } from "@/components/features/dashboard/DashboardIcons";
 
-// [2] Icon Tambahan dari Lucide (Khusus Mahasiswa)
 import { 
-  Activity,     // Untuk Total SKS (Garis Naik Turun)
-  CalendarDays  // Untuk Semester (Tetap)
+  Activity,    
+  CalendarDays  
 } from "lucide-react";
 
-// Import Components
 import { DashboardHeader } from "@/components/features/dashboard/DashboardHeader";
 import { StatCard } from "@/components/features/dashboard/StatCard";
-import { SemesterBarChart } from "@/components/features/dashboard/SemesterBarChart";
+// [UBAH] Ganti BarChart dengan LineChart
+import { SemesterLineChart } from "@/components/features/dashboard/SemesterLineChart"; 
 import { GradeDonutChart } from "@/components/features/dashboard/GradeDonutChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -92,14 +91,11 @@ export default function DashboardPage() {
     const currentUsername = user?.username;
 
     if (isMahasiswa && currentUsername) {
-      // --- VIEW MAHASISWA (PERSONAL) ---
       const myData = studentData.find((s) => s.profile.nim === currentUsername);
       
       if (myData) {
         const myIPK = calculateIPK(myData.transcript).toFixed(2);
         const totalSKS = calculateTotalSKS(myData.transcript);
-        
-        // Ambil data semester langsung dari Profile
         const currentSmt = myData.profile.semester; 
         const totalMK = myData.transcript.length;
 
@@ -134,7 +130,7 @@ export default function DashboardPage() {
           },
         ];
 
-        trend = calculateSemesterTrend([myData]); 
+        trend = calculateStudentSemesterTrend(myData); 
         dist = calculateGradeDistribution([myData]);
       } else {
         stats = [
@@ -142,7 +138,6 @@ export default function DashboardPage() {
         ];
       }
     } else {
-      // --- VIEW ADMIN / DOSEN (GLOBAL) ---
       const currentStudentCount = studentData.length;
       let totalIPK = 0;
 
@@ -205,7 +200,6 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <DashboardHeader />
 
-      {/* ===== STAT GRID ===== */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
@@ -224,7 +218,6 @@ export default function DashboardPage() {
           : statData.map((s, idx) => <StatCard key={idx} {...s} />)}
       </div>
 
-      {/* ===== GRAFIK GRID ===== */}
       <div className="grid gap-6 lg:grid-cols-7">
         {isLoading ? (
           <>
@@ -232,14 +225,8 @@ export default function DashboardPage() {
               <div className="px-6 py-5 border-b border-border bg-muted/40">
                 <Skeleton className="h-6 w-48" />
               </div>
-              <div className="p-6 flex-1 flex items-end justify-between gap-4">
-                {[40, 70, 50, 80, 60, 90, 55, 75].map((h, idx) => (
-                  <Skeleton
-                    key={idx}
-                    className="w-full rounded-t-xl"
-                    style={{ height: `${h}%` }}
-                  />
-                ))}
+              <div className="p-6 flex-1 flex items-center justify-center">
+                 <Skeleton className="w-full h-[200px] rounded-xl" />
               </div>
             </div>
 
@@ -268,7 +255,8 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            <SemesterBarChart data={trendData} />
+            {/* [UBAH] Gunakan Komponen Line Chart */}
+            <SemesterLineChart data={trendData} />
             <GradeDonutChart
               counts={gradeDistData.counts}
               total={gradeDistData.totalGrades}

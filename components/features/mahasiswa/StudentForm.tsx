@@ -27,23 +27,30 @@ const defaultValues: StudentFormValues = {
 };
 
 export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, onCancel }: StudentFormProps) {
-  const [formData, setFormData] = useState<StudentFormValues>(defaultValues);
+  
+  // [PERBAIKAN] Helper untuk memastikan data ter-parse dengan benar sejak awal render
+  const parseInitialData = (data?: StudentFormValues): StudentFormValues => {
+    if (!data) return defaultValues;
+    return {
+      nim: data.nim || "",
+      nama: data.nama || "",
+      // Pastikan ID dikonversi ke String secara eksplisit agar cocok dengan value SelectItem
+      study_program_id: data.study_program_id ? String(data.study_program_id) : "",
+      semester: data.semester ? String(data.semester) : "",
+      alamat: data.alamat || "",
+      is_active: data.is_active ?? true 
+    };
+  };
+
+  // [PERBAIKAN] Inisialisasi state LANGSUNG dengan data yang sudah di-parse
+  // Ini mencegah "flash" data kosong yang membuat Select bingung
+  const [formData, setFormData] = useState<StudentFormValues>(() => parseInitialData(initialData));
+  
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormValues, boolean>>>({});
 
-  // Reset form saat initialData berubah
+  // Reset form jika initialData berubah (misal ganti baris yang diedit tanpa tutup modal)
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        nim: initialData.nim || "",
-        nama: initialData.nama || "",
-        study_program_id: initialData.study_program_id || "",
-        semester: initialData.semester || "",
-        alamat: initialData.alamat || "",
-        is_active: initialData.is_active ?? true 
-      });
-    } else {
-      setFormData(defaultValues);
-    }
+    setFormData(parseInitialData(initialData));
   }, [initialData]);
 
   // --- HANDLERS ---
@@ -133,11 +140,9 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
               value={formData.nim}
               onChange={(e) => handleNumericInput("nim", e.target.value, 8)}
               placeholder="Contoh: 4121001"
-              // [MODIFIKASI] Tambah pr-8 (padding right) agar teks tidak tertutup ikon
               className={`${errorClass("nim")} ${isEditing ? "bg-muted text-muted-foreground opacity-100 pr-8" : ""}`}
               disabled={isEditing} 
             />
-            {/* [MODIFIKASI] Icon Lock Absolute di dalam Input */}
             {isEditing && (
               <Lock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             )}

@@ -120,12 +120,14 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      {/* Baris 1: NIM, Status (Jika Edit), & Semester */}
-      {/* Menggunakan grid-cols-6 untuk pembagian ukuran yang lebih fleksibel */}
-      <div className="grid grid-cols-6 gap-4">
+      {/* Baris 1: NIM, Status (Edit), & Semester */}
+      <div className="grid grid-cols-12 gap-4">
         
-        {/* NIM: Lebar 3/6 (Edit) atau 5/6 (Add) - Paling lebar */}
-        <div className={`grid gap-2 ${isEditing ? "col-span-3" : "col-span-5"}`}>
+        {/* NIM: 
+            - Edit: 6/12 (50%) 
+            - Add:  9/12 (75%) 
+        */}
+        <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-9"}`}>
           <Label htmlFor="nim">NIM</Label>
           <Input
             id="nim"
@@ -137,9 +139,9 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
           />
         </div>
 
-        {/* Status: Lebar 2/6 (Hanya muncul saat Edit) - Posisi di tengah */}
+        {/* Status: 3/12 (25%) - Sama dengan Semester, hanya saat Edit */}
         {isEditing && (
-          <div className="grid gap-2 col-span-2">
+          <div className="grid gap-2 col-span-3">
             <Label htmlFor="status">Status</Label>
             <Select 
                 value={formData.is_active ? "active" : "inactive"}
@@ -156,8 +158,8 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
           </div>
         )}
 
-        {/* Semester: Lebar 1/6 (Paling kecil) - Posisi di akhir */}
-        <div className="grid gap-2 col-span-1">
+        {/* Semester: 3/12 (25%) - Ukuran sama dengan Status */}
+        <div className="grid gap-2 col-span-3">
           <Label htmlFor="semester">Semester</Label>
           <Input
             id="semester"

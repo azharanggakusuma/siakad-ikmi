@@ -38,7 +38,7 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
         study_program_id: initialData.study_program_id || "",
         semester: initialData.semester || "",
         alamat: initialData.alamat || "",
-        is_active: initialData.is_active ?? true // Default true
+        is_active: initialData.is_active ?? true 
       });
     } else {
       setFormData(defaultValues);
@@ -120,9 +120,12 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      {/* Baris 1: NIM & Semester */}
-      <div className="grid grid-cols-5 gap-4">
-        <div className="grid gap-2 col-span-3">
+      {/* Baris 1: NIM, Status (Jika Edit), & Semester */}
+      {/* Menggunakan grid-cols-6 untuk pembagian ukuran yang lebih fleksibel */}
+      <div className="grid grid-cols-6 gap-4">
+        
+        {/* NIM: Lebar 3/6 (Edit) atau 5/6 (Add) - Paling lebar */}
+        <div className={`grid gap-2 ${isEditing ? "col-span-3" : "col-span-5"}`}>
           <Label htmlFor="nim">NIM</Label>
           <Input
             id="nim"
@@ -133,7 +136,28 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
             disabled={isEditing} 
           />
         </div>
-        <div className="grid gap-2 col-span-2">
+
+        {/* Status: Lebar 2/6 (Hanya muncul saat Edit) - Posisi di tengah */}
+        {isEditing && (
+          <div className="grid gap-2 col-span-2">
+            <Label htmlFor="status">Status</Label>
+            <Select 
+                value={formData.is_active ? "active" : "inactive"}
+                onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
+            >
+                <SelectTrigger className="w-full">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="inactive">Non-Aktif</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Semester: Lebar 1/6 (Paling kecil) - Posisi di akhir */}
+        <div className="grid gap-2 col-span-1">
           <Label htmlFor="semester">Semester</Label>
           <Input
             id="semester"
@@ -145,37 +169,16 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
         </div>
       </div>
 
-      {/* Baris 2: Nama & Status */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className={`grid gap-2 ${isEditing ? "col-span-3" : "col-span-4"}`}>
-            <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input
-            id="nama"
-            value={formData.nama}
-            onChange={(e) => handleInputChange("nama", e.target.value)}
-            placeholder="Contoh: Budi Santoso"
-            className={errorClass("nama")}
-            />
-        </div>
-        
-        {/* [MODIFIKASI] Input Status Hanya muncul jika sedang Edit */}
-        {isEditing && (
-          <div className="grid gap-2 col-span-1">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                  value={formData.is_active ? "active" : "inactive"}
-                  onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
-              >
-                  <SelectTrigger>
-                      <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="active">Aktif</SelectItem>
-                      <SelectItem value="inactive">Tidak Aktif</SelectItem>
-                  </SelectContent>
-              </Select>
-          </div>
-        )}
+      {/* Baris 2: Nama Lengkap (Full Width) */}
+      <div className="grid gap-2">
+        <Label htmlFor="nama">Nama Lengkap</Label>
+        <Input
+        id="nama"
+        value={formData.nama}
+        onChange={(e) => handleInputChange("nama", e.target.value)}
+        placeholder="Contoh: Budi Santoso"
+        className={errorClass("nama")}
+        />
       </div>
 
       {/* Baris 3: Prodi (Select ID) */}

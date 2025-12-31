@@ -11,9 +11,11 @@ import {
   PanelLeftOpen,
   LogOut,       
   Settings,
-  CalendarDays // Icon sederhana untuk konteks tahun
+  CalendarDays
 } from "lucide-react";
 import { UserSession, logout } from "@/app/actions/auth";
+// 1. Import tipe data
+import { AcademicYear } from "@/lib/types";
 
 import {
   DropdownMenu,
@@ -29,14 +31,25 @@ type NavbarProps = {
   onToggleCollapse?: () => void;
   isCollapsed?: boolean;
   user?: UserSession | null;
+  // 2. Tambahkan props baru (opsional karena bisa null)
+  academicYearData?: AcademicYear | null;
 };
 
-export default function Navbar({ onOpenSidebar, onToggleCollapse, isCollapsed, user }: NavbarProps) {
+export default function Navbar({ 
+  onOpenSidebar, 
+  onToggleCollapse, 
+  isCollapsed, 
+  user,
+  academicYearData // Terima props
+}: NavbarProps) {
   const displayName = user?.name || user?.username || "Pengguna";
   const displayRole = user?.role || "Mahasiswa";
   
-  // Data statis (bisa diganti dinamis nanti)
-  const academicYear = "2024/2025 Ganjil";
+  // 3. Logic: Jika data ada, gabungkan nama + semester. Jika tidak, pakai fallback.
+  // Format: "2024/2025" + " " + "Ganjil" -> "2024/2025 Ganjil"
+  const academicYear = academicYearData 
+    ? `${academicYearData.nama} ${academicYearData.semester}` 
+    : "TA Belum Diatur";
 
   return (
     <nav className="w-full bg-white/80 backdrop-blur-md print:hidden border-b border-slate-200/60">
@@ -67,7 +80,7 @@ export default function Navbar({ onOpenSidebar, onToggleCollapse, isCollapsed, u
             </button>
           </Tooltip>
 
-          {/* SEARCH BAR */}
+          {/* SEARCH BAR (Tetap sama) */}
           <div className="hidden md:block ml-2">
             <div className="relative group">
               <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 transition-colors duration-200 group-focus-within:text-blue-600">
@@ -85,8 +98,7 @@ export default function Navbar({ onOpenSidebar, onToggleCollapse, isCollapsed, u
         {/* === RIGHT SECTION === */}
         <div className="flex items-center gap-2 sm:gap-3">
           
-          {/* [SIMPLE] INFO TAHUN AKADEMIK */}
-          {/* Tampilan seperti 'badge' sistem yang netral */}
+          {/* [DYNAMIC] INFO TAHUN AKADEMIK */}
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 mr-2">
              <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
              <span className="text-xs font-medium text-slate-600">

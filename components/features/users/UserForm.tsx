@@ -99,6 +99,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
       newErrors.username = true;
       errorMessages.push("Username wajib diisi.");
     }
+    // Validasi password hanya jika BUKAN mode edit
     if (!isEditing && (!formData.password || formData.password.length < 6)) {
       newErrors.password = true;
       errorMessages.push("Password minimal 6 karakter.");
@@ -150,8 +151,8 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
       
       {/* Role Selection & Status */}
-      <div className="grid grid-cols-4 gap-4">
-          <div className={`grid gap-2 ${isEditing ? "col-span-3" : "col-span-4"}`}>
+      <div className="grid grid-cols-10 gap-4">
+          <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-10"}`}>
             <Label htmlFor="role">Role / Peran</Label>
             <Select
             value={formData.role}
@@ -171,15 +172,16 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             </Select>
           </div>
 
-           {/* [LOGIKA BARU] Hanya tampilkan dropdown status saat EDIT */}
+           {/* Status: col-span-4 (40%) hanya saat edit */}
            {isEditing && (
-            <div className="grid gap-2 col-span-1">
+            <div className="grid gap-2 col-span-4">
                 <Label htmlFor="status">Status</Label>
                 <Select 
                     value={formData.is_active ? "active" : "inactive"}
                     onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
                 >
-                    <SelectTrigger>
+                    {/* UPDATE: Menambahkan className="w-full" agar select full width */}
+                    <SelectTrigger className="w-full">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -254,8 +256,8 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
       )}
 
       {/* Nama & Username */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
+      <div className="grid grid-cols-10 gap-4">
+        <div className="grid gap-2 col-span-6">
           <Label htmlFor="name">Nama Lengkap</Label>
           <Input
             id="name"
@@ -267,7 +269,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
           />
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-2 col-span-4">
           <Label htmlFor="username">Username</Label>
           <Input
             id="username"
@@ -279,30 +281,30 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
         </div>
       </div>
 
-      {/* Password */}
-      <div className="grid gap-2">
-        <Label htmlFor="password">
-          {isEditing ? "Password Baru (Opsional)" : "Password"}
-        </Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={formData.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            placeholder={isEditing ? "Biarkan kosong jika tetap" : "******"}
-            className={`pr-10 ${errorClass("password")}`}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
-            tabIndex={-1}
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+      {/* Password - HANYA TAMPIL SAAT TAMBAH BARU (!isEditing) */}
+      {!isEditing && (
+        <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+            <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                placeholder="******"
+                className={`pr-10 ${errorClass("password")}`}
+            />
+            <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+                tabIndex={-1}
+            >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+            </div>
         </div>
-      </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-2">
         <Button type="button" variant="outline" onClick={onCancel}>Batal</Button>

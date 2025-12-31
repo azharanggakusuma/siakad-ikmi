@@ -2,35 +2,40 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { type StudentData } from "@/lib/types";
-import { useLayout } from "@/app/context/LayoutContext"; 
+import { useLayout } from "@/app/context/LayoutContext";
 import {
   calculateIPK,
   calculateSemesterTrend,
   calculateGradeDistribution,
   calculateTotalSKS,
-  // getCurrentSemester, // <-- Hapus fungsi ini karena tidak dipakai lagi untuk penentuan semester
 } from "@/lib/dashboard-helper";
 
 // Import Server Actions
 import { getStudents } from "@/app/actions/students";
 import { getCourses } from "@/app/actions/courses";
 
+// [!code ++] Import Icon dari Lucide React langsung
+import { 
+  Users, 
+  Library, 
+  Award, 
+  TrendingUp, 
+  GraduationCap, 
+  BookOpen, 
+  BookCheck, 
+  CalendarClock 
+} from "lucide-react";
+
 // Import Components
 import { DashboardHeader } from "@/components/features/dashboard/DashboardHeader";
 import { StatCard } from "@/components/features/dashboard/StatCard";
 import { SemesterBarChart } from "@/components/features/dashboard/SemesterBarChart";
 import { GradeDonutChart } from "@/components/features/dashboard/GradeDonutChart";
-import {
-  UsersIcon,
-  LibraryIcon,
-  AwardIcon,
-  TrendingUpIcon,
-} from "@/components/features/dashboard/DashboardIcons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function DashboardPage() {
-  const { user } = useLayout(); 
+  const { user } = useLayout();
   
   const [studentData, setStudentData] = useState<StudentData[]>([]);
   const [courseCount, setCourseCount] = useState(0);
@@ -92,10 +97,8 @@ export default function DashboardPage() {
         const myIPK = calculateIPK(myData.transcript).toFixed(2);
         const totalSKS = calculateTotalSKS(myData.transcript);
         
-        // [PERBAIKAN DISINI]
-        // Mengambil langsung dari profile.semester (Data Master), bukan hitungan transkrip
+        // Ambil semester langsung dari profil
         const currentSmt = myData.profile.semester; 
-        
         const totalMK = myData.transcript.length;
 
         stats = [
@@ -103,28 +106,28 @@ export default function DashboardPage() {
             label: "Indeks Prestasi (IPK)",
             value: myIPK,
             description: "Skala Indeks 4.00", 
-            icon: <AwardIcon className="w-6 h-6" />,
+            icon: <GraduationCap className="w-6 h-6" />, // Icon Topi Toga (Prestasi Akademik)
             themeColor: "chart-1",
           },
           {
             label: "Total SKS",
             value: totalSKS.toString(),
             description: "Akumulasi Kredit Lulus", 
-            icon: <LibraryIcon className="w-6 h-6" />,
+            icon: <BookOpen className="w-6 h-6" />, // Icon Buku Terbuka (Kredit Belajar)
             themeColor: "chart-2",
           },
           {
             label: "Mata Kuliah",
             value: totalMK.toString(),
             description: "Total MK Diambil", 
-            icon: <TrendingUpIcon className="w-6 h-6" />,
+            icon: <BookCheck className="w-6 h-6" />, // Icon Buku Centang (MK Selesai/Ambil)
             themeColor: "chart-3",
           },
           {
             label: "Semester",
             value: `Smt ${currentSmt}`,
             description: "Periode Akademik Aktif", 
-            icon: <UsersIcon className="w-6 h-6" />, 
+            icon: <CalendarClock className="w-6 h-6" />, // Icon Kalender Waktu (Progres Semester)
             themeColor: "chart-4",
           },
         ];
@@ -133,7 +136,7 @@ export default function DashboardPage() {
         dist = calculateGradeDistribution([myData]);
       } else {
         stats = [
-            { label: "Data Tidak Ditemukan", value: "-", description: "Hubungi Bagian Akademik", icon: <UsersIcon className="w-6 h-6"/>, themeColor: "chart-1" },
+            { label: "Data Tidak Ditemukan", value: "-", description: "Hubungi Bagian Akademik", icon: <Users className="w-6 h-6"/>, themeColor: "chart-1" },
         ];
       }
     } else {
@@ -162,28 +165,28 @@ export default function DashboardPage() {
           label: "Total Mahasiswa",
           value: currentStudentCount.toLocaleString(),
           description: "Mahasiswa Terdaftar",
-          icon: <UsersIcon className="w-6 h-6" />,
+          icon: <Users className="w-6 h-6" />, // Icon User Group (Populasi)
           themeColor: "chart-1",
         },
         {
           label: "Total Mata Kuliah",
           value: courseCount.toString(),
           description: "MK Dalam Kurikulum",
-          icon: <LibraryIcon className="w-6 h-6" />,
+          icon: <Library className="w-6 h-6" />, // Icon Perpustakaan (Koleksi MK)
           themeColor: "chart-2",
         },
         {
           label: "Rata-rata Nilai",
           value: avgGradePoint,
           description: "Skala Indeks 4.00",
-          icon: <AwardIcon className="w-6 h-6" />,
+          icon: <Award className="w-6 h-6" />, // Icon Penghargaan (Kualitas Nilai)
           themeColor: "chart-3",
         },
         {
           label: "Rata-rata IPK",
           value: avgIPK,
           description: "Rata-rata Seluruh Angkatan",
-          icon: <TrendingUpIcon className="w-6 h-6" />,
+          icon: <TrendingUp className="w-6 h-6" />, // Icon Grafik Naik (Tren Performa)
           themeColor: "chart-4",
         },
       ];

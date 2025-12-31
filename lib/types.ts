@@ -174,3 +174,30 @@ export type GradeFormValues = {
   course_id: string;
   hm: string;
 };
+
+// =========================================
+// MENUS (MANAJEMEN MENU)
+// =========================================
+export interface Menu {
+  id: number;
+  label: string;
+  href: string;
+  icon: string;
+  section: string;
+  allowed_roles: string[];
+  sequence: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MenuFormValues {
+  id?: number;
+  label: string;
+  href: string;
+  icon: string;
+  section: string;
+  allowed_roles: string[];
+  sequence: number | string;
+  is_active: boolean;
+}

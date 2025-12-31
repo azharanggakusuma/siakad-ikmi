@@ -261,7 +261,7 @@ export default function MahasiswaPage() {
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
-        description={isEditing ? `Perbarui informasi untuk NIM ${formData?.nim}` : "Pastikan data yang dimasukkan valid."}
+        description={isEditing ? `Perbarui data mahasiswa atas nama ${formData?.nama}.` : "Lengkapi form di bawah untuk menambah mahasiswa baru."}
         maxWidth="sm:max-w-[600px]"
       >
         <StudentForm 

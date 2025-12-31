@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { type StudentData } from "@/lib/types";
-// [!code fix] Gunakan useLayout, bukan useLayoutContext
 import { useLayout } from "@/app/context/LayoutContext"; 
 import {
   calculateIPK,
@@ -12,9 +11,11 @@ import {
   getCurrentSemester,
 } from "@/lib/dashboard-helper";
 
+// Import Server Actions
 import { getStudents } from "@/app/actions/students";
 import { getCourses } from "@/app/actions/courses";
 
+// Import Components
 import { DashboardHeader } from "@/components/features/dashboard/DashboardHeader";
 import { StatCard } from "@/components/features/dashboard/StatCard";
 import { SemesterBarChart } from "@/components/features/dashboard/SemesterBarChart";
@@ -29,7 +30,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function DashboardPage() {
-  // [!code fix] Ambil user dari useLayout()
   const { user } = useLayout(); 
   
   const [studentData, setStudentData] = useState<StudentData[]>([]);
@@ -70,7 +70,6 @@ export default function DashboardPage() {
       };
     }
 
-    // [!code fix] Definisikan tipe array secara eksplisit untuk menghindari error implicit any
     let stats: {
       label: string;
       value: string;
@@ -80,7 +79,6 @@ export default function DashboardPage() {
     }[] = [];
 
     let trend: { label: string; val: number; height: string }[] = [];
-    
     let dist = { counts: { A: 0, B: 0, C: 0, D: 0, E: 0 }, totalGrades: 0, totalAM: 0 };
 
     const isMahasiswa = user?.role === "mahasiswa";
@@ -88,7 +86,6 @@ export default function DashboardPage() {
 
     if (isMahasiswa && currentUsername) {
       // --- VIEW MAHASISWA (PERSONAL) ---
-      // [!code fix] Akses nim via s.profile.nim sesuai tipe StudentData
       const myData = studentData.find((s) => s.profile.nim === currentUsername);
       
       if (myData) {
@@ -99,30 +96,30 @@ export default function DashboardPage() {
 
         stats = [
           {
-            label: "Indeks Prestasi Kumulatif",
+            label: "Indeks Prestasi (IPK)",
             value: myIPK,
-            description: "Skala Indeks 4.00",
+            description: "Skala Indeks 4.00", // Menjelaskan skala maksimal
             icon: <AwardIcon className="w-6 h-6" />,
             themeColor: "chart-1",
           },
           {
             label: "Total SKS",
             value: totalSKS.toString(),
-            description: "SKS Diambil",
+            description: "Akumulasi Kredit Lulus", // Menjelaskan status kredit
             icon: <LibraryIcon className="w-6 h-6" />,
             themeColor: "chart-2",
           },
           {
-            label: "Total Mata Kuliah",
+            label: "Mata Kuliah",
             value: totalMK.toString(),
-            description: "Mata Kuliah Diambil",
+            description: "Total MK Diambil", // Menjelaskan jumlah item
             icon: <TrendingUpIcon className="w-6 h-6" />,
             themeColor: "chart-3",
           },
           {
-            label: "Semester Berjalan",
-            value: `${currentSmt}`,
-            description: "Status Akademik",
+            label: "Semester",
+            value: `Smt ${currentSmt}`,
+            description: "Periode Akademik Aktif", // Menjelaskan status waktu
             icon: <UsersIcon className="w-6 h-6" />, 
             themeColor: "chart-4",
           },
@@ -132,7 +129,7 @@ export default function DashboardPage() {
         dist = calculateGradeDistribution([myData]);
       } else {
         stats = [
-            { label: "Data Tidak Ditemukan", value: "-", description: "Hubungi Admin", icon: <UsersIcon className="w-6 h-6"/>, themeColor: "chart-1" },
+            { label: "Data Tidak Ditemukan", value: "-", description: "Hubungi Bagian Akademik", icon: <UsersIcon className="w-6 h-6"/>, themeColor: "chart-1" },
         ];
       }
     } else {
@@ -160,14 +157,14 @@ export default function DashboardPage() {
         {
           label: "Total Mahasiswa",
           value: currentStudentCount.toLocaleString(),
-          description: "Mahasiswa Aktif",
+          description: "Mahasiswa Terdaftar",
           icon: <UsersIcon className="w-6 h-6" />,
           themeColor: "chart-1",
         },
         {
           label: "Total Mata Kuliah",
           value: courseCount.toString(),
-          description: "Kurikulum Berjalan",
+          description: "MK Dalam Kurikulum",
           icon: <LibraryIcon className="w-6 h-6" />,
           themeColor: "chart-2",
         },
@@ -181,7 +178,7 @@ export default function DashboardPage() {
         {
           label: "Rata-rata IPK",
           value: avgIPK,
-          description: "Performa Angkatan",
+          description: "Rata-rata Seluruh Angkatan",
           icon: <TrendingUpIcon className="w-6 h-6" />,
           themeColor: "chart-4",
         },

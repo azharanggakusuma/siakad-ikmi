@@ -15,19 +15,19 @@ function createSharpPath(points: [number, number][]) {
   return d;
 }
 
-export function SemesterLineChart({ data }: { data: TrendData[] }) {
+// [UBAH] Tambahkan prop 'title'
+export function SemesterLineChart({ data, title }: { data: TrendData[]; title: string }) {
   // --- Konfigurasi Ukuran BESAR ---
   const width = 800;
-  const height = 350; // Tinggi canvas diperbesar
-  const paddingX = 40; // Padding samping dikurangi biar grafik makin lebar
+  const height = 350; 
+  const paddingX = 40; 
   
-  // Padding atas/bawah disesuaikan agar grafik memenuhi ruang (tidak ngambang)
   const paddingTop = 20; 
   const paddingBottom = 30; 
   
   const graphHeight = height - paddingTop - paddingBottom;
   const graphWidth = width - paddingX * 2;
-  const maxVal = 4; // Skala IPK Maksimal
+  const maxVal = 4; 
 
   const getX = (index: number) => {
     if (data.length <= 1) return width / 2;
@@ -51,12 +51,13 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
       <header className="px-6 py-5 border-b border-border bg-transparent flex justify-between items-center">
         <h3 className="font-semibold tracking-tight text-foreground flex items-center gap-2">
           <TrendingUpIcon className="w-5 h-5 text-primary" />
-          Tren IPS Mahasiswa
+          {/* [UBAH] Gunakan prop title di sini */}
+          {title}
         </h3>
-        {/* Indikator Skala */}
+        
         {data.length > 0 && (
-           <div className="text-xs text-muted-foreground font-semibold bg-muted/30 px-2 py-1 rounded">
-             Skala 0 - 4.00
+           <div className="text-xs text-muted-foreground font-semibold bg-muted/30 px-3 py-1 rounded-full border border-border/50">
+             Skala Indeks 4.00
            </div>
         )}
       </header>
@@ -78,19 +79,17 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
               preserveAspectRatio="none"
             >
               <defs>
-                {/* Gradient Standar */}
                 <linearGradient id="largeGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" className="text-primary" />
                   <stop offset="100%" stopColor="currentColor" stopOpacity="0.0" className="text-primary" />
                 </linearGradient>
               </defs>
 
-              {/* Grid Lines Horizontal */}
+              {/* Grid Lines */}
               {[0, 1, 2, 3, 4].map((gridVal) => {
                 const y = getY(gridVal);
                 return (
                   <g key={gridVal}>
-                    {/* Garis Grid */}
                     <line
                       x1={paddingX}
                       y1={y}
@@ -101,7 +100,6 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                       strokeOpacity={0.1}
                       className="text-muted-foreground"
                     />
-                    {/* Label Angka Sumbu Y (Lebih Besar) */}
                     <text
                       x={paddingX - 12}
                       y={y + 5}
@@ -123,7 +121,7 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                 />
               )}
 
-              {/* GARIS UTAMA (Tebal & Besar) */}
+              {/* GARIS UTAMA */}
               <path
                 d={linePath}
                 fill="none"
@@ -134,19 +132,15 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                 className="text-primary drop-shadow-sm"
               />
 
-              {/* Points (Titik Data Besar) */}
+              {/* Points */}
               {points.map((pos, idx) => {
                 const [x, y] = pos;
                 const item = data[idx];
                 
-                if (item.val === 0) return null;
-
                 return (
                   <g key={idx} className="group cursor-pointer">
-                    {/* Hit Area Besar */}
                     <circle cx={x} cy={y} r="30" fill="transparent" />
                     
-                    {/* Garis Indikator Vertikal */}
                     <line 
                       x1={x} y1={y} 
                       x2={x} y2={height - paddingBottom} 
@@ -155,7 +149,6 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                       className="text-primary opacity-0 group-hover:opacity-30 transition-opacity duration-200"
                     />
 
-                    {/* Lingkaran Titik (Lebih Besar) */}
                     <circle
                       cx={x}
                       cy={y}
@@ -163,7 +156,6 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                       className="fill-background stroke-primary stroke-[3.5px] transition-all duration-200 group-hover:r-8 group-hover:stroke-[5px] shadow-sm"
                     />
 
-                    {/* Tooltip */}
                     <g className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:-translate-y-2 pointer-events-none">
                       <rect
                         x={x - 40}
@@ -186,7 +178,6 @@ export function SemesterLineChart({ data }: { data: TrendData[] }) {
                 );
               })}
               
-              {/* Label Sumbu X (Semester) - Lebih Besar & Jelas */}
                {points.map((pos, idx) => (
                   <text
                     key={`label-${idx}`}

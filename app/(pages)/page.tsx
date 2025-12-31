@@ -11,7 +11,6 @@ import {
   calculateTotalSKS,
 } from "@/lib/dashboard-helper";
 
-// Import Server Actions
 import { getStudents } from "@/app/actions/students";
 import { getCourses } from "@/app/actions/courses";
 
@@ -29,7 +28,6 @@ import {
 
 import { DashboardHeader } from "@/components/features/dashboard/DashboardHeader";
 import { StatCard } from "@/components/features/dashboard/StatCard";
-// [UBAH] Ganti BarChart dengan LineChart
 import { SemesterLineChart } from "@/components/features/dashboard/SemesterLineChart"; 
 import { GradeDonutChart } from "@/components/features/dashboard/GradeDonutChart";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -255,8 +253,11 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            {/* [UBAH] Gunakan Komponen Line Chart */}
-            <SemesterLineChart data={trendData} />
+            {/* [UBAH] Pass prop title berdasarkan role user */}
+            <SemesterLineChart 
+              data={trendData} 
+              title={user?.role === "mahasiswa" ? "Tren IPS Setiap Semester" : "Tren Rata-Rata IPS Mahasiswa"} 
+            />
             <GradeDonutChart
               counts={gradeDistData.counts}
               total={gradeDistData.totalGrades}

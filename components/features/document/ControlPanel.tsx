@@ -131,15 +131,12 @@ export default function ControlPanel(props: ControlPanelProps) {
                 </Command>
               </PopoverContent>
             </Popover>
-          </div>
+          </div> 
 
           {/* Pilih Semester (KHS) */}
           {props.showSemesterSelect && (
             <div className={sectionClass}>
-              <div className="flex items-baseline justify-between">
-                <label className={labelClass}>Semester</label>
-                <p className="text-[11px] text-gray-400">Pilih Smt</p>
-              </div>
+              <label className={labelClass}>Semester</label>
               <Select
                 value={String(props.selectedSemester)}
                 onValueChange={(val) => props.onSelectSemester?.(Number(val))}

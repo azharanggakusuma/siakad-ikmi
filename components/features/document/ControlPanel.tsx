@@ -1,6 +1,12 @@
 import React from "react";
 import { StudentData } from "@/lib/types";
-import { Printer } from "lucide-react"; 
+import { Printer } from "lucide-react";
+
+// Shadcn UI Components
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ControlPanelProps {
   students: StudentData[];
@@ -31,14 +37,14 @@ interface ControlPanelProps {
 export default function ControlPanel(props: ControlPanelProps) {
   const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages } = props;
   
-  const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
-  const selectClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:ring-2 focus:ring-[#1B3F95]/30 focus:border-[#1B3F95] hover:border-gray-300";
-  const inputClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none transition focus:ring-2 focus:ring-[#1B3F95]/30 focus:border-[#1B3F95] hover:border-gray-300";
+  // Style asli dipertahankan
+  const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block";
   const sectionClass = "flex flex-col gap-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3";
 
   return (
     <aside className="w-full print:hidden xl:sticky xl:top-24 h-fit">
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        {/* Header */}
         <div className="px-5 pt-5 flex justify-between items-start">
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Panel Kontrol</h3>
@@ -60,48 +66,70 @@ export default function ControlPanel(props: ControlPanelProps) {
           {/* Pilih Mahasiswa */}
           <div className={sectionClass}>
             <div className="flex items-baseline justify-between">
-              <p className={labelClass}>Mahasiswa</p>
+              <label className={labelClass}>Mahasiswa</label>
               <p className="text-[11px] text-gray-400">{selectedIndex + 1}/{students.length}</p>
             </div>
-            <select
-              value={selectedIndex}
-              onChange={(e) => onSelect(Number(e.target.value))}
-              className={selectClass}
+            <Select 
+              value={String(selectedIndex)} 
+              onValueChange={(val) => onSelect(Number(val))}
             >
-              {students.map((student, index) => (
-                <option key={student.id} value={index}>{student.profile.nama}</option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
+                <SelectValue placeholder="Pilih Mahasiswa" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {students.map((student, index) => (
+                  <SelectItem key={student.id} value={String(index)} className="text-xs rounded-lg cursor-pointer">
+                    {student.profile.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Pilih Semester (KHS) */}
           {props.showSemesterSelect && (
             <div className={sectionClass}>
               <div className="flex items-baseline justify-between">
-                <p className={labelClass}>Semester</p>
+                <label className={labelClass}>Semester</label>
                 <p className="text-[11px] text-gray-400">Pilih Smt</p>
               </div>
-              <select
-                value={props.selectedSemester}
-                onChange={(e) => props.onSelectSemester?.(Number(e.target.value))}
-                className={selectClass}
+              <Select
+                value={String(props.selectedSemester)}
+                onValueChange={(val) => props.onSelectSemester?.(Number(val))}
               >
-                {props.availableSemesters?.map((smt) => (
-                  <option key={smt} value={smt}>
-                    Semester {smt}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
+                  <SelectValue placeholder="Pilih Semester" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {props.availableSemesters?.map((smt) => (
+                    <SelectItem key={smt} value={String(smt)} className="text-xs rounded-lg cursor-pointer">
+                      Semester {smt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
           {/* Input Manual Surat */}
           {props.setNomorSurat && (
             <div className={sectionClass}>
-              <p className={labelClass}>Detail Surat</p>
+              <label className={labelClass}>Detail Surat</label>
               <div className="space-y-2">
-                  <input type="text" value={props.nomorSurat} onChange={(e) => props.setNomorSurat?.(e.target.value)} className={inputClass} placeholder="No Surat (Contoh: 125)" />
-                  <input type="text" value={props.tahunAkademik} onChange={(e) => props.setTahunAkademik?.(e.target.value)} className={inputClass} placeholder="Tahun Akademik" />
+                  <Input 
+                    type="text" 
+                    value={props.nomorSurat} 
+                    onChange={(e) => props.setNomorSurat?.(e.target.value)} 
+                    className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                    placeholder="No Surat (Contoh: 125)" 
+                  />
+                  <Input 
+                    type="text" 
+                    value={props.tahunAkademik} 
+                    onChange={(e) => props.setTahunAkademik?.(e.target.value)} 
+                    className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                    placeholder="Tahun Akademik" 
+                  />
               </div>
             </div>
           )}
@@ -109,43 +137,80 @@ export default function ControlPanel(props: ControlPanelProps) {
           {/* Biodata Manual */}
           {props.setTempatLahir && (
              <div className={sectionClass}>
-              <p className={labelClass}>Biodata</p>
+              <label className={labelClass}>Biodata</label>
               <div className="grid grid-cols-2 gap-2">
-                 <input type="text" value={props.tempatLahir} onChange={(e) => props.setTempatLahir?.(e.target.value)} className={inputClass} placeholder="Tempat Lahir" />
-                 <input type="text" value={props.tanggalLahir} onChange={(e) => props.setTanggalLahir?.(e.target.value)} className={inputClass} placeholder="Tgl Lahir" />
+                 <Input 
+                   type="text" 
+                   value={props.tempatLahir} 
+                   onChange={(e) => props.setTempatLahir?.(e.target.value)} 
+                   className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                   placeholder="Tempat Lahir" 
+                 />
+                 <Input 
+                   type="text" 
+                   value={props.tanggalLahir} 
+                   onChange={(e) => props.setTanggalLahir?.(e.target.value)} 
+                   className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                   placeholder="Tgl Lahir" 
+                 />
               </div>
-              <textarea value={props.alamat} onChange={(e) => props.setAlamat?.(e.target.value)} className={`${inputClass} h-16 resize-none leading-tight`} placeholder="Alamat Lengkap" />
+              <Textarea 
+                value={props.alamat} 
+                onChange={(e) => props.setAlamat?.(e.target.value)} 
+                className="bg-white min-h-[60px] text-xs resize-none rounded-xl border-gray-200" 
+                placeholder="Alamat Lengkap" 
+              />
             </div>
           )}
           
+          {/* Data Orang Tua */}
           {props.setNamaOrangTua && (
             <div className={sectionClass}>
-              <p className={labelClass}>Data Orang Tua</p>
+              <label className={labelClass}>Data Orang Tua</label>
               <div className="space-y-2">
-                <input type="text" value={props.namaOrangTua} onChange={(e) => props.setNamaOrangTua?.(e.target.value)} className={inputClass} placeholder="Nama Ayah/Ibu" />
-                <input type="text" value={props.pekerjaanOrangTua} onChange={(e) => props.setPekerjaanOrangTua?.(e.target.value)} className={inputClass} placeholder="Pekerjaan" />
+                <Input 
+                  type="text" 
+                  value={props.namaOrangTua} 
+                  onChange={(e) => props.setNamaOrangTua?.(e.target.value)} 
+                  className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                  placeholder="Nama Ayah/Ibu" 
+                />
+                <Input 
+                  type="text" 
+                  value={props.pekerjaanOrangTua} 
+                  onChange={(e) => props.setPekerjaanOrangTua?.(e.target.value)} 
+                  className="h-9 bg-white text-xs rounded-xl border-gray-200" 
+                  placeholder="Pekerjaan" 
+                />
               </div>
             </div>
           )}
 
           {/* Tanda Tangan */}
           <div className={sectionClass}>
-            <p className={labelClass}>Tanda Tangan</p>
-            <select
+            <label className={labelClass}>Tanda Tangan</label>
+            <Select
               value={signatureType}
-              onChange={(e) => onSignatureChange(e.target.value as any)}
-              className={selectClass}
+              onValueChange={(val: any) => onSignatureChange(val)}
             >
-              <option value="none">Tanpa tanda tangan</option>
-              <option value="basah">Tanda tangan basah</option>
-              <option value="digital">Tanda tangan digital (QR)</option>
-            </select>
+              <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
+                <SelectValue placeholder="Pilih Tipe TTD" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="none" className="text-xs rounded-lg cursor-pointer">Tanpa tanda tangan</SelectItem>
+                <SelectItem value="basah" className="text-xs rounded-lg cursor-pointer">Tanda tangan basah</SelectItem>
+                <SelectItem value="digital" className="text-xs rounded-lg cursor-pointer">Tanda tangan digital (QR)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <button onClick={onPrint} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B3F95] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-900 active:translate-y-[1px]" > 
-             <Printer className="h-4 w-4" /> {/* Icon Printer */}
+          <Button 
+            onClick={onPrint} 
+            className="w-full bg-[#1B3F95] hover:bg-blue-900 h-11 text-sm font-semibold shadow-sm rounded-xl"
+          > 
+             <Printer className="mr-2 h-4 w-4" />
              Cetak PDF 
-          </button> 
+          </Button> 
           
           <div className="text-center"> 
             <p className="text-[10px] text-gray-400 leading-snug">Pastikan pengaturan kertas <b>A4</b> & margin <b>None</b>.</p> 

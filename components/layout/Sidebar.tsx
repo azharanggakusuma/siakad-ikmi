@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +19,9 @@ import {
   ClipboardList,
   Library,
   LayoutList,
+  Database,     
+  ChevronDown,  
+  Circle        
 } from "lucide-react";
 // Import logout action
 import { logout } from "@/app/actions/auth";
@@ -33,16 +36,14 @@ type SidebarProps = {
 
 export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
-  // Ambil data user dari context layout
   const { user } = useLayout();
-
-  // Variabel isMahasiswa dihapus karena semua menu sekarang terbuka
-  // const isMahasiswa = user?.role === "mahasiswa";
+  
+  // State untuk mengontrol dropdown Master Data
+  const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
 
   const isActive = (path: string) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
-  // Update handleLogout menjadi async dan panggil server action
   const handleLogout = async () => {
     await logout();
   };
@@ -94,7 +95,6 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             </div>
           </div>
 
-          {/* Close button (Mobile Only) */}
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -105,10 +105,38 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </div>
 
         {/* === MENU NAVIGATION === */}
-        <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
+        {/* UPDATE: 
+            1. [scrollbar-gutter:stable] -> Mencegah layout shift (menu geser) saat scrollbar muncul.
+            2. Styling Webkit -> Membuat scrollbar tipis (mini) dan rounded ala Shadcn.
+        */}
+        <nav className={`
+          flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden
+          [scrollbar-gutter:stable]
+          [&::-webkit-scrollbar]:w-1.5
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:bg-slate-200
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          hover:[&::-webkit-scrollbar-thumb]:bg-slate-300
+        `}>
+          
           <div className="space-y-1">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
+            
             <NavItem href="/" label="Dashboard" icon={<LayoutDashboard size={20} />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            
+            {/* --- DROPDOWN MASTER DATA --- */}
+            <NavDropdown 
+              label="Master Data" 
+              icon={<Database size={20} />} 
+              isOpen={isMasterDataOpen}
+              onToggle={() => setIsMasterDataOpen(!isMasterDataOpen)}
+              isCollapsed={isCollapsed}
+            >
+              <NavItem href="/master/dummy-1" label="Dummy Menu 1" icon={<Circle size={10} />} active={isActive("/master/dummy-1")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+              <NavItem href="/master/dummy-2" label="Dummy Menu 2" icon={<Circle size={10} />} active={isActive("/master/dummy-2")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+            </NavDropdown>
+            {/* ---------------------------- */}
+
             <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
@@ -124,6 +152,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             <NavItem href="/menus" label="Manajemen Menu" icon={<LayoutList size={20} />} active={isActive("/menus")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/pengaturan" label="Pengaturan" icon={<Settings size={20} />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
           </div>
+
         </nav>
 
         {/* === FOOTER === */}
@@ -154,14 +183,65 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
   );
 }
 
-function NavItem({ href, icon, label, active, onClick, isCollapsed }: any) {
+// --- KOMPONEN HELPER ---
+
+function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: any) {
+  return (
+    <div className="space-y-0.5">
+      <Tooltip content={label} enabled={isCollapsed} position="right">
+        <button
+          onClick={onToggle}
+          type="button"
+          className={`
+            w-full flex items-center justify-between
+            gap-3 rounded-lg relative group
+            text-sm font-medium transition-all duration-200
+            px-3 py-2 select-none
+            ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
+            ${isOpen ? "text-slate-800 bg-slate-50" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}
+          `}
+        >
+          <div className="flex items-center gap-3 overflow-hidden">
+             <span className={`shrink-0 transition-colors ${isOpen ? "text-slate-700" : "text-slate-400 group-hover:text-slate-600"}`}>
+              {icon}
+            </span>
+            <span className={`truncate transition-all duration-300 block text-left
+               w-auto opacity-100
+               ${isCollapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : ""}
+            `}>
+                {label}
+            </span>
+          </div>
+
+          {!isCollapsed && (
+             <div className={`transition-transform duration-200 text-slate-400 ${isOpen ? "rotate-180" : ""}`}>
+               <ChevronDown size={16} />
+             </div>
+          )}
+        </button>
+      </Tooltip>
+
+      <div className={`
+        overflow-hidden transition-all duration-300 ease-in-out
+        ${isOpen && !isCollapsed ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
+      `}>
+        <div className="ml-4 pl-2 border-l border-slate-200 space-y-1 mt-1">
+           {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavItem({ href, icon, label, active, onClick, isCollapsed, isSubItem }: any) {
   return (
     <Tooltip content={label} enabled={isCollapsed} position="right">
       <Link href={href} onClick={onClick} className="block group relative">
         <div
           className={`
             flex items-center gap-3 rounded-lg relative
-            text-sm font-medium transition-all duration-200
+            ${isSubItem ? "text-xs font-medium" : "text-sm font-medium"} 
+            transition-all duration-200
             px-3 py-2
             ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
             ${active ? "bg-blue-50 text-[#1B3F95]" : "text-slate-600 hover:bg-slate-50"}

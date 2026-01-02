@@ -176,8 +176,7 @@ export function MenuForm({
           </div>
         </div>
 
-        {/* Urutan & Status (Split dalam 1 cell atau dipisah) */}
-        {/* Disini kita pakai 2 kolom terpisah agar rapi */}
+        {/* Urutan */}
         <div className="space-y-2">
           <Label htmlFor="sequence">Urutan</Label>
           <Input

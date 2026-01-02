@@ -230,10 +230,12 @@ export default function MenuReorderList({ initialItems, onClose, onSuccess }: Me
 
     sections.forEach((section) => {
        section.items.forEach((root, rootIndex) => {
+          // UPDATE: Gunakan kelipatan 10 untuk Parent (10, 20, 30...)
           updates.push({ id: root.id, sequence: (rootIndex + 1) * 10 });
 
           root.children.forEach((child, childIndex) => {
-             updates.push({ id: child.id, sequence: (childIndex + 1) * 10 });
+             // UPDATE: Gunakan format 100+ untuk Child (101, 102, 103...)
+             updates.push({ id: child.id, sequence: 100 + (childIndex + 1) });
           });
        });
     });
@@ -252,7 +254,7 @@ export default function MenuReorderList({ initialItems, onClose, onSuccess }: Me
 
   return (
     <div className="flex flex-col">
-      {/* UPDATE: Alert diganti jadi bg-slate-50 (Netral) */}
+      {/* Alert Info */}
       <div className="bg-slate-50 text-slate-600 px-3 py-3 rounded-md mb-4 text-xs border border-slate-200 shrink-0 flex gap-2">
         <Info className="w-4 h-4 shrink-0 text-slate-400 mt-0.5" />
         <div className="space-y-1">

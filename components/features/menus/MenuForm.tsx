@@ -139,7 +139,7 @@ export function MenuForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="parent_id">Menu Induk (Opsional)</Label>
+          <Label htmlFor="parent_id">Menu Induk</Label>
           <Select
             value={formData.parent_id?.toString() || "0"}
             onValueChange={(val) =>
@@ -173,7 +173,7 @@ export function MenuForm({
         </div>
 
         <div className="space-y-2">
-            <Label htmlFor="status">Status Aktif</Label>
+            <Label htmlFor="status">Status Menu</Label>
             <Select
                 value={formData.is_active ? "active" : "inactive"}
                 onValueChange={(val) => handleInputChange("is_active", val === "active")}
@@ -182,8 +182,8 @@ export function MenuForm({
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="active">Aktif (Tampil)</SelectItem>
-                    <SelectItem value="inactive">Non-Aktif (Sembunyi)</SelectItem>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="inactive">Non-Aktif</SelectItem>
                 </SelectContent>
             </Select>
         </div>
@@ -198,11 +198,14 @@ export function MenuForm({
           />
         </div>
 
-        {/* === BARIS 4: HAK AKSES ROLE (CLEAN & THIN LINE) === */}
+        {/* === BARIS 4: HAK AKSES ROLE === */}
         <div className="md:col-span-2 space-y-3 mt-2">
-          <Label className={errors.allowed_roles ? "text-red-500" : ""}>
-            Hak Akses Role <span className="text-red-500">*</span>
-          </Label>
+          {/* [UPDATE] Text hint dipindah ke bawah Label */}
+          <div className="space-y-1">
+            <Label className={errors.allowed_roles ? "text-red-500" : ""}>
+              Hak Akses Role <span className="text-red-500">*</span>
+            </Label>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {ROLE_OPTIONS.map((role) => {
@@ -220,7 +223,6 @@ export function MenuForm({
                         : "border-slate-200 text-slate-600"
                    )}
                  >
-                   {/* [UPDATE] strokeWidth={1} agar garis tipis sama seperti border */}
                    {isSelected ? (
                      <CheckCircle2 
                         size={20} 
@@ -246,7 +248,7 @@ export function MenuForm({
             })}
           </div>
           {errors.allowed_roles && (
-            <p className="text-xs text-red-500 font-medium animate-pulse">
+            <p className="text-xs text-red-500 font-medium">
               * Wajib memilih minimal satu hak akses.
             </p>
           )}

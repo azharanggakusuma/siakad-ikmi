@@ -5,7 +5,15 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, CheckCircle2, XCircle, HelpCircle, CornerDownRight } from "lucide-react";
+import { 
+  Pencil, 
+  Trash2, 
+  CheckCircle2, 
+  XCircle, 
+  HelpCircle, 
+  CornerDownRight, 
+  Link as LinkIcon 
+} from "lucide-react";
 import { Menu } from "@/lib/types";
 import * as LucideIcons from "lucide-react";
 
@@ -17,6 +25,7 @@ interface MenuTableProps {
   onAdd: () => void;
 }
 
+// Helper untuk render icon secara dinamis
 const RowIcon = ({ name }: { name: string }) => {
   // @ts-ignore 
   const IconComponent = LucideIcons[name];
@@ -30,7 +39,7 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Filter Data
+  // === FILTERING LOGIC ===
   const filteredData = useMemo(() => {
     let result = data;
     if (searchQuery) {
@@ -39,17 +48,20 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
         (item) =>
           item.label.toLowerCase().includes(lowerQuery) ||
           item.href.toLowerCase().includes(lowerQuery) ||
-          (item.parent && item.parent.label.toLowerCase().includes(lowerQuery)) // Search parent name
+          item.section.toLowerCase().includes(lowerQuery) ||
+          (item.parent && item.parent.label.toLowerCase().includes(lowerQuery))
       );
     }
     return result;
   }, [data, searchQuery]);
 
+  // === PAGINATION ===
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
+  // === COLUMNS DEFINITION ===
   const columns: Column<Menu>[] = [
     {
       header: "#",
@@ -57,10 +69,10 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
       render: (_, index) => <span className="text-muted-foreground">{startIndex + index + 1}</span>,
     },
     {
-      header: "Label Menu",
+      header: "Label Menu & Section",
       render: (row) => (
-        <div className="flex flex-col">
-            {/* Tampilan Visual Parent vs Child */}
+        <div className="flex flex-col min-w-[180px]">
+            {/* Visual Hierarchy untuk Sub-Menu */}
             {row.parent ? (
                  <div className="flex items-center gap-1.5 text-slate-600">
                     <CornerDownRight className="w-3 h-3 text-slate-400" />
@@ -70,10 +82,12 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
                 <span className="font-semibold text-slate-800">{row.label}</span>
             )}
             
-            <div className="flex gap-2 text-xs text-muted-foreground mt-0.5">
-               <span>{row.section}</span>
+            <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground mt-1">
+               <span className="bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                  {row.section}
+               </span>
                {row.parent && (
-                  <span className="bg-slate-100 px-1 rounded text-[10px] border">
+                  <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">
                     Induk: {row.parent.label}
                   </span>
                )}
@@ -82,43 +96,82 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
       ),
     },
     {
-      header: "Icon & Path",
+      header: "Icon",
+      className: "w-[80px] text-center",
       render: (row) => (
-        <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+        <div className="flex justify-center" title={`Icon Name: ${row.icon}`}>
+            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 transition-colors">
                 <RowIcon name={row.icon} />
-            </div>
-            <div className="flex flex-col gap-0.5">
-                <code className="text-xs font-mono text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 w-fit">
-                    {row.href}
-                </code>
             </div>
         </div>
       ),
     },
     {
-        header: "Urutan",
+      header: "Path URL",
+      render: (row) => (
+        <div className="flex items-center gap-2 max-w-[150px]">
+           <LinkIcon className="w-3 h-3 text-slate-400 shrink-0" />
+           <code className="text-xs font-mono text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 truncate" title={row.href}>
+              {row.href}
+           </code>
+        </div>
+      ),
+    },
+    {
+      header: "Hak Akses",
+      render: (row) => (
+        <div className="flex flex-wrap gap-1 max-w-[180px]">
+            {row.allowed_roles && row.allowed_roles.length > 0 ? (
+                row.allowed_roles.map(role => (
+                    <Badge 
+                        key={role} 
+                        variant="outline" 
+                        className="text-[10px] px-1.5 py-0 h-5 capitalize bg-white hover:bg-slate-50 font-normal text-slate-600"
+                    >
+                        {role}
+                    </Badge>
+                ))
+            ) : (
+                <span className="text-[10px] text-slate-400 italic">Tidak ada akses</span>
+            )}
+        </div>
+      ),
+    },
+    {
+        header: "Urut",
         className: "text-center w-[60px]",
-        render: (row) => <span className="font-mono text-slate-600">{row.sequence}</span>,
+        render: (row) => <span className="font-mono text-sm text-slate-500 font-medium">{row.sequence}</span>,
     },
     {
         header: "Status",
         className: "text-center w-[90px]",
         render: (row) => (
           row.is_active ? 
-          <Badge variant="default" className="bg-green-600/10 text-green-700 shadow-none"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</Badge> : 
-          <Badge variant="destructive" className="bg-red-50 text-red-700 shadow-none"><XCircle className="w-3 h-3 mr-1"/> Non</Badge>
+          <Badge variant="default" className="bg-green-600/10 text-green-700 shadow-none hover:bg-green-600/20 px-2 py-0.5 h-6"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</Badge> : 
+          <Badge variant="destructive" className="bg-red-50 text-red-700 shadow-none hover:bg-red-100 px-2 py-0.5 h-6"><XCircle className="w-3 h-3 mr-1"/> Non</Badge>
         )
     },
     {
       header: "Aksi",
       className: "text-center w-[100px]",
       render: (row) => (
-        <div className="flex justify-center gap-2">
-          <Button variant="ghost" size="icon" className="text-amber-600 hover:bg-amber-50 h-8 w-8" onClick={() => onEdit(row)}>
+        <div className="flex justify-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-amber-600 hover:bg-amber-50 h-8 w-8 transition-colors" 
+            onClick={() => onEdit(row)}
+            title="Edit Menu"
+          >
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-rose-600 hover:bg-rose-50 h-8 w-8" onClick={() => onDelete(row)}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-rose-600 hover:bg-rose-50 h-8 w-8 transition-colors" 
+            onClick={() => onDelete(row)}
+            title="Hapus Menu"
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -138,7 +191,7 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
             setSearchQuery(e.target.value);
             setCurrentPage(1);
           }}
-          searchPlaceholder="Cari Menu..."
+          searchPlaceholder="Cari label, path, atau section..."
           onAdd={onAdd}
           addLabel="Tambah Menu"
           currentPage={currentPage}

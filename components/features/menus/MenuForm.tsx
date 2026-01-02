@@ -41,15 +41,21 @@ const AVAILABLE_ROLES = [
   { id: "mahasiswa", label: "Mahasiswa" },
 ];
 
-export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit, onCancel }: MenuFormProps) {
+export function MenuForm({
+  initialData,
+  availableMenus = [],
+  isEditing,
+  onSubmit,
+  onCancel,
+}: MenuFormProps) {
   const [formData, setFormData] = useState<MenuFormValues>(
     initialData ? { ...initialData } : { ...defaultValues }
   );
   const [errors, setErrors] = useState<Partial<Record<keyof MenuFormValues, boolean>>>({});
 
   // Filter Parent yang valid: Hanya menu root (parent_id null) & bukan diri sendiri
-  const validParents = availableMenus.filter(m => 
-    m.parent_id === null && m.id !== initialData?.id
+  const validParents = availableMenus.filter(
+    (m) => m.parent_id === null && m.id !== initialData?.id
   );
 
   const validate = (): boolean => {
@@ -57,7 +63,7 @@ export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit
     let isValid = true;
     if (!formData.label.trim()) newErrors.label = true;
     // Href wajib, tapi bisa '#' jika dropdown
-    if (!formData.href.trim()) newErrors.href = true; 
+    if (!formData.href.trim()) newErrors.href = true;
     if (!formData.icon.trim()) newErrors.icon = true;
     if (formData.allowed_roles.length === 0) newErrors.allowed_roles = true;
 
@@ -89,12 +95,15 @@ export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      
-      {/* --- BARIS 1: LABEL & URUTAN --- */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="grid gap-2 col-span-3">
-          <Label htmlFor="label">Label Menu</Label>
+    <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      {/* Container Grid: Default 1 kolom, Layar medium ke atas 2 kolom */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {/* --- SECTION 1: INFORMASI UTAMA (Full Width) --- */}
+        
+        {/* Label Menu */}
+        <div className="md:col-span-2 space-y-2">
+          <Label htmlFor="label">Label Menu <span className="text-red-500">*</span></Label>
           <Input
             id="label"
             placeholder="Contoh: Dashboard"
@@ -103,7 +112,73 @@ export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit
             className={errors.label ? "border-red-500" : ""}
           />
         </div>
-        <div className="grid gap-2 col-span-1">
+
+        {/* Path / URL */}
+        <div className="md:col-span-2 space-y-2">
+          <div className="flex justify-between">
+            <Label htmlFor="href">Path / Link URL <span className="text-red-500">*</span></Label>
+            <span className="text-[10px] text-muted-foreground">Gunakan <b>#</b> jika ini Parent Dropdown</span>
+          </div>
+          <Input
+            id="href"
+            placeholder={formData.parent_id ? "/master/data" : "# atau /path"}
+            value={formData.href}
+            onChange={(e) => handleInputChange("href", e.target.value)}
+            className={errors.href ? "border-red-500" : ""}
+          />
+        </div>
+
+        {/* --- SECTION 2: STRUKTUR & TAMPILAN (2 Kolom) --- */}
+
+        {/* Parent ID */}
+        <div className="space-y-2">
+          <Label htmlFor="parent_id">Menu Induk (Opsional)</Label>
+          <Select
+            value={formData.parent_id?.toString() || "0"}
+            onValueChange={(val) =>
+              handleInputChange("parent_id", val === "0" ? null : Number(val))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih Parent..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">-- Root (Menu Utama) --</SelectItem>
+              {validParents.map((parent) => (
+                <SelectItem key={parent.id} value={parent.id.toString()}>
+                  {parent.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Section Group */}
+        <div className="space-y-2">
+          <Label htmlFor="section">Section Group</Label>
+          <Input
+            id="section"
+            placeholder="Contoh: Menu Utama"
+            value={formData.section}
+            onChange={(e) => handleInputChange("section", e.target.value)}
+          />
+        </div>
+
+        {/* Icon */}
+        <div className="space-y-2">
+          <Label>Icon <span className="text-red-500">*</span></Label>
+          <div className="w-full">
+            <IconPicker
+              value={formData.icon}
+              onChange={(icon) => handleInputChange("icon", icon)}
+              error={!!errors.icon}
+            />
+          </div>
+        </div>
+
+        {/* Urutan & Status (Split dalam 1 cell atau dipisah) */}
+        {/* Disini kita pakai 2 kolom terpisah agar rapi */}
+        <div className="space-y-2">
           <Label htmlFor="sequence">Urutan</Label>
           <Input
             id="sequence"
@@ -113,70 +188,13 @@ export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit
             placeholder="0"
           />
         </div>
-      </div>
 
-      {/* --- BARIS 2: INDUK MENU (PARENT) & SECTION --- */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-            <Label htmlFor="parent_id">Menu Induk (Opsional)</Label>
-            <Select 
-                value={formData.parent_id?.toString() || "0"}
-                onValueChange={(val) => handleInputChange("parent_id", val === "0" ? null : Number(val))}
-            >
-                <SelectTrigger>
-                    <SelectValue placeholder="Pilih Parent..." />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="0">-- Root (Menu Utama) --</SelectItem>
-                    {validParents.map(parent => (
-                        <SelectItem key={parent.id} value={parent.id.toString()}>
-                            {parent.label}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-            <p className="text-[10px] text-muted-foreground">Pilih menu lain jika ini adalah sub-menu.</p>
-        </div>
+        {/* --- SECTION 3: STATUS & PERMISSIONS (Full Width) --- */}
 
-        <div className="grid gap-2">
-            <Label htmlFor="section">Section Group</Label>
-            <Input
-                id="section"
-                placeholder="Contoh: Menu Utama"
-                value={formData.section}
-                onChange={(e) => handleInputChange("section", e.target.value)}
-            />
-        </div>
-      </div>
-
-      {/* --- BARIS 3: PATH & ICON --- */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="href">Path / Link URL</Label>
-          <Input
-            id="href"
-            placeholder={formData.parent_id ? "/master/data" : "# atau /path"}
-            value={formData.href}
-            onChange={(e) => handleInputChange("href", e.target.value)}
-            className={errors.href ? "border-red-500" : ""}
-          />
-          <p className="text-[10px] text-muted-foreground">Gunakan <b>#</b> jika menu ini adalah Parent Dropdown.</p>
-        </div>
-        
-        <div className="grid gap-2">
-          <Label>Icon</Label>
-          <IconPicker 
-            value={formData.icon} 
-            onChange={(icon) => handleInputChange("icon", icon)}
-            error={!!errors.icon}
-          />
-        </div>
-      </div>
-
-      {/* --- BARIS 4: STATUS & ROLES --- */}
-      <div className="grid gap-2">
+        {/* Status Aktif */}
+        <div className="md:col-span-2 space-y-2">
             <Label htmlFor="status">Status Aktif</Label>
-            <Select 
+            <Select
                 value={formData.is_active ? "active" : "inactive"}
                 onValueChange={(val) => handleInputChange("is_active", val === "active")}
             >
@@ -188,29 +206,42 @@ export function MenuForm({ initialData, availableMenus = [], isEditing, onSubmit
                     <SelectItem value="inactive">Non-Aktif (Sembunyi)</SelectItem>
                 </SelectContent>
             </Select>
-      </div>
-
-      <div className="grid gap-3 border rounded-md p-3 bg-slate-50/50">
-        <Label className={errors.allowed_roles ? "text-red-500" : ""}>Hak Akses Role</Label>
-        <div className="flex flex-wrap gap-4">
-          {AVAILABLE_ROLES.map((role) => (
-            <div key={role.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`role-${role.id}`} 
-                checked={formData.allowed_roles.includes(role.id)}
-                onCheckedChange={() => toggleRole(role.id)}
-              />
-              <Label htmlFor={`role-${role.id}`} className="text-sm font-normal cursor-pointer capitalize">
-                {role.label}
-              </Label>
-            </div>
-          ))}
         </div>
+
+        {/* Hak Akses Role */}
+        <div className="md:col-span-2 space-y-3 border rounded-md p-4 bg-slate-50/50">
+          <Label className={errors.allowed_roles ? "text-red-500" : ""}>
+            Hak Akses Role <span className="text-red-500">*</span>
+          </Label>
+          <div className="flex flex-wrap gap-6">
+            {AVAILABLE_ROLES.map((role) => (
+              <div key={role.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`role-${role.id}`}
+                  checked={formData.allowed_roles.includes(role.id)}
+                  onCheckedChange={() => toggleRole(role.id)}
+                />
+                <Label
+                  htmlFor={`role-${role.id}`}
+                  className="text-sm font-normal cursor-pointer capitalize select-none"
+                >
+                  {role.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t mt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Batal</Button>
-        <Button type="submit">{isEditing ? "Simpan Perubahan" : "Buat Menu"}</Button>
+      {/* Footer Buttons */}
+      <div className="flex justify-end gap-3 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Batal
+        </Button>
+        <Button type="submit">
+          {isEditing ? "Simpan Perubahan" : "Buat Menu"}
+        </Button>
       </div>
     </form>
   );

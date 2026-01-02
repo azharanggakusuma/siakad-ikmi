@@ -4,29 +4,37 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLayout } from "@/app/context/LayoutContext";
+import { logout } from "@/app/actions/auth";
 import Tooltip from "@/components/shared/Tooltip";
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  FileSpreadsheet, 
-  Mail, 
-  Settings, 
-  UserCog, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  FileSpreadsheet,
+  Mail,
+  Settings,
+  UserCog,
+  LogOut,
   X,
   Star,
   ClipboardList,
   Library,
   LayoutList,
-  Database,     
-  ChevronDown,  
-  Circle        
+  Database,
+  ChevronDown,
+  School,
+  CalendarClock,
+  LucideIcon,
 } from "lucide-react";
-// Import logout action
-import { logout } from "@/app/actions/auth";
-// Import useLayout untuk mengakses data user
-import { useLayout } from "@/app/context/LayoutContext";
+
+// --- TIPE DATA ---
+type MenuItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  subItems?: MenuItem[];
+};
 
 type SidebarProps = {
   open: boolean;
@@ -34,11 +42,41 @@ type SidebarProps = {
   isCollapsed?: boolean;
 };
 
+// --- KONFIGURASI MENU ---
+const MAIN_MENU: MenuItem[] = [
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  {
+    label: "Master Data",
+    href: "#",
+    icon: Database,
+    subItems: [
+      // UPDATE: Data Dosen dihapus, Mata Kuliah dipindahkan ke sini
+      { label: "Mata Kuliah", href: "/matakuliah", icon: Library },
+      { label: "Program Studi", href: "/master/prodi", icon: School },
+      { label: "Tahun Akademik", href: "/master/tahun-akademik", icon: CalendarClock },
+    ],
+  },
+  { label: "Data Pengguna", href: "/users", icon: UserCog },
+  { label: "Data Mahasiswa", href: "/mahasiswa", icon: Users },
+  // UPDATE: Menu "Mata Kuliah" di sini sudah dihapus (dipindah ke atas)
+  { label: "Nilai Mahasiswa", href: "/nilai", icon: Star },
+  { label: "Kartu Rencana Studi", href: "/krs", icon: ClipboardList },
+  { label: "Kartu Hasil Studi", href: "/khs", icon: FileSpreadsheet },
+  { label: "Transkrip Nilai", href: "/transkrip", icon: FileText },
+  { label: "Surat Keterangan", href: "/surat-keterangan", icon: Mail },
+];
+
+const SYSTEM_MENU: MenuItem[] = [
+  { label: "Manajemen Menu", href: "/menus", icon: LayoutList },
+  { label: "Pengaturan", href: "/pengaturan", icon: Settings },
+];
+
 export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
+  // eslint-disable-next-line no-unused-vars
   const { user } = useLayout();
-  
-  // State untuk mengontrol dropdown Master Data
+
+  // State dropdown Master Data
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
 
   const isActive = (path: string) =>
@@ -73,25 +111,31 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         `}
       >
         {/* === HEADER BRAND === */}
-        <div className={`
+        <div
+          className={`
             h-16 flex items-center bg-white transition-all duration-300 relative overflow-hidden shrink-0
             pl-6 pr-4
             ${isCollapsed ? "lg:pr-0" : ""}
-        `}>
+        `}
+        >
           <div className="flex items-center gap-3">
             {/* Logo */}
             <div className="relative w-8 h-8 shrink-0">
-               <Image src="/img/logo-ikmi.png" alt="Logo" fill className="object-contain" />
+              <Image src="/img/logo-ikmi.png" alt="Logo" fill className="object-contain" />
             </div>
-            
+
             {/* Teks Brand */}
-            <div className={`
+            <div
+              className={`
                 flex flex-col min-w-0 whitespace-nowrap transition-all duration-300 origin-left
                 opacity-100 scale-100 translate-x-0 w-auto
                 ${isCollapsed ? "lg:opacity-0 lg:scale-90 lg:translate-x-[-10px] lg:w-0" : ""}
-            `}>
+            `}
+            >
               <p className="font-bold text-slate-800 text-lg leading-none truncate">SIAKAD</p>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-1 truncate">STMIK IKMI Cirebon</p>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-1 truncate">
+                STMIK IKMI Cirebon
+              </p>
             </div>
           </div>
 
@@ -105,7 +149,8 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </div>
 
         {/* === MENU NAVIGATION === */}
-        <nav className={`
+        <nav
+          className={`
           flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden
           [scrollbar-gutter:stable]
           [&::-webkit-scrollbar]:w-1.5
@@ -113,66 +158,96 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           [&::-webkit-scrollbar-thumb]:bg-slate-200
           [&::-webkit-scrollbar-thumb]:rounded-full
           hover:[&::-webkit-scrollbar-thumb]:bg-slate-300
-        `}>
-          
+        `}
+        >
+          {/* SECTION: MENU UTAMA */}
           <div className="space-y-0.5">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
-            
-            <NavItem href="/" label="Dashboard" icon={<LayoutDashboard size={20} />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            
-            {/* --- DROPDOWN MASTER DATA --- */}
-            <NavDropdown 
-              label="Master Data" 
-              icon={<Database size={20} />} 
-              isOpen={isMasterDataOpen}
-              onToggle={() => setIsMasterDataOpen(!isMasterDataOpen)}
-              isCollapsed={isCollapsed}
-            >
-              <div className="space-y-0.5">
-                <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
-                <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
-                <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
-              </div>
-            </NavDropdown>
-            {/* ---------------------------- */}
 
-            <NavItem href="/nilai" label="Nilai Mahasiswa" icon={<Star size={20} />} active={isActive("/nilai")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/krs" label="Kartu Rencana Studi" icon={<ClipboardList size={20} />} active={isActive("/krs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/khs" label="Kartu Hasil Studi" icon={<FileSpreadsheet size={20} />} active={isActive("/khs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/transkrip" label="Transkrip Nilai" icon={<FileText size={20} />} active={isActive("/transkrip")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<Mail size={20} />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            {MAIN_MENU.map((item, index) => {
+              if (item.subItems && item.subItems.length > 0) {
+                return (
+                  <NavDropdown
+                    key={index}
+                    label={item.label}
+                    icon={<item.icon size={20} />}
+                    isOpen={isMasterDataOpen}
+                    onToggle={() => setIsMasterDataOpen(!isMasterDataOpen)}
+                    isCollapsed={isCollapsed}
+                  >
+                    {item.subItems.map((sub, subIndex) => (
+                      <NavItem
+                        key={subIndex}
+                        href={sub.href}
+                        label={sub.label}
+                        icon={<sub.icon size={16} />}
+                        active={isActive(sub.href)}
+                        onClick={() => setOpen(false)}
+                        isCollapsed={isCollapsed}
+                        isSubItem
+                      />
+                    ))}
+                  </NavDropdown>
+                );
+              }
+
+              return (
+                <NavItem
+                  key={index}
+                  href={item.href}
+                  label={item.label}
+                  icon={<item.icon size={20} />}
+                  active={isActive(item.href)}
+                  onClick={() => setOpen(false)}
+                  isCollapsed={isCollapsed}
+                />
+              );
+            })}
           </div>
 
+          {/* SECTION: SISTEM */}
           <div className="space-y-0.5">
             <SectionLabel label="Sistem" isCollapsed={isCollapsed} />
-            <NavItem href="/menus" label="Manajemen Menu" icon={<LayoutList size={20} />} active={isActive("/menus")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/pengaturan" label="Pengaturan" icon={<Settings size={20} />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
+            {SYSTEM_MENU.map((item, index) => (
+              <NavItem
+                key={index}
+                href={item.href}
+                label={item.label}
+                icon={<item.icon size={20} />}
+                active={isActive(item.href)}
+                onClick={() => setOpen(false)}
+                isCollapsed={isCollapsed}
+              />
+            ))}
           </div>
-
         </nav>
 
         {/* === FOOTER === */}
         <div className="p-3 bg-white border-t border-slate-100 shrink-0 relative">
-           <Tooltip content="Logout" enabled={isCollapsed} position="right">
-              <button
-                onClick={handleLogout} 
-                className={`
+          <Tooltip content="Logout" enabled={isCollapsed} position="right">
+            <button
+              onClick={handleLogout}
+              className={`
                   w-full flex items-center rounded-lg text-sm font-semibold transition-colors overflow-hidden group
                   text-rose-600 hover:bg-rose-50
                   gap-3 px-3 py-2
                   ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
                 `}
-              >
-                <div className="shrink-0"><LogOut size={20} /></div>
-                
-                <span className={`transition-all duration-300 whitespace-nowrap 
+            >
+              <div className="shrink-0">
+                <LogOut size={20} />
+              </div>
+
+              <span
+                className={`transition-all duration-300 whitespace-nowrap 
                   w-auto opacity-100
                   ${isCollapsed ? "lg:w-0 lg:opacity-0" : ""}
-                `}>
-                  Logout
-                </span>
-              </button>
-           </Tooltip>
+                `}
+              >
+                Logout
+              </span>
+            </button>
+          </Tooltip>
         </div>
       </aside>
     </>
@@ -181,7 +256,16 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
 
 // --- KOMPONEN HELPER ---
 
-function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: any) {
+type NavDropdownProps = {
+  label: string;
+  icon: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  isCollapsed: boolean;
+  children: React.ReactNode;
+};
+
+function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: NavDropdownProps) {
   return (
     <div className="space-y-0.5">
       <Tooltip content={label} enabled={isCollapsed} position="right">
@@ -198,62 +282,97 @@ function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: a
           `}
         >
           <div className="flex items-center gap-3 overflow-hidden">
-             <span className={`shrink-0 transition-colors ${isOpen ? "text-slate-700" : "text-slate-400 group-hover:text-slate-600"}`}>
+            <span
+              className={`shrink-0 transition-colors ${
+                isOpen ? "text-slate-700" : "text-slate-400 group-hover:text-slate-600"
+              }`}
+            >
               {icon}
             </span>
-            <span className={`truncate transition-all duration-300 block text-left
+            <span
+              className={`truncate transition-all duration-300 block text-left
                w-auto opacity-100
                ${isCollapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : ""}
-            `}>
-                {label}
+            `}
+            >
+              {label}
             </span>
           </div>
 
           {!isCollapsed && (
-             <div className={`transition-transform duration-200 text-slate-400 ${isOpen ? "rotate-180" : ""}`}>
-               <ChevronDown size={16} />
-             </div>
+            <div
+              className={`transition-transform duration-200 text-slate-400 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            >
+              <ChevronDown size={16} />
+            </div>
           )}
         </button>
       </Tooltip>
 
-      <div className={`
+      <div
+        className={`
         overflow-hidden transition-all duration-300 ease-in-out
         ${isOpen && !isCollapsed ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
-      `}>
-        {/* PERBAIKAN: ml-[22px] agar garis persis di tengah ikon (12px padding + 10px half-icon) */}
-        <div className="ml-[22px] pl-2 border-l border-slate-200 space-y-1 mt-1">
-           {children}
-        </div>
+      `}
+      >
+        <div className="ml-4 pl-2 border-l border-slate-200 space-y-0.5 mt-0.5">{children}</div>
       </div>
     </div>
   );
 }
 
-function NavItem({ href, icon, label, active, onClick, isCollapsed, isSubItem }: any) {
+type NavItemProps = {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  isCollapsed: boolean;
+  isSubItem?: boolean;
+};
+
+function NavItem({
+  href,
+  icon,
+  label,
+  active,
+  onClick,
+  isCollapsed,
+  isSubItem = false,
+}: NavItemProps) {
   return (
     <Tooltip content={label} enabled={isCollapsed} position="right">
       <Link href={href} onClick={onClick} className="block group relative">
         <div
           className={`
             flex items-center gap-3 rounded-lg relative
-            ${isSubItem ? "text-sm font-medium" : "text-sm font-medium"} 
+            ${isSubItem ? "text-xs font-medium" : "text-sm font-medium"} 
             transition-all duration-200
             px-3 py-2
             ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
             ${active ? "bg-blue-50 text-[#1B3F95]" : "text-slate-600 hover:bg-slate-50"}
           `}
         >
-          {active && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />}
-          <span className={`transition-colors shrink-0 ${active ? "text-[#1B3F95]" : "text-slate-400 group-hover:text-slate-600"}`}>
+          {active && (
+            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#1B3F95]" />
+          )}
+          <span
+            className={`transition-colors shrink-0 ${
+              active ? "text-[#1B3F95]" : "text-slate-400 group-hover:text-slate-600"
+            }`}
+          >
             {icon}
           </span>
-          
-          <span className={`truncate transition-all duration-300 block
+
+          <span
+            className={`truncate transition-all duration-300 block
              w-auto opacity-100
              ${isCollapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : ""}
-          `}>
-              {label}
+          `}
+          >
+            {label}
           </span>
         </div>
       </Link>

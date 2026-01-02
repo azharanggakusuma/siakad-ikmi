@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 export type UserSession = {
   username: string;
   name?: string; 
-  role?: string;
+  role: string;
 };
 
 export async function authenticate(formData: FormData) {

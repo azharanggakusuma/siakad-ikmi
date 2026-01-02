@@ -105,10 +105,10 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </div>
 
         {/* === MENU NAVIGATION === */}
-        {/* space-y-6 diubah jadi space-y-3 agar jarak antar section lebih dekat */}
+        {/* jarak antar section */}
         <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
           
-          {/* space-y-1 diubah jadi space-y-0.5 agar jarak antar item lebih rapat */}
+          {/* jarak antar item */}
           <div className="space-y-1">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
             

@@ -1,83 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayout } from "@/app/context/LayoutContext";
 import { logout } from "@/app/actions/auth";
 import Tooltip from "@/components/shared/Tooltip";
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  FileSpreadsheet,
-  Mail,
-  Settings,
-  UserCog,
-  LogOut,
-  X,
-  Star,
-  ClipboardList,
-  Library,
-  LayoutList,
-  Database,
-  ChevronDown,
-  School,
-  CalendarClock,
-  LucideIcon,
-} from "lucide-react";
-
-// --- TIPE DATA ---
-type MenuItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  subItems?: MenuItem[];
-};
+import { Menu } from "@/lib/types"; 
+import * as LucideIcons from "lucide-react"; 
 
 type SidebarProps = {
   open: boolean;
   setOpen: (v: boolean) => void;
   isCollapsed?: boolean;
+  menus: Menu[]; 
 };
 
-// --- KONFIGURASI MENU ---
-const MAIN_MENU: MenuItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
-  {
-    label: "Master Data",
-    href: "#",
-    icon: Database,
-    subItems: [
-      // UPDATE: Data Dosen dihapus, Mata Kuliah dipindahkan ke sini
-      { label: "Mata Kuliah", href: "/matakuliah", icon: Library },
-      { label: "Program Studi", href: "/master/prodi", icon: School },
-      { label: "Tahun Akademik", href: "/master/tahun-akademik", icon: CalendarClock },
-    ],
-  },
-  { label: "Data Pengguna", href: "/users", icon: UserCog },
-  { label: "Data Mahasiswa", href: "/mahasiswa", icon: Users },
-  // UPDATE: Menu "Mata Kuliah" di sini sudah dihapus (dipindah ke atas)
-  { label: "Nilai Mahasiswa", href: "/nilai", icon: Star },
-  { label: "Kartu Rencana Studi", href: "/krs", icon: ClipboardList },
-  { label: "Kartu Hasil Studi", href: "/khs", icon: FileSpreadsheet },
-  { label: "Transkrip Nilai", href: "/transkrip", icon: FileText },
-  { label: "Surat Keterangan", href: "/surat-keterangan", icon: Mail },
-];
-
-const SYSTEM_MENU: MenuItem[] = [
-  { label: "Manajemen Menu", href: "/menus", icon: LayoutList },
-  { label: "Pengaturan", href: "/pengaturan", icon: Settings },
-];
-
-export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarProps) {
+export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: SidebarProps) {
   const pathname = usePathname();
   // eslint-disable-next-line no-unused-vars
   const { user } = useLayout();
 
-  // State dropdown Master Data
-  const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
+
+  const toggleDropdown = (id: number) => {
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const isActive = (path: string) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
@@ -85,6 +37,48 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
   const handleLogout = async () => {
     await logout();
   };
+
+  // Helper dinamis untuk mengambil icon dari LucideIcons
+  const getIconComponent = (iconName: string) => {
+    // Mengakses icon secara dinamis menggunakan key string
+    // Kita gunakan (LucideIcons as any) untuk menghindari error TypeScript indexing
+    const Icon = (LucideIcons as any)[iconName];
+    
+    // Fallback ke icon 'Circle' atau 'HelpCircle' jika icon tidak ditemukan / typo di DB
+    return Icon || LucideIcons.Circle;
+  };
+
+  // --- MEMPROSES STRUKTUR MENU ---
+  const menuSections = useMemo(() => {
+    const sections = Array.from(new Set(menus.map((m) => m.section)));
+    
+    return sections.map((sectionName) => {
+      const rootItems = menus.filter(
+        (m) => m.section === sectionName && !m.parent_id
+      );
+
+      const itemsWithChildren = rootItems.map((parent) => {
+        const children = menus.filter((m) => m.parent_id === parent.id);
+        children.sort((a, b) => a.sequence - b.sequence);
+        
+        return {
+          ...parent,
+          subItems: children,
+        };
+      });
+
+      itemsWithChildren.sort((a, b) => a.sequence - b.sequence);
+
+      return {
+        label: sectionName,
+        items: itemsWithChildren,
+      };
+    });
+  }, [menus]);
+
+  // Icon untuk tombol statis (Logout, Close)
+  const LogOutIcon = LucideIcons.LogOut;
+  const XIcon = LucideIcons.X;
 
   return (
     <>
@@ -144,7 +138,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             onClick={() => setOpen(false)}
             className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 transition"
           >
-            <X className="h-5 w-5" />
+            <XIcon className="h-5 w-5" />
           </button>
         </div>
 
@@ -160,66 +154,59 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           hover:[&::-webkit-scrollbar-thumb]:bg-slate-300
         `}
         >
-          {/* SECTION: MENU UTAMA */}
-          <div className="space-y-0.5">
-            <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
+          {/* RENDER DYNAMIC SECTIONS */}
+          {menuSections.map((section, idx) => (
+            <div key={idx} className="space-y-0.5">
+              <SectionLabel label={section.label} isCollapsed={isCollapsed} />
 
-            {MAIN_MENU.map((item, index) => {
-              if (item.subItems && item.subItems.length > 0) {
+              {section.items.map((item) => {
+                const Icon = getIconComponent(item.icon);
+
+                // Jika punya subItems, render dropdown
+                if (item.subItems && item.subItems.length > 0) {
+                  return (
+                    <NavDropdown
+                      key={item.id}
+                      label={item.label}
+                      icon={<Icon size={20} />}
+                      isOpen={!!openDropdowns[item.id]} 
+                      onToggle={() => toggleDropdown(item.id)}
+                      isCollapsed={isCollapsed}
+                    >
+                      {item.subItems.map((sub) => {
+                        const SubIcon = getIconComponent(sub.icon);
+                        return (
+                          <NavItem
+                            key={sub.id}
+                            href={sub.href}
+                            label={sub.label}
+                            icon={<SubIcon size={16} />}
+                            active={isActive(sub.href)}
+                            onClick={() => setOpen(false)}
+                            isCollapsed={isCollapsed}
+                            isSubItem
+                          />
+                        );
+                      })}
+                    </NavDropdown>
+                  );
+                }
+
+                // Jika tidak punya subItems, render item biasa
                 return (
-                  <NavDropdown
-                    key={index}
+                  <NavItem
+                    key={item.id}
+                    href={item.href}
                     label={item.label}
-                    icon={<item.icon size={20} />}
-                    isOpen={isMasterDataOpen}
-                    onToggle={() => setIsMasterDataOpen(!isMasterDataOpen)}
+                    icon={<Icon size={20} />}
+                    active={isActive(item.href)}
+                    onClick={() => setOpen(false)}
                     isCollapsed={isCollapsed}
-                  >
-                    {item.subItems.map((sub, subIndex) => (
-                      <NavItem
-                        key={subIndex}
-                        href={sub.href}
-                        label={sub.label}
-                        icon={<sub.icon size={16} />}
-                        active={isActive(sub.href)}
-                        onClick={() => setOpen(false)}
-                        isCollapsed={isCollapsed}
-                        isSubItem
-                      />
-                    ))}
-                  </NavDropdown>
+                  />
                 );
-              }
-
-              return (
-                <NavItem
-                  key={index}
-                  href={item.href}
-                  label={item.label}
-                  icon={<item.icon size={20} />}
-                  active={isActive(item.href)}
-                  onClick={() => setOpen(false)}
-                  isCollapsed={isCollapsed}
-                />
-              );
-            })}
-          </div>
-
-          {/* SECTION: SISTEM */}
-          <div className="space-y-0.5">
-            <SectionLabel label="Sistem" isCollapsed={isCollapsed} />
-            {SYSTEM_MENU.map((item, index) => (
-              <NavItem
-                key={index}
-                href={item.href}
-                label={item.label}
-                icon={<item.icon size={20} />}
-                active={isActive(item.href)}
-                onClick={() => setOpen(false)}
-                isCollapsed={isCollapsed}
-              />
-            ))}
-          </div>
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* === FOOTER === */}
@@ -235,7 +222,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
                 `}
             >
               <div className="shrink-0">
-                <LogOut size={20} />
+                <LogOutIcon size={20} />
               </div>
 
               <span
@@ -266,6 +253,8 @@ type NavDropdownProps = {
 };
 
 function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: NavDropdownProps) {
+  const ChevronDownIcon = LucideIcons.ChevronDown;
+
   return (
     <div className="space-y-0.5">
       <Tooltip content={label} enabled={isCollapsed} position="right">
@@ -305,7 +294,7 @@ function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: N
                 isOpen ? "rotate-180" : ""
               }`}
             >
-              <ChevronDown size={16} />
+              <ChevronDownIcon size={16} />
             </div>
           )}
         </button>

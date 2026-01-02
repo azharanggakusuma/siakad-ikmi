@@ -105,10 +105,6 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
         </div>
 
         {/* === MENU NAVIGATION === */}
-        {/* UPDATE: 
-            1. [scrollbar-gutter:stable] -> Mencegah layout shift (menu geser) saat scrollbar muncul.
-            2. Styling Webkit -> Membuat scrollbar tipis (mini) dan rounded ala Shadcn.
-        */}
         <nav className={`
           flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden
           [scrollbar-gutter:stable]
@@ -119,7 +115,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
           hover:[&::-webkit-scrollbar-thumb]:bg-slate-300
         `}>
           
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <SectionLabel label="Menu Utama" isCollapsed={isCollapsed} />
             
             <NavItem href="/" label="Dashboard" icon={<LayoutDashboard size={20} />} active={isActive("/")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
@@ -132,14 +128,14 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
               onToggle={() => setIsMasterDataOpen(!isMasterDataOpen)}
               isCollapsed={isCollapsed}
             >
-              <NavItem href="/master/dummy-1" label="Dummy Menu 1" icon={<Circle size={10} />} active={isActive("/master/dummy-1")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
-              <NavItem href="/master/dummy-2" label="Dummy Menu 2" icon={<Circle size={10} />} active={isActive("/master/dummy-2")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+              <div className="space-y-0.5">
+                <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+                <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+                <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} isSubItem />
+              </div>
             </NavDropdown>
             {/* ---------------------------- */}
 
-            <NavItem href="/users" label="Data Pengguna" icon={<UserCog size={20} />} active={isActive("/users")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/mahasiswa" label="Data Mahasiswa" icon={<Users size={20} />} active={isActive("/mahasiswa")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
-            <NavItem href="/matakuliah" label="Mata Kuliah" icon={<Library size={20} />} active={isActive("/matakuliah")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/nilai" label="Nilai Mahasiswa" icon={<Star size={20} />} active={isActive("/nilai")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/krs" label="Kartu Rencana Studi" icon={<ClipboardList size={20} />} active={isActive("/krs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/khs" label="Kartu Hasil Studi" icon={<FileSpreadsheet size={20} />} active={isActive("/khs")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
@@ -147,7 +143,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false }: SidebarP
             <NavItem href="/surat-keterangan" label="Surat Keterangan" icon={<Mail size={20} />} active={isActive("/surat-keterangan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <SectionLabel label="Sistem" isCollapsed={isCollapsed} />
             <NavItem href="/menus" label="Manajemen Menu" icon={<LayoutList size={20} />} active={isActive("/menus")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
             <NavItem href="/pengaturan" label="Pengaturan" icon={<Settings size={20} />} active={isActive("/pengaturan")} onClick={() => setOpen(false)} isCollapsed={isCollapsed} />
@@ -225,7 +221,8 @@ function NavDropdown({ label, icon, isOpen, onToggle, isCollapsed, children }: a
         overflow-hidden transition-all duration-300 ease-in-out
         ${isOpen && !isCollapsed ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
       `}>
-        <div className="ml-4 pl-2 border-l border-slate-200 space-y-1 mt-1">
+        {/* PERBAIKAN: ml-[22px] agar garis persis di tengah ikon (12px padding + 10px half-icon) */}
+        <div className="ml-[22px] pl-2 border-l border-slate-200 space-y-1 mt-1">
            {children}
         </div>
       </div>
@@ -240,7 +237,7 @@ function NavItem({ href, icon, label, active, onClick, isCollapsed, isSubItem }:
         <div
           className={`
             flex items-center gap-3 rounded-lg relative
-            ${isSubItem ? "text-xs font-medium" : "text-sm font-medium"} 
+            ${isSubItem ? "text-sm font-medium" : "text-sm font-medium"} 
             transition-all duration-200
             px-3 py-2
             ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}

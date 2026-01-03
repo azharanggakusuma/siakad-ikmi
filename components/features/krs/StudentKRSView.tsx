@@ -98,7 +98,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   };
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-4 animate-in fade-in duration-500 mt-8">
       <Card className="border-none shadow-sm ring-1 ring-gray-200 bg-white">
         <CardContent className="p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

@@ -9,9 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
-import { Lock } from "lucide-react"; // [BARU] Import icon Lock
+import { Lock } from "lucide-react"; // Import ikon Lock
 import { CourseFormValues } from "@/lib/types";
+import { useToastMessage } from "@/hooks/use-toast-message"; // Menggunakan hook yang disediakan
 
 interface CourseFormProps {
   initialData?: CourseFormValues;
@@ -25,6 +25,7 @@ const defaultValues: CourseFormValues = {
 };
 
 export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: CourseFormProps) {
+  const { showError } = useToastMessage(); // Inisialisasi hook
   const [formData, setFormData] = useState<CourseFormValues>(defaultValues);
   const [errors, setErrors] = useState<Partial<Record<keyof CourseFormValues, boolean>>>({});
 
@@ -95,9 +96,8 @@ export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: Cours
     if (errorMessages.length > 0) {
       setErrors(newErrors);
       isValid = false;
-      toast.error("Validasi Gagal", {
-        description: <ul className="list-disc pl-4">{errorMessages.map((m, i) => <li key={i}>{m}</li>)}</ul>
-      });
+      // Menggunakan showError dari hook
+      showError("Validasi Gagal", errorMessages.join(", "));
     }
 
     return isValid;
@@ -114,8 +114,7 @@ export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: Cours
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
       <div className="grid grid-cols-4 gap-4">
-        
-        {/* Kolom Kode MK - [DIUBAH AGAR TERKUNCI SAAT EDIT] */}
+        {/* Kolom Kode MK - Terkunci saat Edit */}
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="kode">Kode MK</Label>
           <div className="relative">

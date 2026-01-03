@@ -35,7 +35,7 @@ export async function getMenus() {
 export async function createMenu(values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  // UUID: Jika string kosong atau "0", anggap null
+  // UUID: Jika string kosong atau "0", ubah jadi null
   const formattedParentId = (!parent_id || parent_id === "0") ? null : parent_id;
 
   const payload = {
@@ -45,12 +45,17 @@ export async function createMenu(values: MenuFormValues) {
     section: section || "Menu Utama",
     parent_id: formattedParentId,
     allowed_roles,
-    sequence: Number(sequence) || 0,
+    sequence: sequence ? Number(sequence) : 0,
     is_active,
   };
 
   const { error } = await supabaseAdmin.from("menus").insert([payload]);
-  if (error) throw new Error(error.message);
+  
+  if (error) {
+    console.error("Create Menu Error:", error.message);
+    throw new Error(error.message);
+  }
+  
   revalidatePath("/menus");
 }
 
@@ -58,7 +63,11 @@ export async function createMenu(values: MenuFormValues) {
 export async function updateMenu(id: string, values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  const formattedParentId = (!parent_id || parent_id === "0") ? null : parent_id;
+  // Logika parent_id
+  let formattedParentId = parent_id;
+  if (!formattedParentId || formattedParentId === "0") {
+    formattedParentId = null;
+  }
 
   const payload = {
     label,
@@ -67,9 +76,8 @@ export async function updateMenu(id: string, values: MenuFormValues) {
     section,
     parent_id: formattedParentId,
     allowed_roles,
-    sequence: Number(sequence),
+    sequence: sequence ? Number(sequence) : 0,
     is_active,
-    updated_at: new Date().toISOString(),
   };
 
   const { error } = await supabaseAdmin
@@ -77,7 +85,11 @@ export async function updateMenu(id: string, values: MenuFormValues) {
     .update(payload)
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("Update Menu Error:", error.message); 
+    throw new Error(error.message);
+  }
+  
   revalidatePath("/menus");
 }
 
@@ -90,7 +102,7 @@ export async function deleteMenu(id: string) {
 
 // === REORDER MENUS (DRAG & DROP) ===
 export async function reorderMenus(items: { id: string; sequence: number }[]) {
-  // Update batch urutan
+  // Update batch hanya untuk sequence
   const updates = items.map((item) =>
     supabaseAdmin
       .from("menus")

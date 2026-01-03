@@ -48,7 +48,8 @@ export default function DashboardPage() {
           getCourses(),
         ]);
 
-        setStudentData(studentsRes as unknown as StudentData[]);
+        // StudentData ID sudah bertipe string (UUID) dari lib/types.ts
+        setStudentData(studentsRes as StudentData[]);
         setCourseCount(coursesRes ? coursesRes.length : 0);
       } catch (error) {
         console.error("Gagal mengambil data dashboard:", error);
@@ -89,6 +90,7 @@ export default function DashboardPage() {
     const currentUsername = user?.username;
 
     if (isMahasiswa && currentUsername) {
+      // Pencarian menggunakan NIM (String), jadi aman dari perubahan ID
       const myData = studentData.find((s) => s.profile.nim === currentUsername);
       
       if (myData) {
@@ -253,7 +255,6 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            {/* [UBAH] Pass prop title berdasarkan role user */}
             <SemesterLineChart 
               data={trendData} 
               title={user?.role === "mahasiswa" ? "Tren IPS Setiap Semester" : "Tren Rata-Rata IPS Mahasiswa"} 

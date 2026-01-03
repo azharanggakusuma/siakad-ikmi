@@ -39,6 +39,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
     setIsSaving(true);
 
     try {
+      // Menggunakan username (string) sebagai kunci, jadi aman dari perubahan ID
       await updateUserSettings(user.username, {
         nama: formData.nama,
         username: formData.username,

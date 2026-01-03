@@ -47,7 +47,7 @@ export default function SuratKeteranganPage() {
         ]);
 
         setStudentsData(students);
-        setOfficial(activeOfficial); // Simpan data pejabat
+        setOfficial(activeOfficial); // Simpan data pejabat (ID string/UUID aman)
 
         if (activeYear) {
             setTahunAkademik(activeYear.nama);
@@ -72,7 +72,7 @@ export default function SuratKeteranganPage() {
     }
   }, [currentStudent]);
 
-  // Observer
+  // Observer untuk resize kertas
   useEffect(() => {
     if (!paperRef.current) return;
     const observer = new ResizeObserver((entries) => {

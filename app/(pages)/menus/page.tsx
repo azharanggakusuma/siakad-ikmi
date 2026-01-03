@@ -19,7 +19,7 @@ export default function MenusPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // 2. Gunakan Hook
-  const { showLoading, successAction, errorAction, showSuccess } = useToastMessage();
+  const { showLoading, showSuccess, successAction, errorAction, confirmDeleteMessage } = useToastMessage();
 
   // Modal State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -34,7 +34,6 @@ export default function MenusPage() {
       const menus = await getMenus();
       setDataList(menus);
     } catch (error) {
-      // Panggil template error "load"
       errorAction("load", error);
     } finally {
       setIsLoading(false);
@@ -71,19 +70,18 @@ export default function MenusPage() {
     try {
       if (isEditing && selectedMenu) {
         await updateMenu(selectedMenu.id, values);
-        // Panggil template sukses "update" -> otomatis teksnya "Perubahan Disimpan..."
+        // Toast Sukses Update
         successAction("Menu", "update", toastId);
       } else {
         await createMenu(values);
-        // Panggil template sukses "create" -> otomatis teksnya "Berhasil Ditambahkan..."
+        // Toast Sukses Create
         successAction("Menu", "create", toastId);
       }
       
       await fetchData();
     } catch (error: any) {
-      // Jika error, form dibuka lagi (opsional)
-      setIsFormOpen(true);
-      // Panggil template error "save"
+      setIsFormOpen(true); // Buka form lagi jika gagal
+      // Toast Error Save
       errorAction("save", error, toastId);
     }
   };
@@ -95,11 +93,11 @@ export default function MenusPage() {
 
       try {
         await deleteMenu(selectedMenu.id);
-        // Panggil template sukses "delete"
+        // Toast Sukses Delete
         successAction("Menu", "delete", toastId);
         await fetchData();
       } catch (error: any) {
-        // Panggil template error "delete"
+        // Toast Error Delete
         errorAction("delete", error, toastId);
       }
     }
@@ -187,7 +185,8 @@ export default function MenusPage() {
         onClose={setIsDeleteOpen}
         onConfirm={handleDelete}
         title="Hapus Menu?"
-        description={`Apakah Anda yakin ingin menghapus menu "${selectedMenu?.label}"? Tindakan ini tidak dapat dibatalkan.`}
+        // 3. Gunakan Template Pesan Konfirmasi
+        description={confirmDeleteMessage("Menu", selectedMenu?.label)} 
         confirmLabel="Ya, Hapus Menu"
         variant="destructive"
       />

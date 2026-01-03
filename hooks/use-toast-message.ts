@@ -1,9 +1,8 @@
-// hooks/use-toast-message.ts
 import { toast } from "sonner";
 
 export function useToastMessage() {
   
-  // 1. Loading
+  // 1. Loading Toast
   const showLoading = (message: string = "Sedang memproses...") => {
     return toast.loading(message);
   };
@@ -22,11 +21,8 @@ export function useToastMessage() {
   };
 
   /**
-   * 4. TEMPLATE SUKSES STANDAR
-   * Digunakan agar pesan sukses seragam di seluruh aplikasi.
-   * @param entity Nama data (Contoh: "Menu", "User", "Mahasiswa")
-   * @param action Jenis aksi ("create", "update", "delete")
-   * @param id ID toast (jika ingin me-replace loading)
+   * 4. TEMPLATE SUKSES (Action Based)
+   * Gunakan ini setelah operasi Create/Update/Delete berhasil.
    */
   const successAction = (
     entity: string, 
@@ -53,15 +49,15 @@ export function useToastMessage() {
   };
   
   /**
-   * 5. TEMPLATE ERROR STANDAR
-   * Menangani logging error ke console dan menampilkan pesan user-friendly.
+   * 5. TEMPLATE ERROR (Action Based)
+   * Gunakan ini di blok catch() untuk menangani error standar.
    */
   const errorAction = (
     action: "save" | "delete" | "load", 
     errorRaw?: any, 
     id?: string | number
   ) => {
-     // Log error asli untuk Developer
+     // Log error ke console untuk keperluan debugging developer
      if (errorRaw) console.error(`[${action.toUpperCase()} ERROR]`, errorRaw);
      
      const templates = {
@@ -83,12 +79,24 @@ export function useToastMessage() {
      showError(t.title, t.desc, id);
   };
 
+  /**
+   * 6. TEMPLATE KONFIRMASI DELETE
+   * Gunakan ini pada prop `description` di ConfirmModal.
+   */
+  const confirmDeleteMessage = (entity: string, label?: string) => {
+    if (label) {
+        return `Apakah Anda yakin ingin menghapus data ${entity} "${label}"? Tindakan ini tidak dapat dibatalkan.`;
+    }
+    return `Apakah Anda yakin ingin menghapus data ${entity} ini? Tindakan ini tidak dapat dibatalkan.`;
+  };
+
   return { 
     showLoading, 
     showSuccess, 
     showError, 
     successAction, 
     errorAction,
-    dismiss: toast.dismiss // Expose fungsi dismiss asli jika butuh
+    confirmDeleteMessage,
+    dismiss: toast.dismiss
   };
 }

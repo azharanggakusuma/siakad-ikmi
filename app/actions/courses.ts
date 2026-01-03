@@ -4,12 +4,35 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 import { Course, CoursePayload } from "@/lib/types";
 
+// --- HELPER ERROR HANDLING ---
+const handleDbError = (error: any, context: string) => {
+  // 1. Log Error Asli di SERVER Console
+  console.error(`[DB_ERROR] ${context}:`, error);
+
+  // 2. Cek Kode Error Postgres
+  // Code 23505: Unique Violation (Data Kembar)
+  if (error.code === '23505') {
+    if (error.message?.includes('kode')) {
+        throw new Error("Kode Mata Kuliah tersebut sudah ada. Harap gunakan kode lain.");
+    }
+    throw new Error("Data duplikat terdeteksi dalam sistem.");
+  }
+
+  // Code 23503: Foreign Key Violation (Data Terpakai)
+  if (error.code === '23503') {
+    throw new Error("Mata kuliah tidak dapat dihapus karena sudah diambil oleh mahasiswa atau memiliki data nilai.");
+  }
+
+  // 3. Fallback Error Umum
+  throw new Error("Gagal memproses data. Terjadi kendala di server.");
+};
+
 // Ambil semua mata kuliah
 export async function getCourses() {
   const { data, error } = await supabase
     .from('courses')
     .select('*')
-    .order('matkul', { ascending: true }); // UUID tidak bisa diajukan order, pakai matkul
+    .order('matkul', { ascending: true });
 
   if (error) {
     console.error("Error fetching courses:", error.message);
@@ -30,7 +53,8 @@ export async function createCourse(values: CoursePayload) {
       kategori: values.kategori
     }]);
 
-  if (error) throw new Error(error.message);
+  if (error) handleDbError(error, "createCourse");
+  
   revalidatePath('/matakuliah');
 }
 
@@ -47,7 +71,8 @@ export async function updateCourse(id: string, values: CoursePayload) {
     })
     .eq('id', id);
 
-  if (error) throw new Error(error.message);
+  if (error) handleDbError(error, "updateCourse");
+  
   revalidatePath('/matakuliah');
 }
 
@@ -58,6 +83,7 @@ export async function deleteCourse(id: string) {
     .delete()
     .eq('id', id);
 
-  if (error) throw new Error(error.message);
+  if (error) handleDbError(error, "deleteCourse");
+  
   revalidatePath('/matakuliah');
 }

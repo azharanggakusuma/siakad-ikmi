@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import PageHeader from "@/components/layout/PageHeader";
+import { useToastMessage } from "@/hooks/use-toast-message"; // Menggunakan Hook
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +17,14 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
-import { toast } from "sonner";
 import { CourseForm } from "@/components/features/matakuliah/CourseForm";
 import { type Course as CourseData, type CourseFormValues, type CourseCategory } from "@/lib/types";
 import { getCourses, createCourse, updateCourse, deleteCourse } from "@/app/actions/courses";
 
 export default function MataKuliahPage() {
+  // Init Hook
+  const { successAction, confirmDeleteMessage, showError } = useToastMessage();
+
   const [courses, setCourses] = useState<CourseData[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,8 +40,8 @@ export default function MataKuliahPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
-  // [PERBAIKAN] Ubah tipe state ID menjadi string (UUID)
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string>(""); // State untuk nama MK yang akan dihapus
   const [formData, setFormData] = useState<CourseFormValues | undefined>(undefined);
 
   // === FETCH DATA ===
@@ -48,7 +51,11 @@ export default function MataKuliahPage() {
       const data = await getCourses();
       setCourses(data);
     } catch (error) {
-      toast.error("Gagal memuat data", { description: "Terjadi kesalahan koneksi." });
+      console.error(error);
+      showError(
+        "Gagal Memuat Data",
+        "Terjadi kendala saat mengambil data mata kuliah. Silakan coba muat ulang halaman."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +93,7 @@ export default function MataKuliahPage() {
   };
 
   const handleOpenEdit = (course: CourseData) => {
-    setSelectedId(course.id); // course.id sekarang string
+    setSelectedId(course.id); 
     setFormData({
       kode: course.kode,
       matkul: course.matkul,
@@ -98,9 +105,10 @@ export default function MataKuliahPage() {
     setIsDialogOpen(true);
   };
 
-  // [PERBAIKAN] Parameter id menjadi string
-  const handleDelete = (id: string) => {
-    setSelectedId(id);
+  // Mengubah handle delete untuk menyimpan nama juga
+  const handleDelete = (course: CourseData) => {
+    setSelectedId(course.id);
+    setDeleteName(course.matkul);
     setIsDeleteOpen(true);
   };
 
@@ -108,14 +116,14 @@ export default function MataKuliahPage() {
     if (selectedId) {
       try {
         await deleteCourse(selectedId);
-        toast.success("Berhasil Hapus", { description: "Data mata kuliah telah dihapus." });
+        successAction("Mata Kuliah", "delete");
         
         if (currentData.length === 1 && currentPage > 1) {
           setCurrentPage((prev) => prev - 1);
         }
         await fetchData();
       } catch (error: any) {
-        toast.error("Gagal Hapus", { description: error.message });
+        showError("Gagal Menghapus", error.message);
       }
     }
     setIsDeleteOpen(false);
@@ -125,15 +133,15 @@ export default function MataKuliahPage() {
     try {
       if (isEditing && selectedId) {
         await updateCourse(selectedId, values);
-        toast.success("Berhasil Update", { description: `Mata kuliah ${values.matkul} diperbarui.` });
+        successAction("Mata Kuliah", "update");
       } else {
         await createCourse(values);
-        toast.success("Berhasil Tambah", { description: `Mata kuliah ${values.matkul} ditambahkan.` });
+        successAction("Mata Kuliah", "create");
       }
       await fetchData();
       setIsDialogOpen(false);
     } catch (error: any) {
-      toast.error("Terjadi Kesalahan", { description: error.message || "Gagal menyimpan data." });
+      showError("Gagal Menyimpan", error.message);
     }
   };
 
@@ -178,7 +186,12 @@ export default function MataKuliahPage() {
           <Button variant="ghost" size="icon" className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" onClick={() => handleOpenEdit(row)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(row.id)}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" 
+            onClick={() => handleDelete(row)} // Pass row object
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -251,7 +264,7 @@ export default function MataKuliahPage() {
         onClose={setIsDeleteOpen}
         onConfirm={confirmDelete}
         title="Hapus Mata Kuliah?"
-        description="Data yang dihapus tidak dapat dikembalikan. Lanjutkan?"
+        description={confirmDeleteMessage("Mata Kuliah", deleteName)}
         confirmLabel="Hapus Permanen"
         variant="destructive"
       />

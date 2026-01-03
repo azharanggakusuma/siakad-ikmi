@@ -9,7 +9,6 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isOnLogin = nextUrl.pathname.startsWith("/login");
       
-      // Definisikan public asset agar tidak terblokir middleware
       const isPublicAsset = 
         nextUrl.pathname.startsWith("/img") || 
         nextUrl.pathname.startsWith("/public") ||
@@ -26,33 +25,30 @@ export const authConfig = {
       }
 
       if (isLoggedIn) {
-        // --- PERUBAHAN DI SINI ---
-        // Logika pembatasan (restrictedRoutes) untuk role 'mahasiswa' telah dihapus.
-        // Sekarang semua user yang sudah login bisa mengakses semua route.
         return true;
       }
 
-      return false; // Redirect ke login jika belum login
+      return false; 
     },
-    // Callback JWT: Berjalan saat token dibuat (login) atau diperbarui (akses halaman)
+    // Callback JWT
     async jwt({ token, user }) {
-      // Jika 'user' ada, berarti ini saat LOGIN PERTAMA KALI
       if (user) {
-        token.id = user.id; // Pastikan ID tersimpan di token
+        token.id = user.id;
         token.role = user.role;
         token.username = user.username;
         token.name = user.name;
+        token.student_id = user.student_id; // [BARU] Simpan ke Token
       }
       return token;
     },
-    // Callback Session: Berjalan saat useSession() atau auth() dipanggil
+    // Callback Session
     async session({ session, token }) {
-      // Pindahkan data dari TOKEN ke SESSION agar bisa dibaca di client/server component
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.username = token.username as string;
         session.user.name = token.name as string;
+        session.user.student_id = token.student_id as string | null; // [BARU] Simpan ke Session
       }
       return session;
     },

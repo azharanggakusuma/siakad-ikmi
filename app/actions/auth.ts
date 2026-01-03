@@ -6,10 +6,12 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs"; 
 
+// [UPDATE 1] Tambahkan student_id ke tipe ini
 export type UserSession = {
   username: string;
   name?: string; 
   role: string;
+  student_id?: string | null; 
 };
 
 export async function authenticate(formData: FormData) {
@@ -18,7 +20,7 @@ export async function authenticate(formData: FormData) {
     const username = data.username as string;
     let name = "Pengguna";
 
-    // Cek nama user untuk feedback UI (opsional)
+    // Cek nama user untuk feedback UI
     const { data: userFound } = await supabase
       .from("users")
       .select("name")
@@ -34,16 +36,13 @@ export async function authenticate(formData: FormData) {
 
   } catch (error) {
     if (error instanceof AuthError) {
-      // Menangkap error "InactiveAccount" dari auth.ts
       const cause = error.cause as any;
-      
       if (cause?.err?.message === "InactiveAccount" || error.message.includes("InactiveAccount")) {
         return { success: false, error: "InactiveAccount" };
       }
 
       switch (error.type) {
         case "CredentialsSignin":
-          // Kode error untuk username/password salah
           return { success: false, error: "CredentialsSignin" };
         case "CallbackRouteError":
            if (cause?.err?.message === "InactiveAccount") {
@@ -55,7 +54,6 @@ export async function authenticate(formData: FormData) {
       }
     }
     
-    // Fallback error generic
     if ((error as Error).message.includes("InactiveAccount")) {
         return { success: false, error: "InactiveAccount" };
     }
@@ -72,10 +70,12 @@ export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
   if (!session?.user) return null;
   
+  // [UPDATE 2] Pastikan student_id diteruskan dari session auth ke return object
   return {
     username: session.user.username || "",
     name: session.user.name || "",
     role: session.user.role || "mahasiswa",
+    student_id: session.user.student_id || null, 
   };
 }
 
@@ -101,7 +101,6 @@ export async function getUserSettings(username: string) {
   return { ...user, alamat };
 }
 
-// === FUNGSI UPDATE USER ===
 export async function updateUserSettings(
   currentUsername: string, 
   payload: any,

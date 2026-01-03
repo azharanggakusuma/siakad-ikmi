@@ -4,7 +4,7 @@ import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js"; 
 import bcrypt from "bcryptjs";
-import { User } from "next-auth"; // Import tipe User
+import { User } from "next-auth"; 
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
@@ -29,25 +29,22 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           return null;
         }
 
-        // Cek Status Aktif
         if (user.is_active === false) {
            throw new Error("InactiveAccount");
         }
 
-        // Cek Password
         const passwordsMatch = await bcrypt.compare(
           password as string, 
           user.password
         );
 
         if (passwordsMatch) {
-          // PENTING: Kembalikan objek yang lengkap sesuai tipe User
           return {
-            id: String(user.id), // Konversi ke string agar aman
+            id: String(user.id),
             name: user.name,
             username: user.username,
             role: user.role,
-            // Anda bisa tambahkan field lain jika perlu, tapi pastikan ada di next-auth.d.ts
+            student_id: user.student_id || null, // [BARU] Ambil student_id dari DB
           };
         }
 

@@ -216,3 +216,54 @@ export interface MenuFormValues {
   sequence: number | string;
   is_active: boolean;
 }
+
+// =========================================
+// KRS (KARTU RENCANA STUDI)
+// =========================================
+
+export type KRSStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+
+export interface KRS {
+  id: string;
+  student_id: string;
+  course_id: string;
+  academic_year_id: string;
+  status: KRSStatus;
+  
+  // Nilai (Optional, diisi di akhir semester)
+  grade_letter?: string | null; // A, B, C, dst
+  grade_point?: number | null;  // 4.00, 3.00, dst
+  
+  created_at?: string;
+  updated_at?: string;
+
+  // Data Relasi (Untuk ditampilkan di UI)
+  student?: {
+    nim: string;
+    nama: string;
+    study_program?: {
+      nama: string;
+      jenjang: string;
+    };
+  } | null;
+  
+  course?: {
+    kode: string;
+    matkul: string;
+    sks: number;
+    smt_default: number;
+  } | null;
+
+  academic_year?: {
+    nama: string;
+    semester: string;
+  } | null;
+}
+
+// Tipe untuk Form Input / Payload saat Create
+export interface KRSFormValues {
+  student_id: string;
+  course_id: string;
+  academic_year_id: string;
+  status?: KRSStatus;
+}

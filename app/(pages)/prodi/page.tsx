@@ -5,12 +5,10 @@ import PageHeader from "@/components/layout/PageHeader";
 import { useToastMessage } from "@/hooks/use-toast-message";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import Tooltip from "@/components/shared/Tooltip";
 import { ProdiForm } from "@/components/features/prodi/ProdiForm";
 import { StudyProgram, StudyProgramFormValues } from "@/lib/types";
 import { getStudyPrograms, createStudyProgram, updateStudyProgram, deleteStudyProgram } from "@/app/actions/prodi";
@@ -159,8 +157,8 @@ export default function ProdiPage() {
     {
       header: "Jenjang",
       accessorKey: "jenjang",
-      className: "w-[100px] text-center",
-      render: (row) => <Badge variant="outline" className="font-normal border-blue-200 text-blue-700 bg-blue-50">{row.jenjang}</Badge>
+      // [MODIFIKASI] Badge dihapus, menggunakan text biasa + center
+      className: "w-[100px] text-center text-gray-700",
     },
     {
       header: "Aksi",

@@ -113,7 +113,6 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
       header: "Path URL",
       render: (row) => (
         <div className="flex items-center gap-2 max-w-[150px]">
-           <LinkIcon className="w-3 h-3 text-slate-400 shrink-0" />
            <code className="text-xs font-mono text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 truncate" title={row.href}>
               {row.href}
            </code>

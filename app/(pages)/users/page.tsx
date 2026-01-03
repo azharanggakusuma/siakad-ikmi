@@ -12,8 +12,8 @@ import { type UserData, type UserFormValues } from "@/lib/types";
 import { getUsers, createUser, updateUser, deleteUser } from "@/app/actions/users";
 
 export default function UsersPage() {
-  // Init Hook
-  const { successAction, confirmDeleteMessage, showError } = useToastMessage();
+  // Init Hook: Menambahkan showLoading
+  const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
 
   const [dataList, setDataList] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,30 +70,39 @@ export default function UsersPage() {
   };
 
   const handleFormSubmit = async (values: UserFormValues) => {
+    // 1. Tampilkan Loading dan simpan ID-nya
+    const toastId = showLoading("Sedang menyimpan data...");
+
     try {
       if (isEditing && selectedUser) {
         await updateUser(selectedUser.id, values);
-        successAction("User", "update");
+        // 2. Oper ID ke successAction agar toast loading berubah jadi sukses
+        successAction("User", "update", toastId);
       } else {
         await createUser(values);
-        successAction("User", "create");
+        successAction("User", "create", toastId);
       }
       setIsFormOpen(false);
       await fetchData();
     } catch (error: any) {
-      // Menampilkan pesan error bersih dari server
-      showError("Gagal Menyimpan", error.message);
+      // 3. Oper ID ke showError agar toast loading berubah jadi error
+      showError("Gagal Menyimpan", error.message, toastId);
     }
   };
 
   const handleDelete = async () => {
     if (selectedUser) {
+      // 1. Tampilkan Loading
+      const toastId = showLoading("Sedang menghapus data...");
+      
       try {
         await deleteUser(selectedUser.id);
-        successAction("User", "delete");
+        // 2. Oper ID ke successAction
+        successAction("User", "delete", toastId);
         await fetchData();
       } catch (error: any) {
-        showError("Gagal Menghapus", error.message);
+        // 3. Oper ID ke showError
+        showError("Gagal Menghapus", error.message, toastId);
       }
     }
     setIsDeleteOpen(false);

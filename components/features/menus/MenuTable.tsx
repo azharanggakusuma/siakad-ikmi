@@ -147,11 +147,24 @@ export default function MenuTable({ data, isLoading, onEdit, onDelete, onAdd }: 
     },
     {
         header: "Status",
-        className: "text-center w-[90px]",
+        className: "text-center w-[120px]",
         render: (row) => (
-          row.is_active ? 
-          <Badge variant="default" className="bg-green-600/10 text-green-700 shadow-none hover:bg-green-600/20 px-2 py-0.5 h-6"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</Badge> : 
-          <Badge variant="destructive" className="bg-red-50 text-red-700 shadow-none hover:bg-red-100 px-2 py-0.5 h-6"><XCircle className="w-3 h-3 mr-1"/> Non</Badge>
+          <Badge 
+            variant={row.is_active ? "default" : "destructive"} 
+            // PERBAIKAN DI SINI: Menambahkan hover:bg-green-600 dan hover:bg-destructive agar warna tidak berubah saat di-hover
+            className={`font-normal ${
+              row.is_active 
+                ? "bg-green-600 hover:bg-green-600" 
+                : "hover:bg-destructive"
+            }`}
+          >
+            {row.is_active ? (
+              <CheckCircle2 className="mr-1 h-3 w-3" />
+            ) : (
+              <XCircle className="mr-1 h-3 w-3" />
+            )}
+            {row.is_active ? "Aktif" : "Non-Aktif"}
+          </Badge>
         )
     },
     {

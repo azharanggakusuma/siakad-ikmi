@@ -31,7 +31,9 @@ export default function MenusPage() {
       setDataList(menus);
     } catch (error) {
       console.error(error);
-      toast.error("Gagal memuat data menu.");
+      toast.error("Gagal Memuat Data", { 
+        description: "Terjadi kesalahan saat mengambil data menu. Silakan muat ulang halaman." 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -59,32 +61,59 @@ export default function MenusPage() {
   };
 
   const handleFormSubmit = async (values: MenuFormValues) => {
+    // Tutup modal dulu biar UX terasa cepat
+    setIsFormOpen(false); 
+    
+    // Tampilkan loading toast
+    const toastId = toast.loading("Sedang memproses data...");
+
     try {
       if (isEditing && selectedMenu) {
         await updateMenu(selectedMenu.id, values);
-        toast.success("Berhasil Update", { description: `Menu ${values.label} diperbarui.` });
+        toast.success("Perubahan Disimpan", { 
+          description: `Data menu "${values.label}" berhasil diperbarui.`,
+          id: toastId // Replace loading toast
+        });
       } else {
         await createMenu(values);
-        toast.success("Berhasil", { description: `Menu ${values.label} ditambahkan.` });
+        toast.success("Menu Ditambahkan", { 
+          description: `Menu baru "${values.label}" telah berhasil dibuat.`,
+          id: toastId 
+        });
       }
-      setIsFormOpen(false);
+      
       await fetchData();
     } catch (error: any) {
-      toast.error("Gagal Menyimpan", { description: error.message || "Terjadi kesalahan sistem." });
+      console.error("Submit Error:", error); // Log error asli di console untuk developer
+      toast.error("Gagal Menyimpan", { 
+        description: "Terjadi kendala saat menyimpan data. Silakan coba lagi beberapa saat lagi.",
+        id: toastId
+      });
+      // Buka modal lagi jika gagal, agar user tidak perlu ketik ulang (opsional)
+      setIsFormOpen(true); 
     }
   };
 
   const handleDelete = async () => {
     if (selectedMenu) {
+      setIsDeleteOpen(false);
+      const toastId = toast.loading("Menghapus data...");
+
       try {
         await deleteMenu(selectedMenu.id);
-        toast.success("Dihapus", { description: "Menu berhasil dihapus." });
+        toast.success("Berhasil Dihapus", { 
+            description: "Data menu telah dihapus dari sistem.",
+            id: toastId
+        });
         await fetchData();
       } catch (error: any) {
-        toast.error("Gagal Hapus", { description: error.message || "Gagal menghapus data." });
+        console.error("Delete Error:", error);
+        toast.error("Gagal Menghapus", { 
+            description: "Data tidak dapat dihapus. Pastikan menu ini tidak memiliki sub-menu aktif.",
+            id: toastId
+        });
       }
     }
-    setIsDeleteOpen(false);
   };
 
   return (
@@ -115,7 +144,7 @@ export default function MenusPage() {
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Menu" : "Tambah Menu Baru"}
-        description={isEditing ? "Ubah konfigurasi menu navigasi." : "Tambahkan menu baru ke sidebar."}
+        description={isEditing ? "Ubah detail menu navigasi aplikasi." : "Tambahkan menu baru ke dalam navigasi sidebar."}
         maxWidth="sm:max-w-[600px]"
       >
         <MenuForm
@@ -147,15 +176,17 @@ export default function MenusPage() {
         isOpen={isReorderOpen}
         onClose={setIsReorderOpen}
         title="Atur Urutan Menu"
-        description="Drag dan drop item di bawah ini untuk mengatur posisi sidebar."
-        // UPDATE: Ukuran dikembalikan ke normal (500px)
+        description="Geser item (drag & drop) untuk mengatur posisi menu di sidebar."
         maxWidth="sm:max-w-[500px]"
       >
         {isReorderOpen && (
            <MenuReorderList 
               initialItems={dataList} 
               onClose={() => setIsReorderOpen(false)}
-              onSuccess={fetchData} 
+              onSuccess={() => {
+                  fetchData();
+                  toast.success("Urutan Diperbarui", { description: "Susunan menu sidebar berhasil disimpan." });
+              }} 
            />
         )}
       </FormModal>
@@ -166,8 +197,8 @@ export default function MenusPage() {
         onClose={setIsDeleteOpen}
         onConfirm={handleDelete}
         title="Hapus Menu?"
-        description={`Yakin ingin menghapus menu "${selectedMenu?.label}"?`}
-        confirmLabel="Hapus Menu"
+        description={`Apakah Anda yakin ingin menghapus menu "${selectedMenu?.label}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Ya, Hapus Menu"
         variant="destructive"
       />
     </div>

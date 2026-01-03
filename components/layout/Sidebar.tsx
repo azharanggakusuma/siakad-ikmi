@@ -10,6 +10,16 @@ import Tooltip from "@/components/shared/Tooltip";
 import { Menu } from "@/lib/types"; 
 import * as LucideIcons from "lucide-react"; 
 
+// [TAMBAHAN] Import komponen Dropdown
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 type SidebarProps = {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -78,9 +88,16 @@ export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: S
     });
   }, [menus]);
 
-  // Icon untuk tombol statis (Logout, Close)
-  const LogOutIcon = LucideIcons.LogOut;
+  // Icon Icons
   const XIcon = LucideIcons.X;
+  const UserIcon = LucideIcons.User;
+  const SettingsIcon = LucideIcons.Settings;
+  const LogOutIcon = LucideIcons.LogOut;
+  const ChevronsUpDown = LucideIcons.ChevronsUpDown;
+
+  // Helper tampilan user
+  const displayName = user?.name || user?.username || "Pengguna";
+  const displayRole = user?.role || "Mahasiswa";
 
   return (
     <>
@@ -212,32 +229,77 @@ export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: S
           ))}
         </nav>
 
-        {/* === FOOTER === */}
+        {/* === FOOTER (USER PROFILE & SETTINGS) === */}
         <div className="p-3 bg-white border-t border-slate-100 shrink-0 relative">
-          <Tooltip content="Logout" enabled={isCollapsed} position="right">
-            <button
-              onClick={handleLogout}
-              className={`
-                  w-full flex items-center rounded-lg text-sm font-semibold transition-colors overflow-hidden group
-                  text-rose-600 hover:bg-rose-50
-                  gap-3 px-3 py-2
-                  ${isCollapsed ? "lg:justify-center lg:px-0 lg:py-3 lg:gap-0" : ""}
-                `}
-            >
-              <div className="shrink-0">
-                <LogOutIcon size={20} />
-              </div>
-
-              <span
-                className={`transition-all duration-300 whitespace-nowrap 
-                  w-auto opacity-100
-                  ${isCollapsed ? "lg:w-0 lg:opacity-0" : ""}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className={`
+                  w-full flex items-center rounded-lg text-xs font-semibold transition-colors 
+                  hover:bg-slate-50 border border-transparent hover:border-slate-100
+                  outline-none group
+                  ${isCollapsed ? "justify-center px-0 py-2" : "justify-between px-3 py-2"}
                 `}
               >
-                Logout
-              </span>
-            </button>
-          </Tooltip>
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Avatar */}
+                  <div className="shrink-0 relative w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 group-hover:border-slate-300 transition-colors">
+                    <UserIcon size={16} />
+                  </div>
+
+                  {/* User Details (Hidden if collapsed) */}
+                  <div 
+                    className={`
+                      flex flex-col text-left min-w-0 transition-all duration-300
+                      ${isCollapsed ? "w-0 opacity-0 overflow-hidden hidden" : "w-auto opacity-100"}
+                    `}
+                  >
+                    <span className="text-slate-700 font-semibold truncate text-xs leading-tight max-w-[130px]">
+                      {displayName}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wide truncate">
+                      {displayRole}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Chevron (Hidden if collapsed) */}
+                {!isCollapsed && (
+                  <ChevronsUpDown size={14} className="text-slate-400 shrink-0 opacity-50 group-hover:opacity-100" />
+                )}
+              </button>
+            </DropdownMenuTrigger>
+
+            {/* Dropdown Content */}
+            <DropdownMenuContent 
+              align="end"     // Meratakan bagian bawah dropdown dengan trigger
+              side="right"    // [PERBAIKAN] Membuka ke kanan, bukan ke atas
+              className="w-52 ml-2" // Lebar sedikit dikecilkan, beri jarak kiri
+              sideOffset={5}
+            >
+              <DropdownMenuLabel className="text-xs font-bold text-slate-500">
+                Akun Saya
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem asChild>
+                <Link href="/pengaturan" className="cursor-pointer w-full flex items-center gap-2 text-slate-600 text-xs">
+                  <SettingsIcon size={14} />
+                  <span>Pengaturan</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 gap-2 text-xs"
+              >
+                <LogOutIcon size={14} />
+                <span>Keluar</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
     </>

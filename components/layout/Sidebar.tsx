@@ -22,9 +22,11 @@ export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: S
   // eslint-disable-next-line no-unused-vars
   const { user } = useLayout();
 
-  const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
+  // [PERBAIKAN 1] Ubah key state dari number ke string (UUID)
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
 
-  const toggleDropdown = (id: number) => {
+  // [PERBAIKAN 2] Ubah parameter id dari number ke string
+  const toggleDropdown = (id: string) => {
     setOpenDropdowns((prev) => ({
       ...prev,
       [id]: !prev[id],
@@ -169,6 +171,7 @@ export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: S
                       key={item.id}
                       label={item.label}
                       icon={<Icon size={20} />}
+                      // Key object sekarang string, jadi aman diakses dengan item.id (string)
                       isOpen={!!openDropdowns[item.id]} 
                       onToggle={() => toggleDropdown(item.id)}
                       isCollapsed={isCollapsed}

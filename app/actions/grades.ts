@@ -24,7 +24,8 @@ export async function getGrades(): Promise<GradeData[]> {
       ),
       course:courses (id, kode, matkul, sks)
     `)
-    .order("id", { ascending: false });
+    // Hapus order by id (UUID), ganti timestamp jika ada, atau default
+    .order("hm", { ascending: true }); 
 
   if (error) throw new Error(error.message);
   return data as unknown as GradeData[];
@@ -63,8 +64,8 @@ export async function getCoursesForSelect() {
 
 // --- BATCH SAVE OPERATION (Fitur Baru) ---
 export async function saveStudentGrades(
-  studentId: number, 
-  grades: { course_id: number, hm: string }[]
+  studentId: string, // UUID
+  grades: { course_id: string, hm: string }[] // UUID
 ) {
   for (const item of grades) {
     const { data: existing } = await supabase
@@ -98,9 +99,10 @@ export async function saveStudentGrades(
 
 // --- CRUD SINGLE (Legacy) ---
 export async function createGrade(formData: GradeFormValues) {
+  // Hapus parseInt
   const { error } = await supabase.from("grades").insert({
-    student_id: parseInt(formData.student_id),
-    course_id: parseInt(formData.course_id),
+    student_id: formData.student_id,
+    course_id: formData.course_id,
     hm: formData.hm,
   });
 
@@ -108,12 +110,12 @@ export async function createGrade(formData: GradeFormValues) {
   revalidatePath("/nilai");
 }
 
-export async function updateGrade(id: number | string, formData: GradeFormValues) {
+export async function updateGrade(id: string, formData: GradeFormValues) {
   const { error } = await supabase
     .from("grades")
     .update({
-      student_id: parseInt(formData.student_id),
-      course_id: parseInt(formData.course_id),
+      student_id: formData.student_id,
+      course_id: formData.course_id,
       hm: formData.hm,
     })
     .eq("id", id);
@@ -122,7 +124,7 @@ export async function updateGrade(id: number | string, formData: GradeFormValues
   revalidatePath("/nilai");
 }
 
-export async function deleteGrade(id: number | string) {
+export async function deleteGrade(id: string) {
   const { error } = await supabase.from("grades").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/nilai");

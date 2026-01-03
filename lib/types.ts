@@ -7,14 +7,14 @@ export type Role = "admin" | "dosen" | "mahasiswa";
 export type CourseCategory = "Reguler" | "MBKM";
 
 export interface StudyProgram {
-  id: number;
+  id: string;
   kode: string;
   nama: string;
   jenjang: string;
 }
 
 export interface AcademicYear {
-  id: number;
+  id: string;
   nama: string;
   semester: string;
   is_active: boolean;
@@ -22,7 +22,7 @@ export interface AcademicYear {
 
 // Interface baru untuk Pejabat (Official)
 export interface Official {
-  id: number;
+  id: string;
   nama: string;
   nidn: string | null;
   jabatan: string;
@@ -33,7 +33,7 @@ export interface Official {
 // COURSE (MATA KULIAH)
 // =========================================
 export interface Course {
-  id: number;
+  id: string;
   kode: string;
   matkul: string;
   sks: number;
@@ -55,14 +55,14 @@ export type CoursePayload = CourseFormValues;
 // STUDENT (MAHASISWA)
 // =========================================
 export interface StudentProfile {
-  id: number;
+  id: string;
   nim: string;
   nama: string;
   alamat: string;
   semester: number;
-  study_program_id: number | null;
+  study_program_id: string | null;
   study_program?: StudyProgram | null;
-  is_active: boolean; // [BARU]
+  is_active: boolean;
 }
 
 export interface StudentFormValues {
@@ -70,8 +70,8 @@ export interface StudentFormValues {
   nama: string;
   semester: string | number;
   alamat: string;
-  study_program_id: string; 
-  is_active: boolean; // [BARU]
+  study_program_id: string;
+  is_active: boolean;
 }
 
 // =========================================
@@ -79,7 +79,7 @@ export interface StudentFormValues {
 // =========================================
 export interface TranscriptItem {
   no: number;
-  course_id?: number;
+  course_id?: string;
   kode: string;
   matkul: string;
   smt: number;
@@ -91,7 +91,7 @@ export interface TranscriptItem {
 }
 
 export interface StudentData {
-  id: string; 
+  id: string;
   profile: StudentProfile;
   transcript: TranscriptItem[];
 }
@@ -104,8 +104,8 @@ export interface UserData {
   name: string;
   username: string;
   role: Role | string;
-  student_id?: number | null;
-  is_active: boolean; // [BARU]
+  student_id?: string | null;
+  is_active: boolean;
 }
 
 export interface UserPayload {
@@ -113,8 +113,8 @@ export interface UserPayload {
   username: string;
   password?: string;
   role: string;
-  student_id?: number | null;
-  is_active?: boolean; // [BARU]
+  student_id?: string | null;
+  is_active?: boolean;
 }
 
 export interface UserFormValues {
@@ -123,12 +123,12 @@ export interface UserFormValues {
   username: string;
   password?: string;
   role: string;
-  student_id?: number | null;
-  is_active: boolean; // [BARU]
+  student_id?: string | null;
+  is_active: boolean;
 }
 
 export interface StudentOption {
-  id: number;
+  id: string;
   nim: string;
   nama: string;
   is_taken: boolean;
@@ -147,10 +147,10 @@ export interface UserProfile {
 
 // --- Grades / Nilai ---
 export type Grade = {
-  id: number;
-  student_id: number;
-  course_id: number;
-  hm: string; // Huruf Mutu
+  id: string;
+  student_id: string;
+  course_id: string;
+  hm: string; 
 };
 
 export type GradeData = Grade & {
@@ -170,7 +170,7 @@ export type GradeData = Grade & {
 };
 
 export type GradeFormValues = {
-  student_id: string; 
+  student_id: string;
   course_id: string;
   hm: string;
 };
@@ -178,15 +178,13 @@ export type GradeFormValues = {
 // =========================================
 // MENUS (MANAJEMEN MENU)
 // =========================================
-// lib/types.ts (Bagian Menu Saja)
-
 export interface Menu {
-  id: number;
+  id: string;
   label: string;
   href: string;
   icon: string;
   section: string;
-  parent_id?: number | null;
+  parent_id?: string | null;
   parent?: { label: string } | null;
   allowed_roles: string[];
   sequence: number;
@@ -196,12 +194,12 @@ export interface Menu {
 }
 
 export interface MenuFormValues {
-  id?: number;
+  id?: string;
   label: string;
   href: string;
   icon: string;
   section: string;
-  parent_id?: number | string | null;
+  parent_id?: string | null;
   allowed_roles: string[];
   sequence: number | string;
   is_active: boolean;

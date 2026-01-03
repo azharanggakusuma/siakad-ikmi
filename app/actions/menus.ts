@@ -13,7 +13,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 // === GET MENUS ===
 export async function getMenus() {
-  // Fetch data dengan join ke tabel menus (self-join) untuk ambil label parent
   const { data, error } = await supabaseAdmin
     .from("menus")
     .select(`
@@ -36,8 +35,8 @@ export async function getMenus() {
 export async function createMenu(values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  // Pastikan parent_id dikirim null jika kosong/"0"
-  const formattedParentId = (!parent_id || parent_id === "0") ? null : Number(parent_id);
+  // UUID: Jika string kosong atau "0", anggap null
+  const formattedParentId = (!parent_id || parent_id === "0") ? null : parent_id;
 
   const payload = {
     label,
@@ -56,10 +55,10 @@ export async function createMenu(values: MenuFormValues) {
 }
 
 // === UPDATE MENU ===
-export async function updateMenu(id: number, values: MenuFormValues) {
+export async function updateMenu(id: string, values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  const formattedParentId = (!parent_id || parent_id === "0") ? null : Number(parent_id);
+  const formattedParentId = (!parent_id || parent_id === "0") ? null : parent_id;
 
   const payload = {
     label,
@@ -83,14 +82,14 @@ export async function updateMenu(id: number, values: MenuFormValues) {
 }
 
 // === DELETE MENU ===
-export async function deleteMenu(id: number) {
+export async function deleteMenu(id: string) {
   const { error } = await supabaseAdmin.from("menus").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/menus");
 }
 
 // === REORDER MENUS (DRAG & DROP) ===
-export async function reorderMenus(items: { id: number; sequence: number }[]) {
+export async function reorderMenus(items: { id: string; sequence: number }[]) {
   // Update batch urutan
   const updates = items.map((item) =>
     supabaseAdmin

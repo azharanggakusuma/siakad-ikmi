@@ -6,19 +6,19 @@ import { StudentData, TranscriptItem, StudentFormValues, StudyProgram, AcademicY
 
 // Internal Interface untuk Response DB (Mapping hasil join)
 interface DBResponseStudent {
-  id: number;
+  id: string; // UUID
   nim: string;
   nama: string;
   alamat: string;
   semester: number;
-  study_program_id: number | null;
-  is_active: boolean; // [BARU]
+  study_program_id: string | null; // UUID
+  is_active: boolean;
   study_programs: StudyProgram | null;
   grades: {
-    id: number;
+    id: string; // UUID
     hm: string;
     courses: {
-      id: number;
+      id: string; // UUID
       kode: string;
       matkul: string;
       sks: number;
@@ -96,7 +96,7 @@ export async function getStudents(): Promise<StudentData[]> {
         )
       )
     `)
-    .order('id', { ascending: true });
+    .order('nama', { ascending: true }); // Ubah order by nama karena UUID tidak urut
 
   if (error) {
     console.error("Error fetching students:", error.message);
@@ -117,7 +117,7 @@ export async function getStudents(): Promise<StudentData[]> {
 
         return {
           no: index + 1,
-          course_id: course?.id || 0,
+          course_id: course?.id, // UUID string
           kode: course?.kode || "CODE",
           matkul: course?.matkul || "Unknown",
           smt: course?.smt_default || 1,
@@ -130,7 +130,7 @@ export async function getStudents(): Promise<StudentData[]> {
       .sort((a, b) => a.smt - b.smt || a.kode.localeCompare(b.kode));
 
     return {
-      id: String(s.id),
+      id: s.id, // UUID string
       profile: {
         id: s.id,
         nim: s.nim,
@@ -139,7 +139,7 @@ export async function getStudents(): Promise<StudentData[]> {
         semester: s.semester,
         study_program_id: s.study_program_id,
         study_program: s.study_programs,
-        is_active: s.is_active ?? true // [BARU] Default true jika null
+        is_active: s.is_active ?? true
       },
       transcript: transcript
     };
@@ -149,35 +149,37 @@ export async function getStudents(): Promise<StudentData[]> {
 // --- CRUD OPERATIONS ---
 
 export async function createStudent(values: StudentFormValues) {
+  // Hapus Number() pada study_program_id karena sekarang UUID
   const { error } = await supabase.from('students').insert([{
     nim: values.nim,
     nama: values.nama,
-    semester: Number(values.semester),
+    semester: Number(values.semester), // Semester tetap integer
     alamat: values.alamat,
-    study_program_id: values.study_program_id ? Number(values.study_program_id) : null,
-    is_active: values.is_active // [BARU]
+    study_program_id: values.study_program_id || null, 
+    is_active: values.is_active 
   }]);
   
   if (error) throw new Error(error.message);
   revalidatePath('/mahasiswa'); 
 }
 
-export async function updateStudent(id: string | number, values: StudentFormValues) {
+export async function updateStudent(id: string, values: StudentFormValues) {
+  // id string, study_program_id string
   const { error } = await supabase.from('students').update({
     nim: values.nim,
     nama: values.nama,
     semester: Number(values.semester),
     alamat: values.alamat,
-    study_program_id: values.study_program_id ? Number(values.study_program_id) : null,
-    is_active: values.is_active // [BARU]
-  }).eq('id', Number(id));
+    study_program_id: values.study_program_id || null,
+    is_active: values.is_active
+  }).eq('id', id);
 
   if (error) throw new Error(error.message);
   revalidatePath('/mahasiswa');
 }
 
-export async function deleteStudent(id: string | number) {
-  const { error } = await supabase.from('students').delete().eq('id', Number(id));
+export async function deleteStudent(id: string) {
+  const { error } = await supabase.from('students').delete().eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/mahasiswa');
 }

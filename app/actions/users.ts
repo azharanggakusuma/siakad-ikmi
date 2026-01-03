@@ -49,11 +49,12 @@ export async function getStudentsForSelection(excludeUserId?: string) {
   }
 
   const { data: usedUsers } = await query;
+  // student_id di sini sekarang string
   const usedStudentIds = new Set(usedUsers?.map((u) => u.student_id));
 
   // 3. Map status 'is_taken'
   return students.map((s) => ({
-    id: s.id,
+    id: s.id, // UUID
     nim: s.nim,
     nama: s.nama,
     is_taken: usedStudentIds.has(s.id),
@@ -68,7 +69,8 @@ export async function createUser(values: UserPayload) {
   if (!password) throw new Error("Password wajib diisi untuk user baru.");
 
   // Tentukan student_id berdasarkan role
-  const targetStudentId = (role === "mahasiswa" && student_id) ? Number(student_id) : null;
+  // Hapus Number(), biarkan string atau null
+  const targetStudentId = (role === "mahasiswa" && student_id) ? student_id : null;
 
   // [BARU] Validasi: Pastikan mahasiswa belum punya akun
   if (targetStudentId) {
@@ -109,7 +111,8 @@ export async function updateUser(id: string, values: UserPayload) {
   const { name, username, password, role, student_id, is_active } = values;
 
   // Tentukan student_id berdasarkan role
-  const targetStudentId = (role === "mahasiswa" && student_id) ? Number(student_id) : null;
+  // Hapus Number(), biarkan string atau null
+  const targetStudentId = (role === "mahasiswa" && student_id) ? student_id : null;
 
   // [BARU] Validasi: Pastikan mahasiswa belum punya akun (kecuali user ini sendiri)
   if (targetStudentId) {

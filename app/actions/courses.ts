@@ -9,7 +9,7 @@ export async function getCourses() {
   const { data, error } = await supabase
     .from('courses')
     .select('*')
-    .order('id', { ascending: true });
+    .order('matkul', { ascending: true }); // UUID tidak bisa diajukan order, pakai matkul
 
   if (error) {
     console.error("Error fetching courses:", error.message);
@@ -35,7 +35,7 @@ export async function createCourse(values: CoursePayload) {
 }
 
 // Update mata kuliah
-export async function updateCourse(id: number, values: CoursePayload) {
+export async function updateCourse(id: string, values: CoursePayload) {
   const { error } = await supabase
     .from('courses')
     .update({
@@ -52,7 +52,7 @@ export async function updateCourse(id: number, values: CoursePayload) {
 }
 
 // Hapus mata kuliah
-export async function deleteCourse(id: number) {
+export async function deleteCourse(id: string) {
   const { error } = await supabase
     .from('courses')
     .delete()

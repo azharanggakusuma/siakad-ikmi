@@ -21,8 +21,8 @@ import { type StudentData, type StudentFormValues, type StudyProgram } from "@/l
 import { getStudents, getStudyPrograms, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
 export default function MahasiswaPage() {
-  // Hook Toast Custom
-  const { successAction, confirmDeleteMessage, showError } = useToastMessage();
+  // Hook Toast Custom: Tambahkan showLoading
+  const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
 
   const [dataList, setDataList] = useState<StudentData[]>([]);
   const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]); 
@@ -113,35 +113,43 @@ export default function MahasiswaPage() {
   };
 
   const handleFormSubmit = async (values: StudentFormValues) => {
+    // 1. Tampilkan Loading
+    const toastId = showLoading("Sedang menyimpan data...");
+    
     try {
       if (isEditing && selectedId) {
         await updateStudent(selectedId, values);
-        successAction("Mahasiswa", "update");
+        // 2. Pass toastId ke successAction
+        successAction("Mahasiswa", "update", toastId);
       } else {
         await createStudent(values);
-        successAction("Mahasiswa", "create");
+        successAction("Mahasiswa", "create", toastId);
       }
       await fetchData(); 
       setIsFormOpen(false);
     } catch (error: any) {
-      // Menangkap error bersih dari server action
-      showError("Gagal Menyimpan", error.message);
+      // 3. Pass toastId ke showError
+      showError("Gagal Menyimpan", error.message, toastId);
     }
   };
 
   const handleDelete = async () => {
     if (selectedId) {
+      // 1. Tampilkan Loading
+      const toastId = showLoading("Sedang menghapus data...");
+
       try {
         await deleteStudent(selectedId);
-        successAction("Mahasiswa", "delete");
+        // 2. Pass toastId ke successAction
+        successAction("Mahasiswa", "delete", toastId);
         
         if (currentData.length === 1 && currentPage > 1) {
           setCurrentPage((p) => p - 1);
         }
         await fetchData();
       } catch (error: any) {
-        // Menangkap error bersih dari server action
-        showError("Gagal Menghapus", error.message);
+        // 3. Pass toastId ke showError
+        showError("Gagal Menghapus", error.message, toastId);
       }
     }
     setIsDeleteOpen(false);

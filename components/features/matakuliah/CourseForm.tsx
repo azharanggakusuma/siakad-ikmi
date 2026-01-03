@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Lock } from "lucide-react"; // [BARU] Import icon Lock
 import { CourseFormValues } from "@/lib/types";
 
 interface CourseFormProps {
@@ -113,16 +114,25 @@ export function CourseForm({ initialData, isEditing, onSubmit, onCancel }: Cours
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
       <div className="grid grid-cols-4 gap-4">
-        {/* Kolom Kode MK */}
+        
+        {/* Kolom Kode MK - [DIUBAH AGAR TERKUNCI SAAT EDIT] */}
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="kode">Kode MK</Label>
-          <Input 
-            id="kode" 
-            value={formData.kode} 
-            onChange={(e) => handleInputChange("kode", e.target.value)} 
-            placeholder="Contoh: TKK-01" 
-            className={errorClass("kode")}
-          />
+          <div className="relative">
+            <Input 
+              id="kode" 
+              value={formData.kode} 
+              onChange={(e) => handleInputChange("kode", e.target.value)} 
+              placeholder="Contoh: TKK-01" 
+              // Style khusus saat disabled agar mirip StudentForm
+              className={`${errorClass("kode")} ${isEditing ? "bg-muted text-muted-foreground opacity-100 pr-8" : ""}`}
+              disabled={isEditing} 
+            />
+            {/* Tampilkan ikon gembok jika sedang Edit */}
+            {isEditing && (
+              <Lock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
         </div>
 
         {/* Kolom SKS */}

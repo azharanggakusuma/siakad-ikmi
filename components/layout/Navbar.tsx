@@ -114,7 +114,11 @@ export default function Navbar({
           {/* USER DROPDOWN */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="group flex items-center gap-2 rounded-full p-1 transition-colors duration-200 hover:bg-slate-100/60 focus:outline-none focus:ring-0 active:ring-0">
+              <button 
+                type="button" 
+                suppressHydrationWarning
+                className="group flex items-center gap-2 rounded-full p-1 transition-colors duration-200 hover:bg-slate-100/60 focus:outline-none focus:ring-0 active:ring-0"
+              >
                 <div className="hidden sm:flex flex-col text-right leading-tight mr-1">
                   <span className="text-xs font-semibold text-slate-700 transition-colors duration-200 group-hover:text-slate-900">
                     {displayName}

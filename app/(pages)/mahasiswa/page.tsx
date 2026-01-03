@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
-import { toast } from "sonner";
+import { useToastMessage } from "@/hooks/use-toast-message"; 
 import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +16,14 @@ import {
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import Tooltip from "@/components/shared/Tooltip"; 
 import { StudentForm } from "@/components/features/mahasiswa/StudentForm";
 import { type StudentData, type StudentFormValues, type StudyProgram } from "@/lib/types";
 import { getStudents, getStudyPrograms, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
 export default function MahasiswaPage() {
+  // [UPDATE] Ambil 'showError' untuk pesan custom
+  const { successAction, confirmDeleteMessage, showError } = useToastMessage();
+
   const [dataList, setDataList] = useState<StudentData[]>([]);
   const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]); 
   const [isLoading, setIsLoading] = useState(true); 
@@ -39,6 +41,7 @@ export default function MahasiswaPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string>(""); 
   const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
 
   // === FETCH DATA ===
@@ -52,7 +55,12 @@ export default function MahasiswaPage() {
       setDataList(students);
       setStudyPrograms(programs);
     } catch (error) {
-      toast.error("Gagal Memuat Data", { description: "Terjadi kesalahan koneksi ke server." });
+      console.error("Load Error:", error);
+      // [UPDATE] Pesan Custom untuk Error Load
+      showError(
+        "Gagal Memuat Data",
+        "Mohon maaf, sistem gagal memuat data mahasiswa. Silakan periksa koneksi internet Anda dan coba muat ulang halaman."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -109,15 +117,22 @@ export default function MahasiswaPage() {
     try {
       if (isEditing && selectedId) {
         await updateStudent(selectedId, values);
-        toast.success("Berhasil Update", { description: `Data ${values.nama} berhasil diperbarui.` });
+        successAction("Mahasiswa", "update");
       } else {
         await createStudent(values);
-        toast.success("Berhasil Tambah", { description: `Mahasiswa ${values.nama} berhasil ditambahkan.` });
+        successAction("Mahasiswa", "create");
       }
       await fetchData(); 
       setIsFormOpen(false);
     } catch (error: any) {
-      toast.error("Terjadi Kesalahan", { description: error.message || "Gagal menyimpan data." });
+      console.error("Save Error:", error);
+      // [UPDATE] Pesan Custom untuk Error Save (Create/Update)
+      // Menghandle kemungkinan duplikat data atau validasi
+      const desc = error.message.includes("unique") 
+        ? "NIM tersebut sudah terdaftar di sistem. Mohon gunakan NIM lain."
+        : "Mohon maaf, data mahasiswa gagal disimpan. Pastikan semua input sudah benar atau coba lagi beberapa saat lagi.";
+        
+      showError("Gagal Menyimpan", desc);
     }
   };
 
@@ -125,14 +140,20 @@ export default function MahasiswaPage() {
     if (selectedId) {
       try {
         await deleteStudent(selectedId);
-        toast.success("Berhasil Hapus", { description: "Data mahasiswa telah dihapus permanen." });
+        successAction("Mahasiswa", "delete");
         
         if (currentData.length === 1 && currentPage > 1) {
           setCurrentPage((p) => p - 1);
         }
         await fetchData();
       } catch (error: any) {
-        toast.error("Gagal Hapus", { description: error.message });
+        console.error("Delete Error:", error);
+        // [UPDATE] Pesan Custom untuk Error Delete
+        // Menjelaskan alasan kenapa tidak bisa dihapus (biasanya constraint foreign key)
+        showError(
+          "Gagal Menghapus", 
+          "Data mahasiswa tidak dapat dihapus karena kemungkinan masih memiliki riwayat akademik (KRS/Nilai) atau tagihan aktif."
+        );
       }
     }
     setIsDeleteOpen(false);
@@ -177,7 +198,6 @@ export default function MahasiswaPage() {
       className: "text-center w-[80px]", 
       render: (row) => row.profile.semester 
     },
-    // [UPDATE] Kolom Status dengan Icon
     {
         header: "Status",
         className: "text-center w-[120px]",
@@ -203,7 +223,16 @@ export default function MahasiswaPage() {
           <Button variant="ghost" size="icon" className="text-yellow-600 hover:bg-yellow-50 h-8 w-8" onClick={() => handleOpenEdit(row)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50 h-8 w-8" onClick={() => { setSelectedId(row.id); setIsDeleteOpen(true); }}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-red-600 hover:bg-red-50 h-8 w-8" 
+            onClick={() => { 
+                setSelectedId(row.id); 
+                setDeleteName(row.profile.nama); 
+                setIsDeleteOpen(true); 
+            }}
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -279,7 +308,7 @@ export default function MahasiswaPage() {
         onClose={setIsDeleteOpen}
         onConfirm={handleDelete}
         title="Hapus Data Mahasiswa?"
-        description="Data yang dihapus tidak dapat dikembalikan lagi. Apakah Anda yakin?"
+        description={confirmDeleteMessage("Mahasiswa", deleteName)}
         confirmLabel="Hapus Permanen"
         variant="destructive"
       />

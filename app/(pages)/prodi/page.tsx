@@ -12,7 +12,7 @@ import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { ProdiForm } from "@/components/features/prodi/ProdiForm";
 import { StudyProgram, StudyProgramFormValues } from "@/lib/types";
 import { getStudyPrograms, createStudyProgram, updateStudyProgram, deleteStudyProgram } from "@/app/actions/prodi";
-import { DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 
 export default function ProdiPage() {
   const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
@@ -157,8 +157,8 @@ export default function ProdiPage() {
     {
       header: "Jenjang",
       accessorKey: "jenjang",
-      // [MODIFIKASI] Badge dihapus, menggunakan text biasa + center
-      className: "w-[100px] text-center text-gray-700",
+      // [MODIFIKASI] Ditambahkan font-medium agar ketebalan teks sama dengan kolom lain
+      className: "w-[100px] text-center font-medium text-gray-700", 
     },
     {
       header: "Aksi",

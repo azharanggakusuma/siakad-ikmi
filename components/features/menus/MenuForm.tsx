@@ -30,7 +30,7 @@ const defaultValues: MenuFormValues = {
   href: "",
   icon: "Circle",
   section: "Menu Utama",
-  allowed_roles: ["admin", "dosen", "mahasiswa"],
+  allowed_roles: ["admin", "mahasiswa"],
   sequence: 0,
   is_active: true,
   parent_id: null,
@@ -38,8 +38,8 @@ const defaultValues: MenuFormValues = {
 
 const ROLE_OPTIONS = [
   { id: "admin", label: "Administrator" },
-  { id: "dosen", label: "Dosen" },
   { id: "mahasiswa", label: "Mahasiswa" },
+   { id: "dosen", label: "Dosen" },
 ];
 
 export function MenuForm({

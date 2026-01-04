@@ -183,7 +183,7 @@ export default function AdminKRSValidationView() {
       {/* --- Section Filter & Stats --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        {/* Card Filter: Style Gradient Slate */}
+        {/* Card Filter: Style Gradient Slate (Tetap) */}
         <Card className="md:col-span-8 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-slate-700 to-slate-800">
             {/* Dekorasi Background */}
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -222,8 +222,8 @@ export default function AdminKRSValidationView() {
             </CardContent>
         </Card>
 
-        {/* Card Summary Stats: Style Gradient Indigo */}
-        <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-indigo-600 to-violet-700">
+        {/* Card Summary Stats: UPDATE WARNA SOFT (Teal/Emerald) */}
+        <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-teal-600 to-emerald-600">
             {/* Dekorasi Background */}
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
                 <ListTodo size={140} />
@@ -233,17 +233,17 @@ export default function AdminKRSValidationView() {
                 <div className="space-y-4">
                     <div className="flex items-center gap-3">
                          <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                            <Users className="h-5 w-5 text-indigo-50" />
+                            <Users className="h-5 w-5 text-teal-50" />
                          </div>
-                         <span className="text-sm font-medium text-indigo-100">Antrean Validasi</span>
+                         <span className="text-sm font-medium text-teal-50">Antrean Validasi</span>
                     </div>
                     
                     <div>
                         <div className="text-4xl font-extrabold tracking-tight">
                             {isLoading ? "..." : filteredData.length}
-                            <span className="text-lg font-normal text-indigo-200 ml-2">Mahasiswa</span>
+                            <span className="text-lg font-normal text-teal-100 ml-2">Mahasiswa</span>
                         </div>
-                        <p className="text-indigo-100/80 text-xs mt-1">Menunggu persetujuan KRS.</p>
+                        <p className="text-teal-50/80 text-xs mt-1">Menunggu persetujuan KRS Anda.</p>
                     </div>
                 </div>
             </CardContent>

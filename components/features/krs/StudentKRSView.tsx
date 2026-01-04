@@ -258,8 +258,8 @@ export default function StudentKRSView({ user }: { user: any }) {
             </CardContent>
         </Card>
 
-        {/* Card Statistik SKS: Style Gradient Violet (Diperbarui) */}
-        <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-violet-600 to-purple-700">
+        {/* Card Statistik SKS: UPDATE WARNA SOFT (Cyan/Blue) */}
+        <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
             {/* Dekorasi Background */}
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
                 <PieChart size={140} />
@@ -267,12 +267,12 @@ export default function StudentKRSView({ user }: { user: any }) {
 
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 <div>
-                    <div className="flex items-center gap-2 text-violet-100 mb-1">
+                    <div className="flex items-center gap-2 text-cyan-50 mb-1">
                         <span className="text-sm font-medium">Total SKS Diambil</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-extrabold tracking-tight">{totalSKS}</span>
-                        <span className="text-lg text-violet-200 font-medium">/ {MAX_SKS} SKS</span>
+                        <span className="text-lg text-cyan-100 font-medium">/ {MAX_SKS} SKS</span>
                     </div>
                 </div>
                 
@@ -285,7 +285,7 @@ export default function StudentKRSView({ user }: { user: any }) {
                         />
                     </div>
                     
-                    <p className="text-xs text-violet-100/90 leading-relaxed font-medium">
+                    <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
                         {totalSKS < 10 ? "SKS masih sedikit. Maksimalkan jatah SKS Anda." : 
                              totalSKS > 20 ? "Beban studi tinggi. Semangat!" :
                              "Beban studi cukup optimal."}

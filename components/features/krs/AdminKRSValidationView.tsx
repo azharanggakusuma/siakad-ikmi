@@ -64,7 +64,6 @@ export default function AdminKRSValidationView() {
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      // Fungsi ini sekarang mengembalikan status SUBMITTED, APPROVED, dan REJECTED
       const data = await getStudentsWithSubmittedKRS(selectedYear);
       setStudents(data);
     } catch (error) { console.error(error); } 
@@ -82,7 +81,6 @@ export default function AdminKRSValidationView() {
     );
   }, [students, searchQuery]);
 
-  // Hitung jumlah yang masih pending (status = SUBMITTED) untuk Card Stats
   const pendingCount = useMemo(() => {
     return students.filter(s => s.status === 'SUBMITTED').length;
   }, [students]);
@@ -115,7 +113,7 @@ export default function AdminKRSValidationView() {
         
         successAction("KRS", "update", toastId);
         setIsDetailOpen(false);
-        fetchStudents(); // Refresh data table
+        fetchStudents();
     } catch (e: any) { showError("Gagal", e.message, toastId); }
     finally { setIsProcessing(false); }
   };
@@ -158,7 +156,6 @@ export default function AdminKRSValidationView() {
         className: "text-center w-[120px]",
         render: (row) => (
             <div className="flex justify-center scale-90">
-                {/* Status diambil dari row.status */}
                 <StatusBadge status={row.status} />
             </div>
         )
@@ -167,7 +164,6 @@ export default function AdminKRSValidationView() {
         header: "Aksi",
         className: "text-center w-[100px]", 
         render: (row) => {
-            // Logika Gembok: Jika status BUKAN 'SUBMITTED', tampilkan gembok
             const isLocked = row.status !== 'SUBMITTED';
 
             if (isLocked) {
@@ -176,8 +172,6 @@ export default function AdminKRSValidationView() {
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            // Hapus 'disabled' prop asli agar opacity tidak turun
-                            // Gunakan styling manual untuk memberi kesan non-aktif
                             className="h-8 w-8 text-slate-500 cursor-not-allowed hover:bg-transparent hover:text-slate-500"
                             title="Sudah Diproses"
                             onClick={(e) => e.preventDefault()}
@@ -188,7 +182,6 @@ export default function AdminKRSValidationView() {
                 );
             }
 
-            // Jika 'SUBMITTED' (Diajukan), tampilkan tombol tinjau (Eye)
             return (
                 <div className="flex justify-center">
                     <Button 
@@ -214,15 +207,11 @@ export default function AdminKRSValidationView() {
       {/* --- Section Filter & Stats --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        {/* Card Filter: Style Gradient Slate */}
+        {/* Card Filter */}
         <Card className="md:col-span-8 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-slate-700 to-slate-800">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-                <BookOpen size={120} />
-            </div>
-            
+            <div className="absolute top-0 right-0 p-8 opacity-10"><BookOpen size={120} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
-                    // SKELETON CARD 1
                     <div className="flex flex-col justify-between h-full gap-6">
                         <div className="space-y-2">
                              <Skeleton className="h-4 w-32 bg-white/20" />
@@ -234,17 +223,13 @@ export default function AdminKRSValidationView() {
                         </div>
                     </div>
                 ) : (
-                    // CONTENT CARD 1
                     <>
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-white/80 font-medium text-sm mb-1">Panel Validasi</p>
-                            <h2 className="text-3xl font-bold tracking-tight">
-                                Validasi KRS Mahasiswa
-                            </h2>
+                            <h2 className="text-3xl font-bold tracking-tight">Validasi KRS Mahasiswa</h2>
                         </div>
                     </div>
-                    
                     <div className="mt-6 flex items-center gap-4">
                         <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
                             <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
@@ -252,13 +237,10 @@ export default function AdminKRSValidationView() {
                             </SelectTrigger>
                             <SelectContent>
                                 {academicYears.map((ay) => (
-                                <SelectItem key={ay.id} value={ay.id}>
-                                    {ay.nama} - {ay.semester}
-                                </SelectItem>
+                                <SelectItem key={ay.id} value={ay.id}>{ay.nama} - {ay.semester}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        
                         <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
                             <CalendarDays className="w-4 h-4 text-white/80" />
                             <span className="text-sm font-medium">Filter Data</span>
@@ -269,39 +251,24 @@ export default function AdminKRSValidationView() {
             </CardContent>
         </Card>
 
-        {/* Card Summary Stats: UPDATE WARNA SOFT (Teal/Emerald) */}
+        {/* Card Summary Stats */}
         <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-teal-600 to-emerald-600">
-            <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
-                <ListTodo size={140} />
-            </div>
-
+            <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12"><ListTodo size={140} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
                  {isLoading ? (
-                    // SKELETON CARD 2
                     <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                             <Skeleton className="h-9 w-9 rounded-lg bg-white/20" />
-                             <Skeleton className="h-4 w-24 bg-white/20" />
-                        </div>
-                        <div className="space-y-2">
-                             <Skeleton className="h-10 w-16 bg-white/20" />
-                             <Skeleton className="h-3 w-32 bg-white/20" />
-                        </div>
+                        <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg bg-white/20" /><Skeleton className="h-4 w-24 bg-white/20" /></div>
+                        <div className="space-y-2"><Skeleton className="h-10 w-16 bg-white/20" /><Skeleton className="h-3 w-32 bg-white/20" /></div>
                     </div>
                  ) : (
-                    // CONTENT CARD 2
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                <Users className="h-5 w-5 text-teal-50" />
-                             </div>
+                             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm"><Users className="h-5 w-5 text-teal-50" /></div>
                              <span className="text-sm font-medium text-teal-50">Antrean Validasi</span>
                         </div>
-                        
                         <div>
                             <div className="text-4xl font-extrabold tracking-tight">
-                                {pendingCount}
-                                <span className="text-lg font-normal text-teal-100 ml-2">Mahasiswa</span>
+                                {pendingCount}<span className="text-lg font-normal text-teal-100 ml-2">Mahasiswa</span>
                             </div>
                             <p className="text-teal-50/80 text-xs mt-1">Menunggu persetujuan KRS Anda.</p>
                         </div>
@@ -319,12 +286,8 @@ export default function AdminKRSValidationView() {
                 columns={columns}
                 isLoading={isLoading}
                 searchQuery={searchQuery}
-                onSearchChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                }}
+                onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 searchPlaceholder="Cari Nama, NIM, atau Prodi..."
-                
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
@@ -337,7 +300,8 @@ export default function AdminKRSValidationView() {
 
       {/* --- Detail Modal --- */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] min-w-2xl overflow-hidden flex flex-col p-0 gap-0">
+        {/* PERUBAHAN: max-w-4xl, max-h-[90vh], dan responsif (w-[95vw] di mobile, md:min-w-[42rem] di desktop) */}
+        <DialogContent className="w-[95vw] sm:w-full max-w-4xl max-h-[90vh] md:min-w-[42rem] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="p-6 pb-4 border-b bg-white z-10">
             <div className="flex items-start justify-between gap-4">
                 <div>
@@ -346,33 +310,34 @@ export default function AdminKRSValidationView() {
                         Tinjau mata kuliah yang diajukan oleh mahasiswa.
                     </DialogDescription>
                 </div>
-                <Badge variant="outline" className="py-1 px-3 bg-slate-50 text-slate-600 border-slate-200 gap-2">
+                <Badge variant="outline" className="hidden sm:flex py-1 px-3 bg-slate-50 text-slate-600 border-slate-200 gap-2">
                     <CalendarDays className="w-3.5 h-3.5" />
                     TA {academicYears.find(y => y.id === selectedYear)?.nama}
                 </Badge>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/30">
             <div className="space-y-6">
-                {/* Student Info Card */}
+                {/* Student Info Card Responsive */}
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100">
+                        <div className="h-14 w-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
                             <GraduationCap className="h-7 w-7" />
                         </div>
                         <div>
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Mahasiswa</p>
                             <h3 className="font-bold text-lg text-slate-900">{selectedStudent?.nama}</h3>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-slate-600">
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-slate-600">
                                 <span className="font-mono bg-slate-100 px-1.5 rounded">{selectedStudent?.nim}</span>
-                                <span>•</span>
-                                <span>{selectedStudent?.study_program?.jenjang} {selectedStudent?.study_program?.nama}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="block sm:inline w-full sm:w-auto mt-1 sm:mt-0">{selectedStudent?.study_program?.jenjang} {selectedStudent?.study_program?.nama}</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-6 pl-6 md:border-l border-slate-100">
+                    {/* Stats Section Responsive */}
+                    <div className="flex items-center gap-6 pl-0 md:pl-6 border-t pt-4 md:pt-0 md:border-t-0 md:border-l border-slate-100">
                          <div>
                             <p className="text-xs font-semibold text-slate-400 uppercase mb-1">Mata Kuliah</p>
                             <p className="text-2xl font-bold text-slate-800">{studentKRS.length}</p>
@@ -387,45 +352,48 @@ export default function AdminKRSValidationView() {
                     </div>
                 </div>
 
-                {/* Course List Detail */}
+                {/* Course List Detail Responsive Table */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                         <h4 className="font-semibold text-slate-800 text-sm">Daftar Mata Kuliah</h4>
                     </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-white hover:bg-white border-slate-100">
-                                <TableHead className="w-[100px] font-semibold text-slate-700">Kode</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Mata Kuliah</TableHead>
-                                <TableHead className="text-center w-[80px] font-semibold text-slate-700">SKS</TableHead>
-                                <TableHead className="text-center w-[80px] font-semibold text-slate-700">Smt</TableHead>
-                                <TableHead className="text-center w-[120px] font-semibold text-slate-700">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoadingDetail ? (
-                                Array.from({ length: 3 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                                        <TableCell><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : studentKRS.map((k) => (
-                                <TableRow key={k.id} className="hover:bg-slate-50 transition-colors">
-                                    <TableCell className="font-mono text-xs text-slate-500">{k.course?.kode}</TableCell>
-                                    <TableCell className="font-medium text-slate-900">{k.course?.matkul}</TableCell>
-                                    <TableCell className="text-center text-slate-600">{k.course?.sks}</TableCell>
-                                    <TableCell className="text-center text-muted-foreground">{k.course?.smt_default}</TableCell>
-                                    <TableCell className="text-center">
-                                        <StatusBadge status={k.status} />
-                                    </TableCell>
+                    {/* Tambahan overflow-x-auto untuk responsif table di mobile */}
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-white hover:bg-white border-slate-100">
+                                    <TableHead className="w-[100px] font-semibold text-slate-700">Kode</TableHead>
+                                    <TableHead className="font-semibold text-slate-700 min-w-[200px]">Mata Kuliah</TableHead>
+                                    <TableHead className="text-center w-[80px] font-semibold text-slate-700">SKS</TableHead>
+                                    <TableHead className="text-center w-[80px] font-semibold text-slate-700">Smt</TableHead>
+                                    <TableHead className="text-center w-[120px] font-semibold text-slate-700">Status</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoadingDetail ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : studentKRS.map((k) => (
+                                    <TableRow key={k.id} className="hover:bg-slate-50 transition-colors">
+                                        <TableCell className="font-mono text-xs text-slate-500">{k.course?.kode}</TableCell>
+                                        <TableCell className="font-medium text-slate-900">{k.course?.matkul}</TableCell>
+                                        <TableCell className="text-center text-slate-600">{k.course?.sks}</TableCell>
+                                        <TableCell className="text-center text-muted-foreground">{k.course?.smt_default}</TableCell>
+                                        <TableCell className="text-center">
+                                            <StatusBadge status={k.status} />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
                 
                 {/* Warning/Note */}
@@ -441,26 +409,26 @@ export default function AdminKRSValidationView() {
             </div>
           </div>
 
-          <DialogFooter className="p-4 border-t bg-white gap-3 sm:gap-0">
-            <div className="flex w-full justify-between items-center">
+          <DialogFooter className="p-4 border-t bg-white gap-3 sm:gap-0 flex-col-reverse sm:flex-row">
+            <div className="flex w-full justify-between items-center flex-col-reverse sm:flex-row gap-3 sm:gap-0">
                 <Button 
                     variant="ghost" 
                     onClick={() => setIsDetailOpen(false)}
-                    className="text-slate-500 hover:text-slate-700"
+                    className="text-slate-500 hover:text-slate-700 w-full sm:w-auto"
                 >
                     Batal
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                     <Button 
                         variant="outline" 
-                        className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300" 
+                        className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 flex-1 sm:flex-none" 
                         onClick={() => handleAction("REJECT")} 
                         disabled={isProcessing}
                     >
                         {isProcessing ? "..." : <><XCircle className="w-4 h-4 mr-2" /> Tolak</>}
                     </Button>
                     <Button 
-                        className="bg-green-600 hover:bg-green-700 text-white min-w-[140px]" 
+                        className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none" 
                         onClick={() => handleAction("APPROVE")} 
                         disabled={isProcessing}
                     >

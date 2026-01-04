@@ -291,7 +291,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                 </thead>
                 <tbody className="font-normal">
                     {takenCourses.length > 0 ? takenCourses.map((course, index) => (
-                        /* Body: Teks Normal, Tinggi Rapat h-[13px] */
                         <tr key={course.id} className="text-center leading-none h-[13px]">
                             <td className="border border-black">{index + 1}</td>
                             <td className="border border-black">{course.kode}</td>
@@ -309,7 +308,7 @@ export default function StudentKRSView({ user }: { user: any }) {
                 </tbody>
                 {takenCourses.length > 0 && (
                      <tfoot>
-                        {/* Footer: Style Mirip KHS */}
+                        {/* Footer*/}
                         <tr className="font-bold bg-white h-4 border-t border-black text-[9px]">
                             <td colSpan={3} className="border border-black px-2 text-left">Jumlah SKS yang diambil</td>
                             <td className="border border-black text-center">{totalSKS}</td>

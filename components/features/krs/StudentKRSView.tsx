@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; 
 import { Label } from "@/components/ui/label"; 
 import { 
-    Send, AlertTriangle, BookOpen, GraduationCap, PieChart, Printer, Loader2
+    Send, AlertTriangle, BookOpen, GraduationCap, PieChart, Printer, Loader2, RotateCcw
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
@@ -25,7 +25,7 @@ import StudentInfo from "@/components/features/document/StudentInfo";
 import DocumentFooter from "@/components/features/document/DocumentFooter";
 
 import { 
-  getStudentCourseOfferings, createKRS, deleteKRS, submitKRS, 
+  getStudentCourseOfferings, createKRS, deleteKRS, submitKRS, resetKRS,
   CourseOffering 
 } from "@/app/actions/krs";
 import { getAcademicYears } from "@/app/actions/academic-years";
@@ -54,6 +54,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   // Modal State
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
 
   const studentId = user.student_id;
   const MAX_SKS = 24; 
@@ -116,7 +117,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   // === STATS & DATA ===
   const totalSKS = offerings.filter(c => c.is_taken).reduce((acc, curr) => acc + curr.sks, 0);
   const hasDraft = offerings.some(c => c.is_taken && c.krs_status === 'DRAFT');
-
+  
   const krsGlobalStatus = offerings.find(c => c.is_taken)?.krs_status || "NOT_TAKEN";
   
   const progressPercent = Math.min((totalSKS / MAX_SKS) * 100, 100);
@@ -222,6 +223,16 @@ export default function StudentKRSView({ user }: { user: any }) {
     } catch (e: any) { showError("Gagal", e.message, toastId); }
     finally { setIsSubmitOpen(false); }
   };
+
+  const handleReset = async () => {
+    const toastId = showLoading("Mereset KRS...");
+    try {
+        await resetKRS(studentId, selectedYear);
+        successAction("KRS", "delete", toastId);
+        await fetchData();
+    } catch (e: any) { showError("Gagal", e.message, toastId); }
+    finally { setIsResetOpen(false); }
+  };
   
   const handlePrintProcess = () => {
     setIsPrintModalOpen(false);
@@ -277,7 +288,6 @@ export default function StudentKRSView({ user }: { user: any }) {
       )
     },
     {
-        // --- SKS DIPINDAH KE SINI & TANPA BADGE ---
         header: "SKS",
         className: "text-center w-[60px]",
         render: (row) => (
@@ -388,6 +398,7 @@ export default function StudentKRSView({ user }: { user: any }) {
         <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
             ${krsGlobalStatus === 'APPROVED' ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 
               krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-800 to-blue-900' : 
+              krsGlobalStatus === 'REJECTED' ? 'bg-gradient-to-br from-red-600 to-rose-700' : // <-- Gradasi Merah untuk Ditolak
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
             <div className="absolute top-0 right-0 p-8 opacity-10"><BookOpen size={120} /></div>
@@ -399,10 +410,18 @@ export default function StudentKRSView({ user }: { user: any }) {
                         <h2 className="text-3xl font-bold tracking-tight">
                             {krsGlobalStatus === 'APPROVED' ? "Disetujui Dosen" : 
                              krsGlobalStatus === 'SUBMITTED' ? "Menunggu Validasi" :
-                             krsGlobalStatus === 'NOT_TAKEN' ? "Belum Mengisi" : "Belum Diajukan"}
+                             krsGlobalStatus === 'REJECTED' ? "KRS Ditolak" :
+                             krsGlobalStatus === 'NOT_TAKEN' ? "Belum Mengisi" : "Mode Draf"}
                         </h2>
                     </div>
                     <div className="flex gap-2">
+                        {/* Tombol Isi Ulang Khusus REJECTED */}
+                        {krsGlobalStatus === 'REJECTED' && (
+                            <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                                onClick={() => setIsResetOpen(true)}>
+                                <RotateCcw className="w-4 h-4 mr-2" /> Isi Ulang
+                            </Button>
+                        )}
                         {(krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') && (
                             <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
                                 onClick={() => setIsPrintModalOpen(true)}>
@@ -464,7 +483,7 @@ export default function StudentKRSView({ user }: { user: any }) {
                   <div className="p-2 bg-amber-100 rounded-full text-amber-700 shrink-0"><AlertTriangle className="h-5 w-5" /></div>
                   <div>
                     <h4 className="font-semibold text-amber-900 text-sm">Selesaikan Pengisian KRS</h4>
-                    <p className="text-sm text-amber-800/80 mt-1 max-w-2xl">Anda memiliki mata kuliah berstatus <strong>Belum Diajukan</strong>. Harap ajukan segera.</p>
+                    <p className="text-sm text-amber-800/80 mt-1 max-w-2xl">Anda memiliki mata kuliah berstatus <strong>Draf</strong>. Harap ajukan segera.</p>
                   </div>
               </div>
               <Button onClick={() => setIsSubmitOpen(true)} className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white shadow-sm border-0 font-medium">
@@ -521,6 +540,10 @@ export default function StudentKRSView({ user }: { user: any }) {
 
       <ConfirmModal isOpen={isSubmitOpen} onClose={setIsSubmitOpen} onConfirm={confirmSubmit}
         title="Ajukan KRS?" description="Setelah diajukan, KRS akan dikunci dan menunggu persetujuan Dosen Wali." confirmLabel="Ajukan Sekarang" variant="default" />
+      
+      {/* MODAL RESET (Isi Ulang) */}
+      <ConfirmModal isOpen={isResetOpen} onClose={setIsResetOpen} onConfirm={handleReset}
+        title="Isi Ulang KRS?" description="Tindakan ini akan menghapus semua pilihan mata kuliah Anda untuk semester ini. Anda harus memilih ulang dari awal. Lanjutkan?" confirmLabel="Ya, Reset Data" variant="destructive" />
     </div>
     </>
   );

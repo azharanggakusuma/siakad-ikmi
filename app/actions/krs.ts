@@ -234,11 +234,29 @@ export async function submitKRS(studentId: string, academicYearId: string) {
     }
 }
 
+// 6. Reset KRS (Hapus Semua Pilihan untuk Tahun Akademik Terpilih) - NEW
+export async function resetKRS(studentId: string, academicYearId: string) {
+  try {
+    const { error } = await supabase
+      .from("krs")
+      .delete()
+      .eq("student_id", studentId)
+      .eq("academic_year_id", academicYearId);
+
+    if (error) throw error;
+    revalidatePath("/krs");
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(error.message || "Gagal mereset KRS.");
+  }
+}
+
+
 // ==========================================
 // ADMIN ACTIONS (VALIDASI)
 // ==========================================
 
-// 6. Ambil Daftar Mahasiswa yang Mengajukan KRS (Status = SUBMITTED)
+// 7. Ambil Daftar Mahasiswa yang Mengajukan KRS (Status = SUBMITTED)
 export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   try {
     const { data: krsList, error } = await supabase
@@ -271,7 +289,7 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   }
 }
 
-// 7. Approve KRS (Setujui Semua DRAFT/SUBMITTED -> APPROVED)
+// 8. Approve KRS (Setujui Semua DRAFT/SUBMITTED -> APPROVED)
 export async function approveKRS(studentId: string, academicYearId: string) {
   try {
     const { error } = await supabase
@@ -289,7 +307,7 @@ export async function approveKRS(studentId: string, academicYearId: string) {
   }
 }
 
-// 8. Reject KRS (Kembalikan ke DRAFT atau set REJECTED)
+// 9. Reject KRS (Kembalikan ke DRAFT atau set REJECTED)
 export async function rejectKRS(studentId: string, academicYearId: string) {
   try {
     const { error } = await supabase

@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useToastMessage } from "@/hooks/use-toast-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { 
-  CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo
+  CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo, BookOpen
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
@@ -140,7 +140,7 @@ export default function AdminKRSValidationView() {
     },
     {
         header: "Semester",
-        className: "text-center",
+        className: "text-center w-[80px]",
         render: (row) => (
             <div className="text-center font-medium text-slate-700">
                 {row.semester}
@@ -149,7 +149,7 @@ export default function AdminKRSValidationView() {
     },
     {
         header: "Status",
-        className: "text-center",
+        className: "text-center w-[120px]",
         render: () => (
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
                 Submitted
@@ -180,30 +180,43 @@ export default function AdminKRSValidationView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-6">
       
-      {/* --- Section Filter & Stats --- */}
+      {/* --- Section Filter & Stats (Tampilan Diperbarui) --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Card Filter */}
-        <Card className="md:col-span-8 shadow-sm border-slate-200">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-bold text-slate-800">Filter Data</CardTitle>
-                <CardDescription>Pilih tahun akademik untuk melihat pengajuan.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-4">
-                    <div className="flex-1 max-w-xs space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahun Akademik</label>
-                        <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
-                            <SelectTrigger className="w-full bg-slate-50 border-slate-200">
-                                <SelectValue placeholder="Pilih Tahun" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {academicYears.map((ay) => (
-                                <SelectItem key={ay.id} value={ay.id}>
-                                    {ay.nama} - {ay.semester}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+        
+        {/* Card Filter: Style Gradient seperti Halaman Mahasiswa */}
+        <Card className="md:col-span-8 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-slate-700 to-slate-800">
+            {/* Dekorasi Background */}
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+                <BookOpen size={120} />
+            </div>
+            
+            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-white/80 font-medium text-sm mb-1">Halaman Admin</p>
+                        <h2 className="text-3xl font-bold tracking-tight">
+                            Validasi KRS Mahasiswa
+                        </h2>
+                    </div>
+                </div>
+                
+                <div className="mt-6 flex items-center gap-4">
+                    <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
+                        <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
+                            <SelectValue placeholder="Pilih Tahun Akademik" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {academicYears.map((ay) => (
+                            <SelectItem key={ay.id} value={ay.id}>
+                                {ay.nama} - {ay.semester}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
+                         <CalendarDays className="w-4 h-4 text-white/80" />
+                         <span className="text-sm font-medium">Filter Data</span>
                     </div>
                 </div>
             </CardContent>

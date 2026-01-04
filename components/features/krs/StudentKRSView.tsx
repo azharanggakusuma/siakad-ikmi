@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, PlusCircle, Trash2, Send, Lock, AlertTriangle } from "lucide-react";
+import { 
+    CheckCircle2, PlusCircle, Trash2, Send, Lock, AlertTriangle, 
+    BookOpen, GraduationCap, Info 
+} from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
-import { StatusBadge } from "./StatusBadge"; // Import dari folder yang sama
+import { StatusBadge } from "./StatusBadge";
 
 import { 
   getStudentCourseOfferings, createKRS, deleteKRS, submitKRS, 
@@ -32,6 +35,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
 
   const studentId = user.student_id;
+  const MAX_SKS = 24; // Bisa dibuat dinamis dari backend kedepannya
 
   useEffect(() => {
     async function init() {
@@ -66,8 +70,16 @@ export default function StudentKRSView({ user }: { user: any }) {
 
   const totalSKS = offerings.filter(c => c.is_taken).reduce((acc, curr) => acc + curr.sks, 0);
   const hasDraft = offerings.some(c => c.is_taken && c.krs_status === 'DRAFT');
+  
+  // Tentukan status global KRS berdasarkan item pertama yang diambil (asumsi status seragam per semester)
+  const krsGlobalStatus = offerings.find(c => c.is_taken)?.krs_status || "BELUM_AMBIL";
+  const progressPercent = Math.min((totalSKS / MAX_SKS) * 100, 100);
 
   const handleAmbil = async (course: CourseOffering) => {
+    if (totalSKS + course.sks > MAX_SKS) {
+        showError("Batas SKS", `Tidak dapat mengambil mata kuliah. SKS akan melebihi batas (${MAX_SKS}).`);
+        return;
+    }
     const toastId = showLoading(`Mengambil ${course.matkul}...`);
     try {
         await createKRS({ student_id: studentId, academic_year_id: selectedYear, course_id: course.id });
@@ -98,26 +110,38 @@ export default function StudentKRSView({ user }: { user: any }) {
   };
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-500 mt-8">
-      <Card className="border-none shadow-sm ring-1 ring-gray-200 bg-white">
-        <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 ring-4 ring-indigo-50/50">
-                        <CheckCircle2 className="h-6 w-6" />
-                    </div>
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-4">
+      
+      {/* 1. HEADER STATS & FILTER */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card Status Utama */}
+        <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
+            ${krsGlobalStatus === 'APPROVED' ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 
+              krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 
+              'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
+            {/* Dekorasi Background */}
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+                <BookOpen size={120} />
+            </div>
+            
+            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+                <div className="flex justify-between items-start">
                     <div>
-                        <p className="text-sm font-medium text-slate-500">Total SKS Diambil</p>
-                        <div className="flex items-baseline gap-1">
-                          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">{totalSKS}</h2>
-                          <span className="text-sm font-medium text-slate-500">SKS</span>
-                        </div>
+                        <p className="text-white/80 font-medium text-sm mb-1">Status Pengisian KRS</p>
+                        <h2 className="text-3xl font-bold tracking-tight">
+                            {krsGlobalStatus === 'APPROVED' ? "Disetujui Dosen" : 
+                             krsGlobalStatus === 'SUBMITTED' ? "Menunggu Validasi" :
+                             krsGlobalStatus === 'BELUM_AMBIL' ? "Belum Mengisi" : "Mode Draft"}
+                        </h2>
                     </div>
+                    {krsGlobalStatus === 'DRAFT' && (
+                        <Badge className="bg-amber-400 text-amber-900 hover:bg-amber-500">Action Needed</Badge>
+                    )}
                 </div>
-
-                <div className="w-full md:w-auto">
+                
+                <div className="mt-6 flex items-center gap-4">
                     <Select value={selectedYear} onValueChange={setSelectedYear}>
-                        <SelectTrigger className="w-full md:w-[260px] h-10">
+                        <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
                             <SelectValue placeholder="Pilih Tahun Akademik" />
                         </SelectTrigger>
                         <SelectContent>
@@ -128,39 +152,81 @@ export default function StudentKRSView({ user }: { user: any }) {
                             ))}
                         </SelectContent>
                     </Select>
+                    
+                    {/* Jika semester mahasiswa ada datanya */}
+                    {studentSemester > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
+                            <GraduationCap className="w-4 h-4 text-white/80" />
+                            <span className="text-sm font-medium">Semester {studentSemester}</span>
+                        </div>
+                    )}
                 </div>
-            </div>
+            </CardContent>
+        </Card>
 
-            {hasDraft && (
-                 <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-amber-100 rounded-full text-amber-700 shrink-0">
-                          <AlertTriangle className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-900 text-sm">Status Draft</h4>
-                          <p className="text-sm text-amber-700/90 mt-0.5">
-                            Mata kuliah Anda belum diajukan. Silakan klik tombol ajukan agar dapat divalidasi oleh Dosen Wali.
-                          </p>
-                        </div>
+        {/* Card Statistik SKS (Sophisticated) */}
+        <Card className="border-none shadow-sm ring-1 ring-slate-200">
+            <CardContent className="p-6 flex flex-col justify-center h-full">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-500 font-medium flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        Total SKS
+                    </span>
+                    <span className="text-2xl font-bold text-slate-800">
+                        {totalSKS} <span className="text-base font-medium text-slate-400">/ {MAX_SKS}</span>
+                    </span>
+                </div>
+                
+                {/* Custom Progress Bar */}
+                <div className="w-full bg-slate-100 rounded-full h-3 mb-3 overflow-hidden">
+                    <div 
+                        className={`h-full rounded-full transition-all duration-1000 ease-out 
+                            ${totalSKS >= MAX_SKS ? 'bg-rose-500' : 'bg-indigo-600'}`}
+                        style={{ width: `${progressPercent}%` }}
+                    />
+                </div>
+
+                <div className="bg-slate-50 rounded-md p-3 border border-slate-100">
+                    <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            {totalSKS < 10 ? "SKS Anda masih sedikit. Ambil mata kuliah wajib semester ini." : 
+                             totalSKS > 20 ? "Beban studi cukup tinggi, pastikan Anda mampu." :
+                             "Beban studi Anda sudah optimal."}
+                        </p>
                     </div>
-                    <Button onClick={() => setIsSubmitOpen(true)} className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white shadow-sm border-0">
-                        <Send className="w-4 h-4 mr-2" /> Ajukan Sekarang
-                    </Button>
-                 </div>
-            )}
-        </CardContent>
-      </Card>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
 
-      <Card className="border-none shadow-sm ring-1 ring-gray-200">
-        <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-4 px-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold text-slate-800">Paket Semester {studentSemester}</CardTitle>
-                <p className="text-sm text-slate-500 mt-1">Daftar mata kuliah yang ditawarkan sesuai semester Anda.</p>
+      {/* 2. ALERT & ACTION BUTTON */}
+      {hasDraft && (
+           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                  <div className="p-2 bg-amber-100 rounded-full text-amber-700 shrink-0">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-amber-900 text-sm">Selesaikan Pengisian KRS</h4>
+                    <p className="text-sm text-amber-800/80 mt-1 max-w-2xl">
+                      Anda memiliki mata kuliah berstatus <strong>Draft</strong>. Harap ajukan segera agar dapat divalidasi oleh Dosen Wali dan masuk ke sistem penilaian.
+                    </p>
+                  </div>
               </div>
-              <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 px-3 py-1">
-                Semester {studentSemester}
+              <Button onClick={() => setIsSubmitOpen(true)} className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white shadow-sm border-0 font-medium">
+                  <Send className="w-4 h-4 mr-2" /> Ajukan KRS
+              </Button>
+           </div>
+      )}
+
+      {/* 3. TABEL MATA KULIAH */}
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold text-slate-800">Paket Mata Kuliah</CardTitle>
+              <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 px-3 py-1 font-normal">
+                Daftar Penawaran
               </Badge>
             </div>
         </CardHeader>
@@ -168,12 +234,12 @@ export default function StudentKRSView({ user }: { user: any }) {
             <Table>
                 <TableHeader>
                     <TableRow className="hover:bg-transparent border-slate-100">
-                        <TableHead className="w-[60px] text-center font-medium">#</TableHead>
-                        <TableHead className="w-[120px] font-medium">Kode</TableHead>
+                        <TableHead className="w-[50px] text-center font-medium">#</TableHead>
+                        <TableHead className="w-[100px] font-medium">Kode</TableHead>
                         <TableHead className="font-medium">Mata Kuliah</TableHead>
-                        <TableHead className="text-center w-[100px] font-medium">SKS</TableHead>
-                        <TableHead className="text-center w-[160px] font-medium">Status</TableHead>
-                        <TableHead className="text-center w-[140px] font-medium">Aksi</TableHead>
+                        <TableHead className="text-center w-[80px] font-medium">SKS</TableHead>
+                        <TableHead className="text-center w-[140px] font-medium">Status</TableHead>
+                        <TableHead className="text-center w-[120px] font-medium">Aksi</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -183,39 +249,41 @@ export default function StudentKRSView({ user }: { user: any }) {
                         <TableRow><TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Tidak ada mata kuliah ditawarkan.</TableCell></TableRow>
                     ) : (
                         offerings.map((c, i) => (
-                            <TableRow key={c.id} className={`group transition-colors ${c.is_taken ? "bg-slate-50/60" : "hover:bg-slate-50"}`}>
-                                <TableCell className="text-center text-muted-foreground font-medium">{i + 1}</TableCell>
+                            <TableRow key={c.id} className={`group transition-colors ${c.is_taken ? "bg-indigo-50/30" : "hover:bg-slate-50"}`}>
+                                <TableCell className="text-center text-muted-foreground font-medium text-xs">{i + 1}</TableCell>
                                 <TableCell className="font-mono text-xs text-slate-600">{c.kode}</TableCell>
                                 <TableCell>
                                     <div className="font-semibold text-slate-800 text-sm group-hover:text-indigo-700 transition-colors">
                                       {c.matkul}
                                     </div>
-                                    <div className="text-xs text-muted-foreground mt-0.5">{c.kategori || "Reguler"}</div>
+                                    <div className="text-xs text-slate-400 mt-0.5">{c.kategori || "Reguler"}</div>
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Badge variant="secondary" className="font-mono text-xs bg-white border border-slate-200 text-slate-600">
-                                    {c.sks} SKS
+                                    {c.sks}
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-center">
                                     {c.is_taken ? (
-                                        <div className="flex justify-center">
+                                        <div className="flex justify-center scale-90">
                                           <StatusBadge status={c.krs_status} />
                                         </div>
-                                    ) : <span className="text-xs text-slate-400 italic">Belum Diambil</span>}
+                                    ) : <span className="text-xs text-slate-400 italic">-</span>}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     {c.is_taken ? (
-                                        <Button variant="ghost" size="sm" className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3"
+                                        <Button variant="ghost" size="sm" className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 w-full"
                                             disabled={c.krs_status !== 'DRAFT'} 
                                             onClick={() => { setItemToDelete({ id: c.krs_id!, name: c.matkul }); setIsDeleteOpen(true); }}>
                                             {c.krs_status !== 'DRAFT' ? 
-                                              <span className="flex items-center text-slate-400 text-xs"><Lock className="w-3.5 h-3.5 mr-1" /> Terkunci</span> : 
-                                              <span className="flex items-center"><Trash2 className="w-3.5 h-3.5 mr-1.5" /> Batal</span>
+                                              <span className="flex items-center text-slate-400 text-xs"><Lock className="w-3 h-3 mr-1" /> Locked</span> : 
+                                              <span className="flex items-center justify-center"><Trash2 className="w-3.5 h-3.5 mr-1.5" /> Batal</span>
                                             }
                                         </Button>
                                     ) : (
-                                        <Button size="sm" className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm border-0 px-4" onClick={() => handleAmbil(c)}>
+                                        <Button size="sm" variant="outline" 
+                                            className="h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 w-full" 
+                                            onClick={() => handleAmbil(c)}>
                                             <PlusCircle className="w-3.5 h-3.5 mr-1.5" /> Ambil
                                         </Button>
                                     )}
@@ -232,7 +300,7 @@ export default function StudentKRSView({ user }: { user: any }) {
         title="Batalkan Mata Kuliah?" description={`Apakah Anda yakin ingin membatalkan pengambilan mata kuliah ${itemToDelete?.name}?`} confirmLabel="Ya, Batalkan" variant="destructive" />
 
       <ConfirmModal isOpen={isSubmitOpen} onClose={setIsSubmitOpen} onConfirm={confirmSubmit}
-        title="Ajukan KRS?" description="Setelah diajukan, KRS akan dikunci dan menunggu persetujuan Dosen Wali." confirmLabel="Ajukan Sekarang" variant="default" />
+        title="Ajukan KRS?" description="Setelah diajukan, KRS akan dikunci dan menunggu persetujuan Dosen Wali. Pastikan pilihan mata kuliah sudah benar." confirmLabel="Ajukan Sekarang" variant="default" />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { StudentData } from "@/lib/types";
-import { Printer, Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils"; // Pastikan Anda punya utilitas ini (bawaan shadcn)
+import { Printer, Check, ChevronsUpDown, Lock } from "lucide-react";
+import { cn } from "@/lib/utils"; 
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface ControlPanelProps {
   signatureType: "basah" | "digital" | "none";
   onSignatureChange: (type: "basah" | "digital" | "none") => void;
   onPrint: () => void;
+  disablePrint?: boolean; // [BARU] Properti untuk mematikan tombol print
   
   // Props KHS
   showSemesterSelect?: boolean;
@@ -49,7 +50,7 @@ interface ControlPanelProps {
 }
 
 export default function ControlPanel(props: ControlPanelProps) {
-  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages } = props;
+  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages, disablePrint } = props;
   const [open, setOpen] = React.useState(false); // State untuk Combobox
   
   const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block";
@@ -230,30 +231,48 @@ export default function ControlPanel(props: ControlPanelProps) {
             </div>
           )}
 
-          {/* Tanda Tangan */}
-          <div className={sectionClass}>
-            <label className={labelClass}>Tanda Tangan</label>
-            <Select
-              value={signatureType}
-              onValueChange={(val: any) => onSignatureChange(val)}
-            >
-              <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
-                <SelectValue placeholder="Pilih Tipe TTD" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="none" className="text-xs rounded-lg cursor-pointer">Tanpa tanda tangan</SelectItem>
-                <SelectItem value="basah" className="text-xs rounded-lg cursor-pointer">Tanda tangan basah</SelectItem>
-                <SelectItem value="digital" className="text-xs rounded-lg cursor-pointer">Tanda tangan digital (QR)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Tanda Tangan (Hidden jika print disabled agar tidak mengubah pas lagi dikunci) */}
+          {!disablePrint && (
+            <div className={sectionClass}>
+                <label className={labelClass}>Tanda Tangan</label>
+                <Select
+                value={signatureType}
+                onValueChange={(val: any) => onSignatureChange(val)}
+                >
+                <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
+                    <SelectValue placeholder="Pilih Tipe TTD" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                    <SelectItem value="none" className="text-xs rounded-lg cursor-pointer">Tanpa tanda tangan</SelectItem>
+                    <SelectItem value="basah" className="text-xs rounded-lg cursor-pointer">Tanda tangan basah</SelectItem>
+                    <SelectItem value="digital" className="text-xs rounded-lg cursor-pointer">Tanda tangan digital (QR)</SelectItem>
+                </SelectContent>
+                </Select>
+            </div>
+          )}
 
+          {/* Tombol Cetak (Dimodifikasi) */}
           <Button 
             onClick={onPrint} 
-            className="w-full bg-[#1B3F95] hover:bg-blue-900 h-11 text-sm font-semibold shadow-sm rounded-xl"
+            disabled={disablePrint}
+            className={cn(
+              "w-full h-11 text-sm font-semibold shadow-sm rounded-xl transition-all duration-200",
+              disablePrint 
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none hover:bg-slate-100" 
+                : "bg-[#1B3F95] hover:bg-blue-900 text-white"
+            )}
           > 
-             <Printer className="mr-2 h-4 w-4" />
-             Cetak PDF 
+             {disablePrint ? (
+                <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Terkunci
+                </>
+             ) : (
+                <>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </>
+             )}
           </Button> 
           
           <div className="text-center"> 

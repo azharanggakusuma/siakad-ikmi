@@ -12,6 +12,74 @@ export interface CourseOffering extends Course {
 }
 
 // ==========================================
+// GATEKEEPER & VALIDATION (BARU)
+// ==========================================
+
+// Cek Status KRS Mahasiswa untuk Gatekeeper Halaman Lain
+export async function validateStudentKrs(studentId: string) {
+  try {
+    // 1. Cari Tahun Akademik Aktif
+    const { data: activeYear, error: yearError } = await supabase
+      .from("academic_years")
+      .select("id, nama, semester")
+      .eq("is_active", true)
+      .single();
+
+    if (yearError || !activeYear) {
+      return { allowed: false, message: "Tahun akademik tidak aktif." };
+    }
+
+    // 2. Cek apakah ada KRS di tahun tsb dengan status VALID (Submitted/Approved)
+    const { data: krs, error: krsError } = await supabase
+      .from("krs")
+      .select("status")
+      .eq("student_id", studentId)
+      .eq("academic_year_id", activeYear.id)
+      .in("status", ["SUBMITTED", "APPROVED"]) 
+      .limit(1);
+
+    const hasValidKrs = krs && krs.length > 0;
+
+    if (!hasValidKrs) {
+      return { 
+        allowed: false, 
+        message: "Anda belum mengajukan atau menyelesaikan KRS untuk semester ini.",
+        reason: "no_krs"
+      };
+    }
+
+    return { allowed: true, year: activeYear };
+
+  } catch (error) {
+    return { allowed: false, message: "Terjadi kesalahan sistem saat memvalidasi KRS." };
+  }
+}
+
+// Hitung Total SKS yang diambil (Untuk UI Sophisticated)
+export async function getStudentSksCount(studentId: string, academicYearId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("krs")
+        .select(`
+          course:courses (sks)
+        `)
+        .eq("student_id", studentId)
+        .eq("academic_year_id", academicYearId);
+      
+      if (error || !data) return 0;
+
+      // Hitung total
+      const totalSks = data.reduce((acc: number, curr: any) => {
+        return acc + (curr.course?.sks || 0);
+      }, 0);
+      
+      return totalSks;
+    } catch (error) {
+      return 0;
+    }
+}
+
+// ==========================================
 // STUDENT ACTIONS (MAHASISWA)
 // ==========================================
 
@@ -54,7 +122,6 @@ export async function getStudentCourseOfferings(studentId: string, academicYearI
     if (studentError) throw new Error("Data mahasiswa tidak ditemukan");
 
     // B. Ambil Mata Kuliah yang sesuai semester mahasiswa
-    // (Bisa disesuaikan jika ingin menampilkan semua semester)
     const { data: courses, error: courseError } = await supabase
       .from("courses")
       .select("*")
@@ -165,7 +232,6 @@ export async function submitKRS(studentId: string, academicYearId: string) {
 // 6. Ambil Daftar Mahasiswa yang Mengajukan KRS (Status = SUBMITTED)
 export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   try {
-    // Relasi students:students merujuk pada foreign key student_id
     const { data: krsList, error } = await supabase
       .from("krs")
       .select(`
@@ -184,7 +250,6 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
     const studentMap = new Map<string, any>();
 
     krsList.forEach((item: any) => {
-      // Pastikan data students ada
       if (item.students && !studentMap.has(item.student_id)) {
         studentMap.set(item.student_id, item.students);
       }
@@ -205,7 +270,7 @@ export async function approveKRS(studentId: string, academicYearId: string) {
       .update({ status: "APPROVED" })
       .eq("student_id", studentId)
       .eq("academic_year_id", academicYearId)
-      .in("status", ["SUBMITTED", "DRAFT"]); // Approve yang diajukan atau draft sekalian
+      .in("status", ["SUBMITTED", "DRAFT"]); 
 
     if (error) throw error;
     revalidatePath("/validasi-krs"); 
@@ -218,8 +283,6 @@ export async function approveKRS(studentId: string, academicYearId: string) {
 // 8. Reject KRS (Kembalikan ke DRAFT atau set REJECTED)
 export async function rejectKRS(studentId: string, academicYearId: string) {
   try {
-    // Kita kembalikan ke DRAFT agar mahasiswa bisa edit lagi, atau set REJECTED
-    // Di sini saya set ke REJECTED agar jelas, mahasiswa harus hapus/edit lalu submit lagi
     const { error } = await supabase
       .from("krs")
       .update({ status: "REJECTED" }) 

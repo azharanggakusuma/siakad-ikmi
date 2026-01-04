@@ -180,7 +180,7 @@ export default function AdminKRSValidationView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-6">
       
-      {/* --- Section Filter & Stats (Tampilan Diperbarui) --- */}
+      {/* --- Section Filter & Stats --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
         {/* Card Filter: Style Gradient seperti Halaman Mahasiswa */}
@@ -193,7 +193,8 @@ export default function AdminKRSValidationView() {
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 <div className="flex justify-between items-start">
                     <div>
-                        <p className="text-white/80 font-medium text-sm mb-1">Halaman Admin</p>
+                        {/* UPDATE TEXT DISINI */}
+                        <p className="text-white/80 font-medium text-sm mb-1">Panel Validasi</p>
                         <h2 className="text-3xl font-bold tracking-tight">
                             Validasi KRS Mahasiswa
                         </h2>
@@ -230,7 +231,6 @@ export default function AdminKRSValidationView() {
                         <ListTodo className="h-4 w-4" />
                         <span className="text-sm font-medium">Antrean Validasi</span>
                     </div>
-                    {/* Menggunakan filteredData untuk statistik */}
                     <div className="text-2xl font-bold tracking-tight">
                         {isLoading ? "..." : filteredData.length} Mahasiswa
                     </div>

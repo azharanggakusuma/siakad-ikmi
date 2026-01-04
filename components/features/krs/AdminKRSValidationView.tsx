@@ -348,16 +348,15 @@ export default function AdminKRSValidationView() {
                                     {selectedStudent?.nim}
                                  </div>
                                  
-                                 <span className="hidden sm:inline text-white/20">|</span>
+                                 <span className="text-white/20">|</span>
                                  
-                                 <span>{selectedStudent?.study_program?.jenjang} {selectedStudent?.study_program?.nama}</span>
+                                 {/* Format: Prodi (Jenjang) */}
+                                 <span>{selectedStudent?.study_program?.nama} ({selectedStudent?.study_program?.jenjang})</span>
                                  
-                                 <span className="hidden sm:inline text-white/20">|</span>
+                                 <span className="text-white/20">|</span>
 
-                                 <div className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></span>
-                                    <span>Semester {selectedStudent?.semester}</span>
-                                 </div>
+                                 {/* Semester tanpa titik biru */}
+                                 <span>Semester {selectedStudent?.semester}</span>
                             </div>
                         </div>
 

@@ -300,7 +300,6 @@ export default function AdminKRSValidationView() {
 
       {/* --- Detail Modal --- */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        {/* PERUBAHAN: max-w-4xl, max-h-[90vh], dan responsif (w-[95vw] di mobile, md:min-w-[42rem] di desktop) */}
         <DialogContent className="w-[95vw] sm:w-full max-w-4xl max-h-[90vh] md:min-w-[42rem] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="p-6 pb-4 border-b bg-white z-10">
             <div className="flex items-start justify-between gap-4">

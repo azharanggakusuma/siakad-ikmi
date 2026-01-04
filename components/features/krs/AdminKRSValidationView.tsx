@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"; 
 
 // Import DataTable dan Column
 import { DataTable, type Column } from "@/components/ui/data-table";
@@ -151,9 +151,9 @@ export default function AdminKRSValidationView() {
         header: "Status",
         className: "text-center w-[120px]",
         render: () => (
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
-                Diajukan
-            </Badge>
+            <div className="flex justify-center scale-90">
+                <StatusBadge status="SUBMITTED" />
+            </div>
         )
     },
     {
@@ -183,69 +183,99 @@ export default function AdminKRSValidationView() {
       {/* --- Section Filter & Stats --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        {/* Card Filter: Style Gradient Slate (Tetap) */}
+        {/* Card Filter: Style Gradient Slate */}
         <Card className="md:col-span-8 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-slate-700 to-slate-800">
-            {/* Dekorasi Background */}
             <div className="absolute top-0 right-0 p-8 opacity-10">
                 <BookOpen size={120} />
             </div>
             
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <p className="text-white/80 font-medium text-sm mb-1">Panel Validasi</p>
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            Validasi KRS Mahasiswa
-                        </h2>
+                {isLoading ? (
+                    // SKELETON CARD 1
+                    <div className="flex flex-col justify-between h-full gap-6">
+                        <div className="space-y-2">
+                             <Skeleton className="h-4 w-32 bg-white/20" />
+                             <Skeleton className="h-8 w-64 bg-white/20" />
+                        </div>
+                        <div className="flex gap-4">
+                            <Skeleton className="h-10 w-[240px] bg-white/20" />
+                            <Skeleton className="h-10 w-32 bg-white/20 hidden sm:block" />
+                        </div>
                     </div>
-                </div>
-                
-                <div className="mt-6 flex items-center gap-4">
-                    <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
-                        <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
-                            <SelectValue placeholder="Pilih Tahun Akademik" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {academicYears.map((ay) => (
-                            <SelectItem key={ay.id} value={ay.id}>
-                                {ay.nama} - {ay.semester}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                ) : (
+                    // CONTENT CARD 1
+                    <>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-white/80 font-medium text-sm mb-1">Panel Validasi</p>
+                            <h2 className="text-3xl font-bold tracking-tight">
+                                Validasi KRS Mahasiswa
+                            </h2>
+                        </div>
+                    </div>
                     
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
-                         <CalendarDays className="w-4 h-4 text-white/80" />
-                         <span className="text-sm font-medium">Filter Data</span>
+                    <div className="mt-6 flex items-center gap-4">
+                        <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
+                                <SelectValue placeholder="Pilih Tahun Akademik" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {academicYears.map((ay) => (
+                                <SelectItem key={ay.id} value={ay.id}>
+                                    {ay.nama} - {ay.semester}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
+                            <CalendarDays className="w-4 h-4 text-white/80" />
+                            <span className="text-sm font-medium">Filter Data</span>
+                        </div>
                     </div>
-                </div>
+                    </>
+                )}
             </CardContent>
         </Card>
 
         {/* Card Summary Stats: UPDATE WARNA SOFT (Teal/Emerald) */}
         <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-teal-600 to-emerald-600">
-            {/* Dekorasi Background */}
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
                 <ListTodo size={140} />
             </div>
 
             <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                         <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                            <Users className="h-5 w-5 text-teal-50" />
-                         </div>
-                         <span className="text-sm font-medium text-teal-50">Antrean Validasi</span>
-                    </div>
-                    
-                    <div>
-                        <div className="text-4xl font-extrabold tracking-tight">
-                            {isLoading ? "..." : filteredData.length}
-                            <span className="text-lg font-normal text-teal-100 ml-2">Mahasiswa</span>
+                 {isLoading ? (
+                    // SKELETON CARD 2
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                             <Skeleton className="h-9 w-9 rounded-lg bg-white/20" />
+                             <Skeleton className="h-4 w-24 bg-white/20" />
                         </div>
-                        <p className="text-teal-50/80 text-xs mt-1">Menunggu persetujuan KRS Anda.</p>
+                        <div className="space-y-2">
+                             <Skeleton className="h-10 w-16 bg-white/20" />
+                             <Skeleton className="h-3 w-32 bg-white/20" />
+                        </div>
                     </div>
-                </div>
+                 ) : (
+                    // CONTENT CARD 2
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <Users className="h-5 w-5 text-teal-50" />
+                             </div>
+                             <span className="text-sm font-medium text-teal-50">Antrean Validasi</span>
+                        </div>
+                        
+                        <div>
+                            <div className="text-4xl font-extrabold tracking-tight">
+                                {filteredData.length}
+                                <span className="text-lg font-normal text-teal-100 ml-2">Mahasiswa</span>
+                            </div>
+                            <p className="text-teal-50/80 text-xs mt-1">Menunggu persetujuan KRS Anda.</p>
+                        </div>
+                    </div>
+                 )}
             </CardContent>
         </Card>
       </div>

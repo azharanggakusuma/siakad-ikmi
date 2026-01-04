@@ -260,7 +260,7 @@ export default function AdminKRSValidationView() {
         </Card>
 
         {/* Card Summary Stats */}
-        <Card className="md:col-span-4 border-none shadow-md text-slate-900 overflow-hidden relative bg-white">
+        <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-teal-600 to-emerald-600">
             <div className="absolute -bottom-6 -right-6 opacity-5 rotate-12"><ListTodo size={140} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
                  {isLoading ? (
@@ -273,7 +273,7 @@ export default function AdminKRSValidationView() {
                         <div className="flex items-center justify-between">
                              <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-indigo-50 rounded-xl"><Users className="h-5 w-5 text-indigo-600" /></div>
-                                <span className="text-sm font-semibold text-slate-600">Antrean Validasi</span>
+                                <span className="text-sm font-semibold text-white">Antrean Validasi</span>
                              </div>
                              <Badge className={cn(
                                 "rounded-full px-3",
@@ -284,10 +284,10 @@ export default function AdminKRSValidationView() {
                         </div>
                         <div>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-4xl font-extrabold tracking-tight text-slate-900">{pendingCount}</span>
-                                <span className="text-sm font-medium text-slate-500">Mahasiswa</span>
+                                <span className="text-4xl font-extrabold tracking-tight text-white">{pendingCount}</span>
+                                <span className="text-sm font-medium text-white">Mahasiswa</span>
                             </div>
-                            <p className="text-slate-400 text-xs mt-2">Menunggu persetujuan KRS untuk TA {currentAcademicYearName}.</p>
+                            <p className="text-slate-200 text-xs mt-2">Menunggu persetujuan KRS untuk TA {currentAcademicYearName}.</p>
                         </div>
                     </div>
                  )}

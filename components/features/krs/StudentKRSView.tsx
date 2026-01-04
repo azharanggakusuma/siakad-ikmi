@@ -259,11 +259,11 @@ export default function StudentKRSView({ user }: { user: any }) {
     `}</style>
 
     {/* --- LAYOUT PRINT (ID: #print-area) --- */}
-    <div id="print-area" className="hidden print:block font-sans bg-white text-black p-4">
-        <DocumentHeader title="KARTU RENCANA STUDI (KRS)" />
+    <div id="print-area" className="hidden print:block font-sans bg-white text-black p-6">
+        <DocumentHeader title="KARTU RENCANA STUDI" />
 
         {/* Info Mahasiswa Dinamis + Periode */}
-        <div className="mt-6 mb-4 px-2">
+        <div className="mt-1 mb-4 px-2">
              <StudentInfo 
                 profile={studentProfile || { 
                     nama: user?.name || "-",

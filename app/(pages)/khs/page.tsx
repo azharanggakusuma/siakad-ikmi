@@ -197,7 +197,8 @@ export default function KhsPage() {
                 <StudentInfo profile={currentStudent.profile} displaySemester={selectedSemester} />
                 
                 {/* === AREA KONTEN UTAMA DENGAN LOGIC LOCK === */}
-                <div className="min-h-[400px]">
+                {/* FIX: Hapus min-h-[400px] jika tidak terkunci agar footer naik */}
+                <div className={isLocked ? "min-h-[400px]" : ""}>
                     {isLocked ? (
                         <div className="mt-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-8 flex items-center justify-center h-[400px]">
                             <div className="scale-90 transform">

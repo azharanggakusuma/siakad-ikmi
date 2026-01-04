@@ -1,7 +1,7 @@
 import React from "react";
 import { StudentData } from "@/lib/types";
-import { Printer, Check, ChevronsUpDown, Lock } from "lucide-react";
-import { cn } from "@/lib/utils"; 
+import { Printer, Check, ChevronsUpDown, Lock, User } from "lucide-react"; 
+import { cn } from "@/lib/utils";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,11 @@ interface ControlPanelProps {
   signatureType: "basah" | "digital" | "none";
   onSignatureChange: (type: "basah" | "digital" | "none") => void;
   onPrint: () => void;
-  disablePrint?: boolean; // [BARU] Properti untuk mematikan tombol print
+  disablePrint?: boolean;
   
+  // [BARU] Data User Login untuk Cek Role
+  user?: any;
+
   // Props KHS
   showSemesterSelect?: boolean;
   availableSemesters?: number[];
@@ -50,14 +53,17 @@ interface ControlPanelProps {
 }
 
 export default function ControlPanel(props: ControlPanelProps) {
-  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages, disablePrint } = props;
-  const [open, setOpen] = React.useState(false); // State untuk Combobox
+  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages, disablePrint, user } = props;
+  const [open, setOpen] = React.useState(false);
   
   const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block";
   const sectionClass = "flex flex-col gap-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3";
 
-  // Mendapatkan nama mahasiswa yang sedang dipilih untuk ditampilkan di trigger
+  // Nama mahasiswa yang sedang dipilih
   const selectedStudentName = students[selectedIndex]?.profile.nama || "Pilih Mahasiswa...";
+
+  // Cek apakah user adalah mahasiswa
+  const isMahasiswa = user?.role === "mahasiswa";
 
   return (
     <aside className="w-full print:hidden xl:sticky xl:top-24 h-fit">
@@ -81,57 +87,75 @@ export default function ControlPanel(props: ControlPanelProps) {
 
         <div className="p-5 flex flex-col gap-4">
           
-          {/* Pilih Mahasiswa (SEARCHABLE COMBOBOX) */}
+          {/* BAGIAN PILIH MAHASISWA */}
           <div className={sectionClass}>
             <div className="flex items-baseline justify-between">
               <label className={labelClass}>Mahasiswa</label>
-              <p className="text-[11px] text-gray-400">{selectedIndex + 1}/{students.length}</p>
+              {/* Jika Admin, tampilkan counter page. Jika Mahasiswa, sembunyikan atau tampilkan icon user */}
+              {!isMahasiswa && (
+                <p className="text-[11px] text-gray-400">{selectedIndex + 1}/{students.length}</p>
+              )}
             </div>
             
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-full justify-between h-9 bg-white text-xs rounded-xl border-gray-200 font-normal text-left px-3 hover:bg-white hover:text-gray-900"
-                >
-                  <span className="truncate">{selectedStudentName}</span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl shadow-lg" align="start">
-                <Command className="rounded-xl">
-                  <CommandInput placeholder="Cari nama mahasiswa..." className="text-xs h-9" />
-                  <CommandList>
-                    <CommandEmpty className="py-2 text-center text-xs text-gray-500">
-                      Tidak ditemukan.
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {students.map((student, index) => (
-                        <CommandItem
-                          key={student.id}
-                          value={student.profile.nama}
-                          onSelect={() => {
-                            onSelect(index); // Set index mahasiswa
-                            setOpen(false);
-                          }}
-                          className="text-xs rounded-lg cursor-pointer aria-selected:bg-gray-100"
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-3 w-3",
-                              selectedIndex === index ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {student.profile.nama}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            {/* LOGIKA KONDISIONAL */}
+            {isMahasiswa ? (
+               // TAMPILAN UNTUK MAHASISWA (READ ONLY - TERKUNCI)
+               <div className="flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-xl h-10 select-none cursor-not-allowed opacity-90">
+                  <div className="bg-indigo-50 p-1 rounded-full text-indigo-600">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-medium text-gray-700 truncate">
+                    {selectedStudentName}
+                  </span>
+                  <Lock className="w-3 h-3 text-gray-400 ml-auto" />
+               </div>
+            ) : (
+               // TAMPILAN UNTUK ADMIN (DROPDOWN SEARCHABLE)
+               <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between h-9 bg-white text-xs rounded-xl border-gray-200 font-normal text-left px-3 hover:bg-white hover:text-gray-900"
+                    >
+                      <span className="truncate">{selectedStudentName}</span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl shadow-lg" align="start">
+                    <Command className="rounded-xl">
+                      <CommandInput placeholder="Cari nama mahasiswa..." className="text-xs h-9" />
+                      <CommandList>
+                        <CommandEmpty className="py-2 text-center text-xs text-gray-500">
+                          Tidak ditemukan.
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {students.map((student, index) => (
+                            <CommandItem
+                              key={student.id}
+                              value={student.profile.nama}
+                              onSelect={() => {
+                                onSelect(index);
+                                setOpen(false);
+                              }}
+                              className="text-xs rounded-lg cursor-pointer aria-selected:bg-gray-100"
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-3 w-3",
+                                  selectedIndex === index ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {student.profile.nama}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+               </Popover>
+            )}
           </div> 
 
           {/* Pilih Semester (KHS) */}
@@ -156,7 +180,7 @@ export default function ControlPanel(props: ControlPanelProps) {
             </div>
           )}
 
-          {/* Input Manual Surat */}
+          {/* Input Manual Surat (Optional) */}
           {props.setNomorSurat && (
             <div className={sectionClass}>
               <label className={labelClass}>Detail Surat</label>
@@ -166,7 +190,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                     value={props.nomorSurat} 
                     onChange={(e) => props.setNomorSurat?.(e.target.value)} 
                     className="h-9 bg-white text-xs rounded-xl border-gray-200" 
-                    placeholder="No Surat (Contoh: 125)" 
+                    placeholder="No Surat" 
                   />
                   <Input 
                     type="text" 
@@ -179,66 +203,33 @@ export default function ControlPanel(props: ControlPanelProps) {
             </div>
           )}
 
-          {/* Biodata Manual */}
+          {/* Data Tambahan (Optional) */}
           {props.setTempatLahir && (
              <div className={sectionClass}>
               <label className={labelClass}>Biodata</label>
               <div className="grid grid-cols-2 gap-2">
-                 <Input 
-                   type="text" 
-                   value={props.tempatLahir} 
-                   onChange={(e) => props.setTempatLahir?.(e.target.value)} 
-                   className="h-9 bg-white text-xs rounded-xl border-gray-200" 
-                   placeholder="Tempat Lahir" 
-                 />
-                 <Input 
-                   type="text" 
-                   value={props.tanggalLahir} 
-                   onChange={(e) => props.setTanggalLahir?.(e.target.value)} 
-                   className="h-9 bg-white text-xs rounded-xl border-gray-200" 
-                   placeholder="Tgl Lahir" 
-                 />
+                 <Input value={props.tempatLahir} onChange={(e) => props.setTempatLahir?.(e.target.value)} className="h-9 bg-white text-xs rounded-xl border-gray-200" placeholder="Tempat Lahir" />
+                 <Input value={props.tanggalLahir} onChange={(e) => props.setTanggalLahir?.(e.target.value)} className="h-9 bg-white text-xs rounded-xl border-gray-200" placeholder="Tgl Lahir" />
               </div>
-              <Textarea 
-                value={props.alamat} 
-                onChange={(e) => props.setAlamat?.(e.target.value)} 
-                className="bg-white min-h-[60px] text-xs resize-none rounded-xl border-gray-200" 
-                placeholder="Alamat Lengkap" 
-              />
+              <Textarea value={props.alamat} onChange={(e) => props.setAlamat?.(e.target.value)} className="bg-white min-h-[60px] text-xs resize-none rounded-xl border-gray-200" placeholder="Alamat" />
             </div>
           )}
           
-          {/* Data Orang Tua */}
           {props.setNamaOrangTua && (
             <div className={sectionClass}>
               <label className={labelClass}>Data Orang Tua</label>
               <div className="space-y-2">
-                <Input 
-                  type="text" 
-                  value={props.namaOrangTua} 
-                  onChange={(e) => props.setNamaOrangTua?.(e.target.value)} 
-                  className="h-9 bg-white text-xs rounded-xl border-gray-200" 
-                  placeholder="Nama Ayah/Ibu" 
-                />
-                <Input 
-                  type="text" 
-                  value={props.pekerjaanOrangTua} 
-                  onChange={(e) => props.setPekerjaanOrangTua?.(e.target.value)} 
-                  className="h-9 bg-white text-xs rounded-xl border-gray-200" 
-                  placeholder="Pekerjaan" 
-                />
+                <Input value={props.namaOrangTua} onChange={(e) => props.setNamaOrangTua?.(e.target.value)} className="h-9 bg-white text-xs rounded-xl border-gray-200" placeholder="Nama Ayah/Ibu" />
+                <Input value={props.pekerjaanOrangTua} onChange={(e) => props.setPekerjaanOrangTua?.(e.target.value)} className="h-9 bg-white text-xs rounded-xl border-gray-200" placeholder="Pekerjaan" />
               </div>
             </div>
           )}
 
-          {/* Tanda Tangan (Hidden jika print disabled agar tidak mengubah pas lagi dikunci) */}
+          {/* Tanda Tangan (Hidden jika print disabled/terkunci) */}
           {!disablePrint && (
             <div className={sectionClass}>
                 <label className={labelClass}>Tanda Tangan</label>
-                <Select
-                value={signatureType}
-                onValueChange={(val: any) => onSignatureChange(val)}
-                >
+                <Select value={signatureType} onValueChange={(val: any) => onSignatureChange(val)}>
                 <SelectTrigger className="w-full h-9 bg-white text-xs rounded-xl border-gray-200">
                     <SelectValue placeholder="Pilih Tipe TTD" />
                 </SelectTrigger>
@@ -251,7 +242,7 @@ export default function ControlPanel(props: ControlPanelProps) {
             </div>
           )}
 
-          {/* Tombol Cetak (Dimodifikasi) */}
+          {/* Tombol Cetak */}
           <Button 
             onClick={onPrint} 
             disabled={disablePrint}

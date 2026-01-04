@@ -34,7 +34,7 @@ export default function KhsPage() {
   const paperRef = useRef<HTMLDivElement>(null);
   const [totalPages, setTotalPages] = useState(1);
 
-  // === 1. CEK STATUS KRS (Tanpa Blocking Halaman) ===
+  // === 1. CEK STATUS KRS (Tanpa Blocking Halaman Penuh) ===
   useEffect(() => {
     const checkAccess = async () => {
       if (user?.role === "mahasiswa" && user.student_id) {
@@ -64,6 +64,17 @@ export default function KhsPage() {
     };
     fetchData();
   }, []);
+
+  // === 3. AUTO-SELECT MAHASISWA JIKA LOGIN SEBAGAI MAHASISWA ===
+  useEffect(() => {
+    if (studentsData.length > 0 && user?.role === "mahasiswa" && user?.student_id) {
+       // Cari index mahasiswa tersebut di array data
+       const myIndex = studentsData.findIndex((s) => s.id === user.student_id);
+       if (myIndex !== -1) {
+          setSelectedIndex(myIndex); 
+       }
+    }
+  }, [studentsData, user]);
 
   const currentStudent = useMemo(() => studentsData[selectedIndex], [studentsData, selectedIndex]);
 
@@ -102,14 +113,12 @@ export default function KhsPage() {
   // 2. Default Select: Pilih semester terakhir (biasanya semester aktif)
   useEffect(() => {
     if (availableSemesters.length > 0) {
-        // Jika user belum memilih manual, set ke semester paling besar (terakhir)
-        // Logika ini bisa disesuaikan jika ingin default ke semester 1
-        // Tapi biasanya KHS menampilkan yg terbaru.
+        // Jika user belum memilih manual (atau saat load awal), set ke semester paling besar
         if (!availableSemesters.includes(selectedSemester)) {
             setSelectedSemester(availableSemesters[availableSemesters.length - 1]);
         }
     }
-  }, [selectedIndex, availableSemesters]); // Hapus selectedSemester dari deps agar tidak reset terus
+  }, [availableSemesters]); // Hapus deps berlebih
 
   // 3. Filter Data Nilai Sesuai Semester Pilihan
   const semesterData = useMemo(() => {
@@ -117,7 +126,7 @@ export default function KhsPage() {
     return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === selectedSemester);
   }, [currentStudent, selectedSemester]);
 
-  // Hitung IPK/IPS (Sama seperti sebelumnya)
+  // Hitung IPK/IPS
   const cumulativeData = useMemo(() => {
     if (!currentStudent?.transcript) return [];
     return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= selectedSemester);
@@ -138,7 +147,7 @@ export default function KhsPage() {
 
   // === 4. PENENTU KUNCI ===
   // Terkunci JIKA:
-  // - Semester yang dipilih == Semester Aktif Mahasiswa (dari Profil)
+  // - Semester yang dipilih == Semester Aktif Mahasiswa
   // - DAN Status KRS (isKrsValid) == False
   // - DAN User adalah Mahasiswa
   const isLocked = useMemo(() => {
@@ -191,7 +200,6 @@ export default function KhsPage() {
                 <div className="min-h-[400px]">
                     {isLocked ? (
                         <div className="mt-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-8 flex items-center justify-center h-[400px]">
-                            {/* Kita panggil komponen Lock di sini, tapi disesuaikan props-nya agar pas */}
                             <div className="scale-90 transform">
                                 <KrsLock 
                                     title={`Semester ${selectedSemester} Terkunci`}
@@ -237,8 +245,10 @@ export default function KhsPage() {
                 selectedSemester={selectedSemester}
                 onSelectSemester={setSelectedSemester}
                 totalPages={totalPages}
-                // Opsional: Matikan tombol print jika terkunci
                 disablePrint={isLocked}
+                
+                // [PENTING] Kirim prop user ke sini untuk pengecekan role
+                user={user} 
             />
           )}
         </div>

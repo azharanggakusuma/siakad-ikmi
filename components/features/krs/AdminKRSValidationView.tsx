@@ -1,27 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useToastMessage } from "@/hooks/use-toast-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { 
-  CheckCircle2, Eye, XCircle, Search, User, CheckCircle, 
-  ListTodo, GraduationCap, CalendarDays, AlertCircle 
+  CheckCircle2, Eye, XCircle, User, GraduationCap, CalendarDays, AlertCircle, ListTodo
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
-import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Masih dipakai untuk detail modal
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Import DataTable dan Column
+import { DataTable, type Column } from "@/components/ui/data-table";
 
 import { 
   getStudentsWithSubmittedKRS, getKRSByStudent, approveKRS, rejectKRS 
 } from "@/app/actions/krs";
 import { getAcademicYears } from "@/app/actions/academic-years";
 import { AcademicYear, KRS } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminKRSValidationView() {
   const { successAction, showError, showLoading } = useToastMessage();
@@ -29,10 +29,14 @@ export default function AdminKRSValidationView() {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [students, setStudents] = useState<any[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // State untuk DataTable
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Detail Modal State
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentKRS, setStudentKRS] = useState<KRS[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -57,30 +61,32 @@ export default function AdminKRSValidationView() {
     fetchStudents();
   }, [selectedYear]);
 
-  useEffect(() => {
-    if(!searchQuery) {
-        setFilteredStudents(students);
-    } else {
-        const lower = searchQuery.toLowerCase();
-        const filtered = students.filter(s => 
-            s.nama.toLowerCase().includes(lower) || 
-            s.nim.toLowerCase().includes(lower) ||
-            s.study_program?.nama?.toLowerCase().includes(lower)
-        );
-        setFilteredStudents(filtered);
-    }
-  }, [searchQuery, students]);
-
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
       const data = await getStudentsWithSubmittedKRS(selectedYear);
       setStudents(data);
-      setFilteredStudents(data);
     } catch (error) { console.error(error); } 
     finally { setIsLoading(false); }
   };
 
+  // Filtering & Pagination Logic
+  const filteredData = useMemo(() => {
+    if (!searchQuery) return students;
+    const lower = searchQuery.toLowerCase();
+    return students.filter(s => 
+        s.nama.toLowerCase().includes(lower) || 
+        s.nim.toLowerCase().includes(lower) ||
+        s.study_program?.nama?.toLowerCase().includes(lower)
+    );
+  }, [students, searchQuery]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  // === ACTIONS ===
   const openDetail = async (mhs: any) => {
     setSelectedStudent(mhs);
     setIsDetailOpen(true);
@@ -108,146 +114,129 @@ export default function AdminKRSValidationView() {
     finally { setIsProcessing(false); }
   };
 
-  // Helper untuk statistik
+  // Definisi Kolom
+  const columns: Column<any>[] = [
+    {
+      header: "#",
+      className: "w-[50px] text-center",
+      render: (_, index) => <span className="text-muted-foreground">{startIndex + index + 1}</span>,
+    },
+    {
+      header: "Mahasiswa",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+            <div className="h-9 w-9 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border border-indigo-100">
+                <User className="h-4 w-4" />
+            </div>
+            <div>
+                <p className="font-medium text-slate-900 text-sm">{row.nama}</p>
+                <p className="text-xs text-slate-500 font-mono">{row.nim}</p>
+            </div>
+        </div>
+      ),
+    },
+    {
+        header: "Program Studi",
+        render: (row) => (
+            <div className="flex flex-col">
+                <span className="text-sm text-slate-700">{row.study_program?.nama}</span>
+                <span className="text-xs text-slate-400">{row.study_program?.jenjang}</span>
+            </div>
+        )
+    },
+    {
+        header: "Status",
+        className: "text-center w-[120px]",
+        render: () => (
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
+                Submitted
+            </Badge>
+        )
+    },
+    {
+        header: "Aksi",
+        className: "text-center", 
+        render: (row) => (
+            <Button size="sm" onClick={() => openDetail(row)} 
+                className="h-8 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all">
+                <Eye className="w-3.5 h-3.5 mr-2" /> Tinjau
+            </Button>
+        )
+    }
+  ];
+
+  // Konten Filter Tahun Akademik untuk DataTable
+  const filterContent = (
+    <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-slate-600 hidden md:inline">Tahun:</span>
+        <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
+            <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200">
+                <SelectValue placeholder="Pilih Tahun" />
+            </SelectTrigger>
+            <SelectContent>
+                {academicYears.map((ay) => (
+                <SelectItem key={ay.id} value={ay.id}>
+                    {ay.nama} - {ay.semester}
+                </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    </div>
+  );
+
   const totalSKS = studentKRS.reduce((acc, curr) => acc + (curr.course?.sks || 0), 0);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-6">
       
-      {/* --- Section Filter & Stats --- */}
+      {/* --- Section Stats Only --- */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Card Filter */}
-        <Card className="md:col-span-8 shadow-sm border-slate-200">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-bold text-slate-800">Filter Data</CardTitle>
-                <CardDescription>Pilih tahun akademik untuk melihat pengajuan.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
-                    <div className="flex-1 w-full space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahun Akademik</label>
-                        <Select value={selectedYear} onValueChange={setSelectedYear}>
-                            <SelectTrigger className="w-full bg-slate-50 border-slate-200">
-                                <SelectValue placeholder="Pilih Tahun" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {academicYears.map((ay) => (
-                                <SelectItem key={ay.id} value={ay.id}>
-                                    {ay.nama} - {ay.semester} {ay.is_active && "(Aktif)"}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex-[2] w-full space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pencarian</label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input 
-                                placeholder="Cari Nama, NIM, atau Prodi..." 
-                                className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500" 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-
         {/* Card Summary Stats */}
-        <Card className="md:col-span-4 bg-indigo-600 text-white border-indigo-600 shadow-md flex flex-col justify-center">
-            <CardContent className="p-6 flex flex-col justify-between h-full">
+        <Card className="md:col-span-12 bg-indigo-600 text-white border-indigo-600 shadow-md">
+            <CardContent className="p-6 flex items-center justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 opacity-90">
                         <ListTodo className="h-4 w-4" />
                         <span className="text-sm font-medium">Antrean Validasi</span>
                     </div>
-                    <div className="text-4xl font-bold tracking-tight">
-                        {isLoading ? "..." : filteredStudents.length}
+                    {/* [FIXED] Menggunakan filteredData.length alih-alih filteredStudents.length */}
+                    <div className="text-2xl font-bold tracking-tight">
+                        {isLoading ? "..." : filteredData.length} Mahasiswa
                     </div>
-                    <p className="text-indigo-100 text-sm">Mahasiswa menunggu persetujuan</p>
+                    <p className="text-indigo-100 text-xs">Menunggu persetujuan KRS</p>
+                </div>
+                <div className="h-12 w-12 bg-white/10 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-6 w-6 text-white" />
                 </div>
             </CardContent>
         </Card>
       </div>
 
-      {/* --- Section Table --- */}
-      <Card className="shadow-sm border-slate-200 overflow-hidden">
-        <div className="p-1 bg-slate-50/50 border-b border-slate-100"></div>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50/80">
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="w-[60px] text-center font-semibold text-slate-600">No</TableHead>
-                <TableHead className="w-[250px] font-semibold text-slate-600">Mahasiswa</TableHead>
-                <TableHead className="font-semibold text-slate-600">Program Studi</TableHead>
-                <TableHead className="text-center w-[120px] font-semibold text-slate-600">Status</TableHead>
-                <TableHead className="text-right pr-6 font-semibold text-slate-600">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
-                        <TableCell><Skeleton className="h-10 w-[200px]" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                        <TableCell className="text-center"><Skeleton className="h-6 w-16 mx-auto rounded-full" /></TableCell>
-                        <TableCell className="text-right pr-6"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
-                    </TableRow>
-                ))
-              ) : filteredStudents.length === 0 ? (
-                <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                            <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
-                                <CheckCircle className="h-8 w-8 text-green-500/50" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-lg font-medium text-slate-900">Semua Beres!</p>
-                                <p className="text-sm text-slate-500">Tidak ada pengajuan KRS yang perlu divalidasi saat ini.</p>
-                            </div>
-                        </div>
-                    </TableCell>
-                </TableRow>
-              ) : (
-                filteredStudents.map((mhs, i) => (
-                  <TableRow key={mhs.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <TableCell className="text-center text-muted-foreground font-mono text-xs">{i + 1}</TableCell>
-                    <TableCell>
-                        <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border border-indigo-100">
-                                <User className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-slate-900 text-sm group-hover:text-indigo-700 transition-colors">{mhs.nama}</p>
-                                <p className="text-xs text-slate-500 font-mono">{mhs.nim}</p>
-                            </div>
-                        </div>
-                    </TableCell>
-                    <TableCell>
-                        <div className="flex flex-col">
-                            <span className="text-sm text-slate-700">{mhs.study_program?.nama}</span>
-                            <span className="text-xs text-slate-400">{mhs.study_program?.jenjang}</span>
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
-                            Submitted
-                        </Badge>
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <Button size="sm" onClick={() => openDetail(mhs)} 
-                        className="h-8 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all">
-                        <Eye className="w-3.5 h-3.5 mr-2" /> Tinjau
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+      {/* Tabel Menggunakan DataTable */}
+      <Card className="border-none shadow-sm ring-1 ring-gray-200">
+        <CardContent className="p-6">
+            <DataTable
+                data={currentData}
+                columns={columns}
+                isLoading={isLoading}
+                searchQuery={searchQuery}
+                onSearchChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                }}
+                searchPlaceholder="Cari Nama, NIM, atau Prodi..."
+                
+                filterContent={filterContent}
+                isFilterActive={true} 
+                onResetFilter={() => {}} 
+
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                totalItems={filteredData.length}
+            />
         </CardContent>
       </Card>
 
@@ -264,7 +253,7 @@ export default function AdminKRSValidationView() {
                 </div>
                 <Badge variant="outline" className="py-1 px-3 bg-slate-50 text-slate-600 border-slate-200 gap-2">
                     <CalendarDays className="w-3.5 h-3.5" />
-                    Tahun Akademik {academicYears.find(y => y.id === selectedYear)?.nama}
+                    TA {academicYears.find(y => y.id === selectedYear)?.nama}
                 </Badge>
             </div>
           </DialogHeader>
@@ -303,7 +292,7 @@ export default function AdminKRSValidationView() {
                     </div>
                 </div>
 
-                {/* Course List */}
+                {/* Course List Detail */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                         <h4 className="font-semibold text-slate-800 text-sm">Daftar Mata Kuliah</h4>
@@ -344,14 +333,13 @@ export default function AdminKRSValidationView() {
                     </Table>
                 </div>
                 
-                {/* Warning/Note (Optional) */}
+                {/* Warning/Note */}
                 <div className="flex gap-3 p-4 rounded-lg bg-orange-50 text-orange-800 text-sm border border-orange-100 items-start">
                     <AlertCircle className="w-5 h-5 shrink-0 text-orange-600" />
                     <div>
                         <p className="font-semibold">Konfirmasi Validasi</p>
                         <p className="opacity-90 mt-0.5">
-                            Pastikan total SKS tidak melebihi batas maksimal yang diizinkan untuk mahasiswa ini (biasanya 24 SKS).
-                            Tindakan ini akan memperbarui status KRS mahasiswa secara permanen.
+                            Pastikan total SKS tidak melebihi batas maksimal. Tindakan ini akan memperbarui status KRS mahasiswa secara permanen.
                         </p>
                     </div>
                 </div>

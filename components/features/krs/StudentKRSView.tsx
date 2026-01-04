@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useToastMessage } from "@/hooks/use-toast-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
     CheckCircle2, PlusCircle, Trash2, Send, Lock, AlertTriangle, 
     BookOpen, GraduationCap, Info 
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
+
+// [UPDATE] Import DataTable
+import { DataTable, type Column } from "@/components/ui/data-table";
 
 import { 
   getStudentCourseOfferings, createKRS, deleteKRS, submitKRS, 
@@ -30,12 +32,18 @@ export default function StudentKRSView({ user }: { user: any }) {
   const [studentSemester, setStudentSemester] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   
+  // [UPDATE] DataTable State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  // Modal State
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
 
   const studentId = user.student_id;
-  const MAX_SKS = 24; // Bisa dibuat dinamis dari backend kedepannya
+  const MAX_SKS = 24; 
 
   useEffect(() => {
     async function init() {
@@ -68,13 +76,13 @@ export default function StudentKRSView({ user }: { user: any }) {
     }
   };
 
+  // === STATS ===
   const totalSKS = offerings.filter(c => c.is_taken).reduce((acc, curr) => acc + curr.sks, 0);
   const hasDraft = offerings.some(c => c.is_taken && c.krs_status === 'DRAFT');
-  
-  // Tentukan status global KRS berdasarkan item pertama yang diambil (asumsi status seragam per semester)
   const krsGlobalStatus = offerings.find(c => c.is_taken)?.krs_status || "BELUM_AMBIL";
   const progressPercent = Math.min((totalSKS / MAX_SKS) * 100, 100);
 
+  // === ACTIONS ===
   const handleAmbil = async (course: CourseOffering) => {
     if (totalSKS + course.sks > MAX_SKS) {
         showError("Batas SKS", `Tidak dapat mengambil mata kuliah. SKS akan melebihi batas (${MAX_SKS}).`);
@@ -109,10 +117,95 @@ export default function StudentKRSView({ user }: { user: any }) {
     finally { setIsSubmitOpen(false); }
   };
 
+  // [UPDATE] Logic Filter & Pagination
+  const filteredData = useMemo(() => {
+    if (!searchQuery) return offerings;
+    const lower = searchQuery.toLowerCase();
+    return offerings.filter(c => 
+        c.matkul.toLowerCase().includes(lower) || 
+        c.kode.toLowerCase().includes(lower)
+    );
+  }, [offerings, searchQuery]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  // [UPDATE] Definisi Kolom
+  const columns: Column<CourseOffering>[] = [
+    {
+      header: "#",
+      className: "w-[50px] text-center",
+      render: (_, index) => <span className="text-muted-foreground">{startIndex + index + 1}</span>,
+    },
+    {
+      header: "Kode",
+      className: "w-[100px]",
+      render: (row) => <span className="font-mono text-slate-600">{row.kode}</span>
+    },
+    {
+      header: "Mata Kuliah",
+      render: (row) => (
+        <div>
+            <div className="font-semibold text-slate-800 text-sm group-hover:text-indigo-700 transition-colors">
+                {row.matkul}
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">{row.kategori || "Reguler"}</div>
+        </div>
+      )
+    },
+    {
+        header: "SKS",
+        className: "text-center w-[80px]",
+        render: (row) => (
+            <Badge variant="secondary" className="font-mono text-xs bg-white border border-slate-200 text-slate-600">
+                {row.sks}
+            </Badge>
+        )
+    },
+    {
+        header: "Status",
+        className: "text-center w-[140px]",
+        render: (row) => (
+            row.is_taken ? (
+                <div className="flex justify-center scale-90">
+                    <StatusBadge status={row.krs_status} />
+                </div>
+            ) : <span className="text-xs text-slate-400 italic">-</span>
+        )
+    },
+    {
+        header: "Aksi",
+        className: "text-center w-[120px]",
+        render: (row) => {
+            if (row.is_taken) {
+                return (
+                    <Button variant="ghost" size="sm" className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 w-full"
+                        disabled={row.krs_status !== 'DRAFT'} 
+                        onClick={() => { setItemToDelete({ id: row.krs_id!, name: row.matkul }); setIsDeleteOpen(true); }}>
+                        {row.krs_status !== 'DRAFT' ? 
+                            <span className="flex items-center text-slate-400 text-xs"><Lock className="w-3 h-3 mr-1" /> Locked</span> : 
+                            <span className="flex items-center justify-center"><Trash2 className="w-3.5 h-3.5 mr-1.5" /> Batal</span>
+                        }
+                    </Button>
+                );
+            }
+            return (
+                <Button size="sm" variant="outline" 
+                    className="h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 w-full" 
+                    onClick={() => handleAmbil(row)}>
+                    <PlusCircle className="w-3.5 h-3.5 mr-1.5" /> Ambil
+                </Button>
+            );
+        }
+    }
+  ];
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-4">
       
-      {/* 1. HEADER STATS & FILTER */}
+      {/* 1. HEADER STATS & FILTER (Tidak Diubah) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card Status Utama */}
         <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
@@ -153,7 +246,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                         </SelectContent>
                     </Select>
                     
-                    {/* Jika semester mahasiswa ada datanya */}
                     {studentSemester > 0 && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
                             <GraduationCap className="w-4 h-4 text-white/80" />
@@ -164,7 +256,7 @@ export default function StudentKRSView({ user }: { user: any }) {
             </CardContent>
         </Card>
 
-        {/* Card Statistik SKS (Sophisticated) */}
+        {/* Card Statistik SKS */}
         <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardContent className="p-6 flex flex-col justify-center h-full">
                 <div className="flex items-center justify-between mb-2">
@@ -177,7 +269,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                     </span>
                 </div>
                 
-                {/* Custom Progress Bar */}
                 <div className="w-full bg-slate-100 rounded-full h-3 mb-3 overflow-hidden">
                     <div 
                         className={`h-full rounded-full transition-all duration-1000 ease-out 
@@ -210,7 +301,7 @@ export default function StudentKRSView({ user }: { user: any }) {
                   <div>
                     <h4 className="font-semibold text-amber-900 text-sm">Selesaikan Pengisian KRS</h4>
                     <p className="text-sm text-amber-800/80 mt-1 max-w-2xl">
-                      Anda memiliki mata kuliah berstatus <strong>Draft</strong>. Harap ajukan segera agar dapat divalidasi oleh Dosen Wali dan masuk ke sistem penilaian.
+                      Anda memiliki mata kuliah berstatus <strong>Draft</strong>. Harap ajukan segera agar dapat divalidasi oleh Dosen Wali.
                     </p>
                   </div>
               </div>
@@ -220,79 +311,27 @@ export default function StudentKRSView({ user }: { user: any }) {
            </div>
       )}
 
-      {/* 3. TABEL MATA KULIAH */}
+      {/* [UPDATE] Tabel Menggunakan DataTable */}
       <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-800">Paket Mata Kuliah</CardTitle>
-              <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 px-3 py-1 font-normal">
-                Daftar Penawaran
-              </Badge>
-            </div>
-        </CardHeader>
-        <CardContent className="p-0">
-            <Table>
-                <TableHeader>
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                        <TableHead className="w-[50px] text-center font-medium">#</TableHead>
-                        <TableHead className="w-[100px] font-medium">Kode</TableHead>
-                        <TableHead className="font-medium">Mata Kuliah</TableHead>
-                        <TableHead className="text-center w-[80px] font-medium">SKS</TableHead>
-                        <TableHead className="text-center w-[140px] font-medium">Status</TableHead>
-                        <TableHead className="text-center w-[120px] font-medium">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                         <TableRow><TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Memuat data...</TableCell></TableRow>
-                    ) : offerings.length === 0 ? (
-                        <TableRow><TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Tidak ada mata kuliah ditawarkan.</TableCell></TableRow>
-                    ) : (
-                        offerings.map((c, i) => (
-                            <TableRow key={c.id} className={`group transition-colors ${c.is_taken ? "bg-indigo-50/30" : "hover:bg-slate-50"}`}>
-                                <TableCell className="text-center text-muted-foreground font-medium text-xs">{i + 1}</TableCell>
-                                <TableCell className="font-mono text-xs text-slate-600">{c.kode}</TableCell>
-                                <TableCell>
-                                    <div className="font-semibold text-slate-800 text-sm group-hover:text-indigo-700 transition-colors">
-                                      {c.matkul}
-                                    </div>
-                                    <div className="text-xs text-slate-400 mt-0.5">{c.kategori || "Reguler"}</div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant="secondary" className="font-mono text-xs bg-white border border-slate-200 text-slate-600">
-                                    {c.sks}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    {c.is_taken ? (
-                                        <div className="flex justify-center scale-90">
-                                          <StatusBadge status={c.krs_status} />
-                                        </div>
-                                    ) : <span className="text-xs text-slate-400 italic">-</span>}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    {c.is_taken ? (
-                                        <Button variant="ghost" size="sm" className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 w-full"
-                                            disabled={c.krs_status !== 'DRAFT'} 
-                                            onClick={() => { setItemToDelete({ id: c.krs_id!, name: c.matkul }); setIsDeleteOpen(true); }}>
-                                            {c.krs_status !== 'DRAFT' ? 
-                                              <span className="flex items-center text-slate-400 text-xs"><Lock className="w-3 h-3 mr-1" /> Locked</span> : 
-                                              <span className="flex items-center justify-center"><Trash2 className="w-3.5 h-3.5 mr-1.5" /> Batal</span>
-                                            }
-                                        </Button>
-                                    ) : (
-                                        <Button size="sm" variant="outline" 
-                                            className="h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 w-full" 
-                                            onClick={() => handleAmbil(c)}>
-                                            <PlusCircle className="w-3.5 h-3.5 mr-1.5" /> Ambil
-                                        </Button>
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
+        <CardContent className="p-6">
+            <DataTable
+                data={currentData}
+                columns={columns}
+                isLoading={isLoading}
+                searchQuery={searchQuery}
+                onSearchChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                }}
+                searchPlaceholder="Cari Matkul atau Kode..."
+                
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                totalItems={filteredData.length}
+            />
         </CardContent>
       </Card>
 

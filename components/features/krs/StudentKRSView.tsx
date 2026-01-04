@@ -38,7 +38,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   const [studentSemester, setStudentSemester] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   
-  // State Data Dinamis untuk Cetak
+  // State Pejabat untuk Tanda Tangan
   const [official, setOfficial] = useState<Official | null>(null);
   const [studentProfile, setStudentProfile] = useState<any>(null); // State Profil Mahasiswa
 
@@ -102,6 +102,13 @@ export default function StudentKRSView({ user }: { user: any }) {
   const takenCourses = useMemo(() => {
      return offerings.filter(c => c.is_taken);
   }, [offerings]);
+
+  // [UPDATE] Cari Nama Tahun Akademik + Semester (Ganjil/Genap)
+  const selectedAcademicYearName = useMemo(() => {
+      const ay = academicYears.find(y => y.id === selectedYear);
+      // Format: "2025/2026 Ganjil"
+      return ay ? `${ay.nama} ${ay.semester}` : "";
+  }, [academicYears, selectedYear]);
 
   // === ACTIONS ===
   const handleToggleCourse = async (course: CourseOffering, isChecked: boolean) => {
@@ -259,20 +266,21 @@ export default function StudentKRSView({ user }: { user: any }) {
     <div id="print-area" className="hidden print:block font-sans bg-white text-black p-4">
         <DocumentHeader title="KARTU RENCANA STUDI (KRS)" />
 
-        {/* Info Mahasiswa Dinamis */}
+        {/* Info Mahasiswa Dinamis + Periode */}
         <div className="mt-6 mb-4 px-2">
              <StudentInfo 
-                profile={studentProfile || { // Gunakan data dari database, atau fallback ke user session
+                profile={studentProfile || { 
                     nama: user?.name || "-",
                     nim: user?.username || "-", 
                     semester: studentSemester,
                     study_program: { nama: "-", jenjang: "-" } 
                 }}
                 displaySemester={studentSemester}
+                periode={selectedAcademicYearName}
              />
         </div>
 
-        {/* Tabel KRS Resmi */}
+        {/* Tabel KRS Resmi (Style Manual agar Rapi saat Print) */}
         <div className="w-full mb-6 px-1">
             <table className="w-full text-[11px] font-['Cambria']" style={{ borderCollapse: 'collapse', width: '100%' }}>
                 <thead>
@@ -318,13 +326,9 @@ export default function StudentKRSView({ user }: { user: any }) {
             <DocumentFooter 
                 signatureType="none" 
                 signatureBase64={null}
-                mode="khs"
+                mode="krs" 
                 official={official}
             />
-        </div>
-        
-        <div className="mt-8 text-[10px] text-gray-400 italic text-right pr-2">
-             Dicetak melalui SIAKAD STMIK IKMI Cirebon pada {new Date().toLocaleDateString('id-ID')}
         </div>
     </div>
 

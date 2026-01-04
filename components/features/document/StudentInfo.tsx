@@ -4,9 +4,10 @@ import { StudentProfile } from "@/lib/types";
 interface StudentInfoProps {
   profile: StudentProfile;
   displaySemester?: number; 
+  periode?: string; // [BARU] Props optional untuk Periode Akademik
 }
 
-export default function StudentInfo({ profile, displaySemester }: StudentInfoProps) {
+export default function StudentInfo({ profile, displaySemester, periode }: StudentInfoProps) {
   // Ambil data dari relasi jika ada
   const prodiNama = profile.study_program?.nama || "-";
   const prodiJenjang = profile.study_program?.jenjang || "";
@@ -23,6 +24,14 @@ export default function StudentInfo({ profile, displaySemester }: StudentInfoPro
       </div>
       
       <div className="font-bold">Semester</div><div className="font-bold">:</div><div className="font-normal">{displaySemester ?? profile.semester}</div>
+
+      {periode && (
+        <>
+          <div className="font-bold">Periode Akademik</div>
+          <div className="font-bold">:</div>
+          <div className="font-normal">{periode}</div>
+        </>
+      )}
     </div>
   );
 }

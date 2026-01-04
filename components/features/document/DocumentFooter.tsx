@@ -4,8 +4,8 @@ import { Official } from "@/lib/types";
 interface DocumentFooterProps {
   signatureType: "basah" | "digital" | "none";
   signatureBase64: string | null;
-  mode?: "transkrip" | "khs" | "surat";
-  official?: Official | null; // Props baru untuk data pejabat
+  mode?: "transkrip" | "khs" | "surat" | "krs"; // Tambahkan mode 'krs'
+  official?: Official | null; 
 }
 
 export default function DocumentFooter({ 
@@ -24,7 +24,6 @@ export default function DocumentFooter({
     }).format(new Date()));
   }, []);
 
-  // Fallback jika data official belum ada/null
   const namaPejabat = official?.nama || "...";
   const nidnPejabat = official?.nidn || "...";
   const jabatanPejabat = official?.jabatan || "Ketua Program Studi";
@@ -39,15 +38,24 @@ export default function DocumentFooter({
         <div className="mt-0 pl-1">
           <p className="font-bold underline mb-1">Keterangan</p>
           <div className="grid grid-cols-[70px_10px_1fr] leading-tight">
-            {mode === "transkrip" && (
+            {/* SMT muncul di Transkrip dan KRS */}
+            {(mode === "transkrip" || mode === "krs") && (
               <>
                 <div>SMT</div> <div>:</div> <div>Semester</div>
               </>
             )}
+            
+            {/* SKS muncul di semua (Transkrip, KHS, KRS) */}
             <div>SKS</div> <div>:</div> <div>Satuan Kredit Semester</div>
-            <div>HM</div> <div>:</div> <div>Huruf Mutu</div>
-            <div>AM</div> <div>:</div> <div>Angka Mutu</div>
-            <div>NM</div> <div>:</div> <div>Nilai Mutu</div>
+
+            {/* HM, AM, NM TIDAK muncul di KRS */}
+            {mode !== "krs" && (
+                <>
+                    <div>HM</div> <div>:</div> <div>Huruf Mutu</div>
+                    <div>AM</div> <div>:</div> <div>Angka Mutu</div>
+                    <div>NM</div> <div>:</div> <div>Nilai Mutu</div>
+                </>
+            )}
           </div>
         </div>
       )}

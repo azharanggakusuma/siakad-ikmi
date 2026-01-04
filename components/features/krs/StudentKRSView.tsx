@@ -146,16 +146,13 @@ export default function StudentKRSView({ user }: { user: any }) {
   const currentData = filteredData.slice(startIndex, endIndex);
 
   // --- LOGIC SELECT ALL ---
-  // Kita hitung status baris di halaman ini
   const editableRows = useMemo(() => {
     return currentData.filter(row => {
-        // Baris yang bisa diedit adalah yang belum diambil ATAU yang diambil tapi statusnya DRAFT
         const isLocked = row.is_taken && row.krs_status !== 'DRAFT';
         return !isLocked;
     });
   }, [currentData]);
 
-  // Apakah semua baris yang bisa diedit SUDAH diambil?
   const isAllTaken = editableRows.length > 0 && editableRows.every(row => row.is_taken);
   
   // === ACTIONS ===
@@ -186,7 +183,6 @@ export default function StudentKRSView({ user }: { user: any }) {
     if (isLoading || editableRows.length === 0) return;
 
     if (isAllTaken) {
-        // SCENARIO: BATALKAN SEMUA
         const toastId = showLoading("Melepas mata kuliah...");
         try {
             const promises = editableRows
@@ -197,7 +193,6 @@ export default function StudentKRSView({ user }: { user: any }) {
             await fetchData();
         } catch (e: any) { showError("Gagal", e.message, toastId); }
     } else {
-        // SCENARIO: AMBIL SEMUA
         const toTake = editableRows.filter(row => !row.is_taken);
         const sKsToAdd = toTake.reduce((sum, row) => sum + row.sks, 0);
         
@@ -238,7 +233,6 @@ export default function StudentKRSView({ user }: { user: any }) {
   // === COLUMNS DEFINITION ===
   const columns: Column<CourseOffering>[] = [
     {
-      // Checkbox Header
       header: () => (
           <div className="flex justify-center">
             <Checkbox 
@@ -266,16 +260,6 @@ export default function StudentKRSView({ user }: { user: any }) {
         );
       },
     },
-    // --- KOLOM BARU: NOMOR (#) ---
-    {
-        header: "#",
-        className: "w-[40px] text-center",
-        render: (_, index) => (
-            <span className="text-xs font-medium text-slate-500">
-                {startIndex + index + 1}
-            </span>
-        ),
-    },
     {
       header: "Kode",
       className: "w-[100px]",
@@ -293,21 +277,22 @@ export default function StudentKRSView({ user }: { user: any }) {
       )
     },
     {
+        // --- SKS DIPINDAH KE SINI & TANPA BADGE ---
+        header: "SKS",
+        className: "text-center w-[60px]",
+        render: (row) => (
+            <span className="text-sm font-medium text-slate-600">
+                {row.sks}
+            </span>
+        )
+    },
+    {
         header: "Semester",
         className: "text-center w-[60px]",
         render: (row) => (
             <span className="text-sm font-medium text-slate-600">
                 {row.smt_default}
             </span>
-        )
-    },
-    {
-        header: "SKS",
-        className: "text-center w-[60px]",
-        render: (row) => (
-            <Badge variant="secondary" className="font-mono text-xs bg-white border border-slate-200 text-slate-600">
-                {row.sks}
-            </Badge>
         )
     },
     {

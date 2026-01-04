@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 // Import DataTable
 import { DataTable, type Column } from "@/components/ui/data-table";
@@ -395,89 +396,129 @@ export default function StudentKRSView({ user }: { user: any }) {
       
       {/* 1. HEADER STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* CARD 1: STATUS KRS */}
         <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
             ${krsGlobalStatus === 'APPROVED' ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 
               krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-800 to-blue-900' : 
-              krsGlobalStatus === 'REJECTED' ? 'bg-gradient-to-br from-red-600 to-rose-700' : // <-- Gradasi Merah untuk Ditolak
+              krsGlobalStatus === 'REJECTED' ? 'bg-gradient-to-br from-red-600 to-rose-700' : 
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
             <div className="absolute top-0 right-0 p-8 opacity-10"><BookOpen size={120} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <p className="text-white/80 font-medium text-sm mb-1">Status Pengisian KRS</p>
-                        {/* Status Label */}
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            {krsGlobalStatus === 'APPROVED' ? "Disetujui Dosen" : 
-                             krsGlobalStatus === 'SUBMITTED' ? "Menunggu Validasi" :
-                             krsGlobalStatus === 'REJECTED' ? "KRS Ditolak" :
-                             krsGlobalStatus === 'NOT_TAKEN' ? "Belum Mengisi" : "Mode Draf"}
-                        </h2>
-                    </div>
-                    <div className="flex gap-2">
-                        {/* Tombol Isi Ulang Khusus REJECTED */}
-                        {krsGlobalStatus === 'REJECTED' && (
-                            <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
-                                onClick={() => setIsResetOpen(true)}>
-                                <RotateCcw className="w-4 h-4 mr-2" /> Isi Ulang
-                            </Button>
-                        )}
-                        {(krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') && (
-                            <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
-                                onClick={() => setIsPrintModalOpen(true)}>
-                                <Printer className="w-4 h-4 mr-2" /> Cetak KRS
-                            </Button>
-                        )}
-                        {krsGlobalStatus === 'DRAFT' && (
-                            <Badge className="bg-amber-400 text-amber-900 hover:bg-amber-500 border-none">Perlu Tindakan</Badge>
-                        )}
-                    </div>
-                </div>
-                <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <Select value={selectedYear} onValueChange={setSelectedYear}>
-                        <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
-                            <SelectValue placeholder="Pilih Tahun Akademik" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {academicYears.map((ay) => (
-                                <SelectItem key={ay.id} value={ay.id}>{ay.nama} - {ay.semester} {ay.is_active ? "(Aktif)" : ""}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {studentSemester > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
-                            <GraduationCap className="w-4 h-4 text-white/80" />
-                            <span className="text-sm font-medium">Semester {studentSemester}</span>
+                {isLoading ? (
+                    // LOADING SKELETON CARD 1
+                    <div className="flex flex-col justify-between h-full gap-6">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-3">
+                                <Skeleton className="h-4 w-32 bg-white/20" />
+                                <Skeleton className="h-8 w-48 bg-white/20" />
+                            </div>
+                            <Skeleton className="h-9 w-24 bg-white/20" />
                         </div>
-                    )}
-                </div>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <Skeleton className="h-10 w-[240px] bg-white/20" />
+                            <Skeleton className="h-10 w-32 bg-white/20" />
+                        </div>
+                    </div>
+                ) : (
+                    // CONTENT CARD 1
+                    <>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-white/80 font-medium text-sm mb-1">Status Pengisian KRS</p>
+                            <h2 className="text-3xl font-bold tracking-tight">
+                                {krsGlobalStatus === 'APPROVED' ? "Disetujui Dosen" : 
+                                 krsGlobalStatus === 'SUBMITTED' ? "Menunggu Validasi" :
+                                 krsGlobalStatus === 'REJECTED' ? "KRS Ditolak" :
+                                 krsGlobalStatus === 'NOT_TAKEN' ? "Belum Mengisi" : "Mode Draf"}
+                            </h2>
+                        </div>
+                        <div className="flex gap-2">
+                            {krsGlobalStatus === 'REJECTED' && (
+                                <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                                    onClick={() => setIsResetOpen(true)}>
+                                    <RotateCcw className="w-4 h-4 mr-2" /> Isi Ulang
+                                </Button>
+                            )}
+                            {(krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') && (
+                                <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                                    onClick={() => setIsPrintModalOpen(true)}>
+                                    <Printer className="w-4 h-4 mr-2" /> Cetak KRS
+                                </Button>
+                            )}
+                            {krsGlobalStatus === 'DRAFT' && (
+                                <Badge className="bg-amber-400 text-amber-900 hover:bg-amber-500 border-none">Perlu Tindakan</Badge>
+                            )}
+                        </div>
+                    </div>
+                    <div className="mt-6 flex flex-wrap items-center gap-4">
+                        <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-[240px] h-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-0">
+                                <SelectValue placeholder="Pilih Tahun Akademik" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {academicYears.map((ay) => (
+                                    <SelectItem key={ay.id} value={ay.id}>{ay.nama} - {ay.semester} {ay.is_active ? "(Aktif)" : ""}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {studentSemester > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
+                                <GraduationCap className="w-4 h-4 text-white/80" />
+                                <span className="text-sm font-medium">Semester {studentSemester}</span>
+                            </div>
+                        )}
+                    </div>
+                    </>
+                )}
             </CardContent>
         </Card>
 
+        {/* CARD 2: TOTAL SKS */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12"><PieChart size={140} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
-                <div>
-                    <div className="flex items-center gap-2 text-cyan-50 mb-1"><span className="text-sm font-medium">Total SKS Diambil</span></div>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-extrabold tracking-tight">{totalSKS}</span>
-                        <span className="text-lg text-cyan-100 font-medium">/ {MAX_SKS} SKS</span>
+                {isLoading ? (
+                    // LOADING SKELETON CARD 2
+                    <div className="space-y-6">
+                        <div className="space-y-3">
+                             <Skeleton className="h-4 w-32 bg-white/20" />
+                             <div className="flex items-baseline gap-2">
+                                <Skeleton className="h-10 w-16 bg-white/20" />
+                                <Skeleton className="h-6 w-12 bg-white/20" />
+                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-full bg-white/20 rounded-full" />
+                            <Skeleton className="h-3 w-3/4 bg-white/20 rounded-full" />
+                        </div>
                     </div>
-                </div>
-                <div className="mt-4">
-                    <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
-                        <div className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }} />
+                ) : (
+                    // CONTENT CARD 2
+                    <>
+                    <div>
+                        <div className="flex items-center gap-2 text-cyan-50 mb-1"><span className="text-sm font-medium">Total SKS Diambil</span></div>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-4xl font-extrabold tracking-tight">{totalSKS}</span>
+                            <span className="text-lg text-cyan-100 font-medium">/ {MAX_SKS} SKS</span>
+                        </div>
                     </div>
-                    <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
-                        {totalSKS < 10 ? "SKS masih sedikit. Maksimalkan jatah SKS Anda." : totalSKS > 20 ? "Beban studi tinggi. Semangat!" : "Beban studi cukup optimal."}
-                    </p>
-                </div>
+                    <div className="mt-4">
+                        <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
+                            <div className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }} />
+                        </div>
+                        <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
+                            {totalSKS < 10 ? "SKS masih sedikit. Maksimalkan jatah SKS Anda." : totalSKS > 20 ? "Beban studi tinggi. Semangat!" : "Beban studi cukup optimal."}
+                        </p>
+                    </div>
+                    </>
+                )}
             </CardContent>
         </Card>
       </div>
 
       {/* 2. ALERT & ACTION BUTTON */}
-      {hasDraft && (
+      {!isLoading && hasDraft && (
            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
               <div className="flex items-start gap-3">
                   <div className="p-2 bg-amber-100 rounded-full text-amber-700 shrink-0"><AlertTriangle className="h-5 w-5" /></div>

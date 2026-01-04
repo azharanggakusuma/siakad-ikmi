@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { 
-    CheckCircle2, PlusCircle, Trash2, Send, Lock, AlertTriangle, 
-    BookOpen, GraduationCap, Info, PieChart
+    Send, AlertTriangle, BookOpen, GraduationCap, PieChart
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
@@ -38,9 +38,7 @@ export default function StudentKRSView({ user }: { user: any }) {
   const itemsPerPage = 10;
   
   // Modal State
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
 
   const studentId = user.student_id;
   const MAX_SKS = 24; 
@@ -83,28 +81,31 @@ export default function StudentKRSView({ user }: { user: any }) {
   const progressPercent = Math.min((totalSKS / MAX_SKS) * 100, 100);
 
   // === ACTIONS ===
-  const handleAmbil = async (course: CourseOffering) => {
-    if (totalSKS + course.sks > MAX_SKS) {
-        showError("Batas SKS", `Tidak dapat mengambil mata kuliah. SKS akan melebihi batas (${MAX_SKS}).`);
-        return;
-    }
-    const toastId = showLoading(`Mengambil ${course.matkul}...`);
-    try {
-        await createKRS({ student_id: studentId, academic_year_id: selectedYear, course_id: course.id });
-        successAction("Mata Kuliah", "create", toastId);
-        await fetchData(); 
-    } catch (e: any) { showError("Gagal", e.message, toastId); }
-  };
+  const handleToggleCourse = async (course: CourseOffering, isChecked: boolean) => {
+    // 1. Jika dicentang (Ambil Mata Kuliah)
+    if (isChecked) {
+        if (totalSKS + course.sks > MAX_SKS) {
+            showError("Batas SKS", `Gagal mengambil mata kuliah. Total SKS akan melebihi batas (${MAX_SKS}).`);
+            return;
+        }
 
-  const confirmBatal = async () => {
-    if (!itemToDelete) return;
-    const toastId = showLoading("Membatalkan...");
-    try {
-        await deleteKRS(itemToDelete.id);
-        successAction("Mata Kuliah", "delete", toastId);
-        await fetchData();
-    } catch (e: any) { showError("Gagal", e.message, toastId); }
-    finally { setIsDeleteOpen(false); }
+        const toastId = showLoading(`Mengambil ${course.matkul}...`);
+        try {
+            await createKRS({ student_id: studentId, academic_year_id: selectedYear, course_id: course.id });
+            successAction("Mata Kuliah", "create", toastId);
+            await fetchData(); 
+        } catch (e: any) { showError("Gagal", e.message, toastId); }
+    
+    // 2. Jika tidak dicentang (Batal Mata Kuliah)
+    } else {
+        if (!course.krs_id) return;
+        const toastId = showLoading(`Membatalkan ${course.matkul}...`);
+        try {
+            await deleteKRS(course.krs_id);
+            successAction("Mata Kuliah", "delete", toastId);
+            await fetchData();
+        } catch (e: any) { showError("Gagal", e.message, toastId); }
+    }
   };
 
   const confirmSubmit = async () => {
@@ -132,12 +133,24 @@ export default function StudentKRSView({ user }: { user: any }) {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // Definisi Kolom
+  // === DEFINISI KOLOM ===
   const columns: Column<CourseOffering>[] = [
     {
-      header: "#",
+      header: "Pilih",
       className: "w-[50px] text-center",
-      render: (_, index) => <span className="text-muted-foreground">{startIndex + index + 1}</span>,
+      render: (row) => {
+        const isLocked = row.is_taken && row.krs_status !== 'DRAFT';
+        return (
+            <div className="flex justify-center">
+                <Checkbox 
+                    checked={row.is_taken}
+                    disabled={isLocked || isLoading}
+                    onCheckedChange={(checked) => handleToggleCourse(row, checked as boolean)}
+                    className="data-[state=checked]:bg-blue-800 data-[state=checked]:border-blue-800"
+                />
+            </div>
+        );
+      },
     },
     {
       header: "Kode",
@@ -148,7 +161,7 @@ export default function StudentKRSView({ user }: { user: any }) {
       header: "Mata Kuliah",
       render: (row) => (
         <div>
-            <div className="font-semibold text-slate-800 text-sm group-hover:text-indigo-700 transition-colors">
+            <div className={`font-semibold text-sm transition-colors ${row.is_taken ? "text-blue-800" : "text-slate-800"}`}>
                 {row.matkul}
             </div>
             <div className="text-xs text-slate-400 mt-0.5">{row.kategori || "Reguler"}</div>
@@ -174,32 +187,8 @@ export default function StudentKRSView({ user }: { user: any }) {
                 </div>
             ) : <span className="text-xs text-slate-400 italic">-</span>
         )
-    },
-    {
-        header: "Aksi",
-        className: "text-center w-[120px]",
-        render: (row) => {
-            if (row.is_taken) {
-                return (
-                    <Button variant="ghost" size="sm" className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 w-full"
-                        disabled={row.krs_status !== 'DRAFT'} 
-                        onClick={() => { setItemToDelete({ id: row.krs_id!, name: row.matkul }); setIsDeleteOpen(true); }}>
-                        {row.krs_status !== 'DRAFT' ? 
-                            <span className="flex items-center text-slate-400 text-xs"><Lock className="w-3 h-3 mr-1" /> Locked</span> : 
-                            <span className="flex items-center justify-center"><Trash2 className="w-3.5 h-3.5 mr-1.5" /> Batal</span>
-                        }
-                    </Button>
-                );
-            }
-            return (
-                <Button size="sm" variant="outline" 
-                    className="h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 w-full" 
-                    onClick={() => handleAmbil(row)}>
-                    <PlusCircle className="w-3.5 h-3.5 mr-1.5" /> Ambil
-                </Button>
-            );
-        }
     }
+    // Kolom "Aksi" dihapus karena sudah digantikan oleh Checkbox
   ];
 
   return (
@@ -208,14 +197,12 @@ export default function StudentKRSView({ user }: { user: any }) {
       {/* 1. HEADER STATS & FILTER */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* Card Status Utama: Style Gradient Dinamis */}
+        {/* Card Status Utama */}
         <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
             ${krsGlobalStatus === 'APPROVED' ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 
-              // UPDATE: Menggunakan class Tailwind (blue-800 ke blue-900)
               krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-800 to-blue-900' : 
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
-            {/* Dekorasi Background */}
             <div className="absolute top-0 right-0 p-8 opacity-10">
                 <BookOpen size={120} />
             </div>
@@ -259,9 +246,8 @@ export default function StudentKRSView({ user }: { user: any }) {
             </CardContent>
         </Card>
 
-        {/* Card Statistik SKS: Style Gradient Soft (Cyan/Blue) */}
+        {/* Card Statistik SKS */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
-            {/* Dekorasi Background */}
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
                 <PieChart size={140} />
             </div>
@@ -278,7 +264,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                 </div>
                 
                 <div className="mt-4">
-                     {/* Progress Bar Custom */}
                     <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
                         <div 
                             className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
@@ -339,9 +324,6 @@ export default function StudentKRSView({ user }: { user: any }) {
             />
         </CardContent>
       </Card>
-
-      <ConfirmModal isOpen={isDeleteOpen} onClose={setIsDeleteOpen} onConfirm={confirmBatal}
-        title="Batalkan Mata Kuliah?" description={`Apakah Anda yakin ingin membatalkan pengambilan mata kuliah ${itemToDelete?.name}?`} confirmLabel="Ya, Batalkan" variant="destructive" />
 
       <ConfirmModal isOpen={isSubmitOpen} onClose={setIsSubmitOpen} onConfirm={confirmSubmit}
         title="Ajukan KRS?" description="Setelah diajukan, KRS akan dikunci dan menunggu persetujuan Dosen Wali. Pastikan pilihan mata kuliah sudah benar." confirmLabel="Ajukan Sekarang" variant="default" />

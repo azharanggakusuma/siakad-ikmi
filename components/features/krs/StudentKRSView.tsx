@@ -103,10 +103,9 @@ export default function StudentKRSView({ user }: { user: any }) {
      return offerings.filter(c => c.is_taken);
   }, [offerings]);
 
-  // [UPDATE] Cari Nama Tahun Akademik + Semester (Ganjil/Genap)
+  // Cari Nama Tahun Akademik + Semester (Ganjil/Genap)
   const selectedAcademicYearName = useMemo(() => {
       const ay = academicYears.find(y => y.id === selectedYear);
-      // Format: "2025/2026 Ganjil"
       return ay ? `${ay.nama} ${ay.semester}` : "";
   }, [academicYears, selectedYear]);
 
@@ -240,15 +239,12 @@ export default function StudentKRSView({ user }: { user: any }) {
           margin: 10mm;
           size: A4 portrait;
         }
-        /* Sembunyikan SEMUA elemen body */
         body * {
           visibility: hidden;
         }
-        /* Hanya tampilkan area print */
         #print-area, #print-area * {
           visibility: visible;
         }
-        /* Posisikan area print di pojok kiri atas menutupi segalanya */
         #print-area {
           position: absolute;
           left: 0;
@@ -280,30 +276,32 @@ export default function StudentKRSView({ user }: { user: any }) {
              />
         </div>
 
-        {/* Tabel KRS Resmi (Style Manual agar Rapi saat Print) */}
+        {/* Tabel KRS Resmi (Style Compact Mirip KHS) */}
         <div className="w-full mb-6 px-1">
-            <table className="w-full text-[11px] font-['Cambria']" style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <table className="w-full text-[9px] font-['Cambria'] border-collapse border border-black mb-2">
                 <thead>
-                    <tr className="bg-gray-100">
-                        <th style={{ border: '1px solid black', padding: '6px', width: '40px', textAlign: 'center' }}>NO</th>
-                        <th style={{ border: '1px solid black', padding: '6px', width: '100px', textAlign: 'left' }}>KODE</th>
-                        <th style={{ border: '1px solid black', padding: '6px', textAlign: 'left' }}>MATA KULIAH</th>
-                        <th style={{ border: '1px solid black', padding: '6px', width: '50px', textAlign: 'center' }}>SKS</th>
-                        <th style={{ border: '1px solid black', padding: '6px', width: '50px', textAlign: 'center' }}>SMT</th>
+                    {/* Header: Biru Muda, Bold, Tinggi h-5 */}
+                    <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
+                        <th className="border border-black w-6">No</th>
+                        <th className="border border-black w-24">Kode MK</th>
+                        <th className="border border-black text-left pl-2">Mata Kuliah</th>
+                        <th className="border border-black w-10">SKS</th>
+                        <th className="border border-black w-10">SMT</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="font-normal">
                     {takenCourses.length > 0 ? takenCourses.map((course, index) => (
-                        <tr key={course.id}>
-                            <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center' }}>{index + 1}</td>
-                            <td style={{ border: '1px solid black', padding: '4px', fontFamily: 'monospace' }}>{course.kode}</td>
-                            <td style={{ border: '1px solid black', padding: '4px', fontWeight: 'bold' }}>{course.matkul}</td>
-                            <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center' }}>{course.sks}</td>
-                            <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center' }}>{course.smt_default}</td>
+                        /* Body: Teks Normal, Tinggi Rapat h-[13px] */
+                        <tr key={course.id} className="text-center leading-none h-[13px]">
+                            <td className="border border-black">{index + 1}</td>
+                            <td className="border border-black">{course.kode}</td>
+                            <td className="border border-black text-left pl-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">{course.matkul}</td>
+                            <td className="border border-black">{course.sks}</td>
+                            <td className="border border-black">{course.smt_default}</td>
                         </tr>
                     )) : (
                         <tr>
-                            <td colSpan={5} style={{ border: '1px solid black', padding: '20px', textAlign: 'center', fontStyle: 'italic' }}>
+                            <td colSpan={5} className="border border-black p-4 text-center italic">
                                 Belum ada mata kuliah yang diambil.
                             </td>
                         </tr>
@@ -311,10 +309,11 @@ export default function StudentKRSView({ user }: { user: any }) {
                 </tbody>
                 {takenCourses.length > 0 && (
                      <tfoot>
-                        <tr className="bg-gray-50 font-bold">
-                            <td colSpan={3} style={{ border: '1px solid black', padding: '6px', textAlign: 'right' }}>TOTAL SKS :</td>
-                            <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{totalSKS}</td>
-                            <td style={{ border: '1px solid black', padding: '6px' }}></td>
+                        {/* Footer: Style Mirip KHS */}
+                        <tr className="font-bold bg-white h-4 border-t border-black text-[9px]">
+                            <td colSpan={3} className="border border-black px-2 text-left">Jumlah SKS yang diambil</td>
+                            <td className="border border-black text-center">{totalSKS}</td>
+                            <td className="border border-black bg-gray-100"></td>
                         </tr>
                      </tfoot>
                 )}
@@ -359,7 +358,7 @@ export default function StudentKRSView({ user }: { user: any }) {
                         </h2>
                     </div>
                     <div className="flex gap-2">
-                        {/* Tombol Cetak (Hanya muncul jika sudah Submitted/Approved) */}
+                        {/* Tombol Cetak */}
                         {(krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') && (
                             <Button 
                                 size="sm" 

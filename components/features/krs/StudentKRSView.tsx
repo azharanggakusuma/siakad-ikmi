@@ -211,7 +211,8 @@ export default function StudentKRSView({ user }: { user: any }) {
         {/* Card Status Utama: Style Gradient Dinamis */}
         <Card className={`col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative
             ${krsGlobalStatus === 'APPROVED' ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 
-              krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 
+              // UPDATE: Menggunakan class Tailwind (blue-800 ke blue-900)
+              krsGlobalStatus === 'SUBMITTED' ? 'bg-gradient-to-br from-blue-800 to-blue-900' : 
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
             {/* Dekorasi Background */}
@@ -258,7 +259,7 @@ export default function StudentKRSView({ user }: { user: any }) {
             </CardContent>
         </Card>
 
-        {/* Card Statistik SKS: UPDATE WARNA SOFT (Cyan/Blue) */}
+        {/* Card Statistik SKS: Style Gradient Soft (Cyan/Blue) */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
             {/* Dekorasi Background */}
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">

@@ -11,7 +11,7 @@ import {
   CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Import DataTable dan Column
@@ -139,8 +139,17 @@ export default function AdminKRSValidationView() {
         )
     },
     {
+        header: "Semester",
+        className: "text-center",
+        render: (row) => (
+            <div className="text-center font-medium text-slate-700">
+                {row.semester}
+            </div>
+        )
+    },
+    {
         header: "Status",
-        className: "text-center w-[120px]",
+        className: "text-center",
         render: () => (
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
                 Submitted

@@ -12,7 +12,7 @@ export interface CourseOffering extends Course {
 }
 
 // ==========================================
-// GATEKEEPER & VALIDATION (BARU)
+// GATEKEEPER & VALIDATION
 // ==========================================
 
 // Cek Status KRS Mahasiswa untuk Gatekeeper Halaman Lain
@@ -237,7 +237,7 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
       .select(`
         student_id,
         students:students (
-          id, nim, nama, 
+          id, nim, nama, semester,
           study_program:study_programs (nama, jenjang)
         )
       `)

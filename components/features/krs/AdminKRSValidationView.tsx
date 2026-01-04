@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { 
-  CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo, BookOpen, Users
+  CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo, BookOpen, Users, Lock
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
@@ -158,7 +158,7 @@ export default function AdminKRSValidationView() {
         className: "text-center w-[120px]",
         render: (row) => (
             <div className="flex justify-center scale-90">
-                {/* Status diambil dari row.status (hasil modifikasi action) */}
+                {/* Status diambil dari row.status */}
                 <StatusBadge status={row.status} />
             </div>
         )
@@ -166,19 +166,43 @@ export default function AdminKRSValidationView() {
     {
         header: "Aksi",
         className: "text-center w-[100px]", 
-        render: (row) => (
-            <div className="flex justify-center">
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => openDetail(row)} 
-                    className="h-8 w-8 text-indigo-600 hover:bg-indigo-50"
-                    title="Tinjau KRS"
-                >
-                    <Eye className="w-4 h-4" />
-                </Button>
-            </div>
-        )
+        render: (row) => {
+            // Logika Gembok: Jika status BUKAN 'SUBMITTED', tampilkan gembok
+            const isLocked = row.status !== 'SUBMITTED';
+
+            if (isLocked) {
+                return (
+                    <div className="flex justify-center">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            // Hapus 'disabled' prop asli agar opacity tidak turun
+                            // Gunakan styling manual untuk memberi kesan non-aktif
+                            className="h-8 w-8 text-slate-500 cursor-not-allowed hover:bg-transparent hover:text-slate-500"
+                            title="Sudah Diproses"
+                            onClick={(e) => e.preventDefault()}
+                        >
+                            <Lock className="w-4 h-4" />
+                        </Button>
+                    </div>
+                );
+            }
+
+            // Jika 'SUBMITTED' (Diajukan), tampilkan tombol tinjau (Eye)
+            return (
+                <div className="flex justify-center">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => openDetail(row)} 
+                        className="h-8 w-8 text-indigo-600 hover:bg-indigo-50"
+                        title="Tinjau KRS"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </Button>
+                </div>
+            );
+        }
     }
   ];
 

@@ -231,9 +231,6 @@ export default function AdminKRSValidationView() {
                     <>
                     <div className="flex justify-between items-start">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-200 border-0 backdrop-blur-sm rounded-full">Admin Panel</Badge>
-                            </div>
                             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Validasi KRS Mahasiswa</h2>
                             <p className="text-slate-400 text-sm mt-1">Kelola persetujuan rencana studi mahasiswa untuk semester aktif.</p>
                         </div>

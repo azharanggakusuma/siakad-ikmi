@@ -132,15 +132,26 @@ export default function StudentKRSView({ user }: { user: any }) {
       return ay ? `${ay.nama} ${ay.semester}` : "";
   }, [academicYears, selectedYear]);
 
-  // Filter & Pagination
+  // Filter & Pagination Logic
   const filteredData = useMemo(() => {
-    if (!searchQuery) return offerings;
+    let data = offerings;
+
+    // Filter Visibility:
+    // Sembunyikan mata kuliah yang tidak diambil jika status sudah diajukan atau diproses (SUBMITTED, APPROVED, REJECTED).
+    // Mata kuliah akan muncul kembali semua hanya jika status adalah 'DRAFT' atau 'NOT_TAKEN'.
+    if (krsGlobalStatus !== 'DRAFT' && krsGlobalStatus !== 'NOT_TAKEN') {
+        data = data.filter(row => row.is_taken);
+    }
+
+    // Filter Search Query:
+    if (!searchQuery) return data;
+    
     const lower = searchQuery.toLowerCase();
-    return offerings.filter(c => 
+    return data.filter(c => 
         c.matkul.toLowerCase().includes(lower) || 
         c.kode.toLowerCase().includes(lower)
     );
-  }, [offerings, searchQuery]);
+  }, [offerings, searchQuery, krsGlobalStatus]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;

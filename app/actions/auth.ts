@@ -6,12 +6,12 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs"; 
 
-// [UPDATE 1] Tambahkan student_id ke tipe ini
 export type UserSession = {
   username: string;
   name?: string; 
   role: string;
   student_id?: string | null; 
+  error?: string;
 };
 
 export async function authenticate(formData: FormData) {
@@ -70,12 +70,12 @@ export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
   if (!session?.user) return null;
   
-  // [UPDATE 2] Pastikan student_id diteruskan dari session auth ke return object
   return {
     username: session.user.username || "",
     name: session.user.name || "",
     role: session.user.role || "mahasiswa",
-    student_id: session.user.student_id || null, 
+    student_id: session.user.student_id || null,
+    error: session.user.error, 
   };
 }
 

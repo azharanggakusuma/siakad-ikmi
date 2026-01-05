@@ -12,15 +12,16 @@ export default async function PagesLayout({
 }) {
   const user = await getSession();
 
+  // Cek jika user tidak ada ATAU ada error pada token
+  if (!user || user.error === "RefreshAccessTokenError") {
+    redirect("/login");
+  }
+
   // Ambil data Tahun Akademik yang aktif
   const academicYear = await getActiveAcademicYear();
 
   // Ambil semua menu dari database
   const allMenus = await getMenus();
-
-  if (!user) {
-    redirect("/login");
-  }
 
   // Filter menu berdasarkan role user dan status aktif
   const userMenus = allMenus.filter((menu) => {

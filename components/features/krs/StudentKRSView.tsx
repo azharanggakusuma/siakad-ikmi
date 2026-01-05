@@ -11,7 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; 
 import { Label } from "@/components/ui/label"; 
 import { 
-    Send, AlertTriangle, BookOpen, GraduationCap, PieChart, Printer, Loader2, RotateCcw
+    Send, AlertTriangle, BookOpen, GraduationCap, PieChart, Printer, Loader2, RotateCcw,
+    CheckCircle, Clock, XCircle // [Added] Import icon tambahan untuk status
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
@@ -132,13 +133,23 @@ export default function StudentKRSView({ user }: { user: any }) {
       return ay ? `${ay.nama} ${ay.semester}` : "";
   }, [academicYears, selectedYear]);
 
+  // === ICON LOGIC ===
+  // Menentukan Icon Background Card berdasarkan Status
+  const StatusIcon = useMemo(() => {
+    switch (krsGlobalStatus) {
+        case 'APPROVED': return CheckCircle; // Disetujui -> Centang
+        case 'SUBMITTED': return Clock;       // Menunggu -> Jam
+        case 'REJECTED': return XCircle;      // Ditolak -> Silang
+        default: return BookOpen;             // Draft/Belum -> Buku
+    }
+  }, [krsGlobalStatus]);
+
   // Filter & Pagination Logic
   const filteredData = useMemo(() => {
     let data = offerings;
 
     // Filter Visibility:
     // Sembunyikan mata kuliah yang tidak diambil jika status sudah diajukan atau diproses (SUBMITTED, APPROVED, REJECTED).
-    // Mata kuliah akan muncul kembali semua hanya jika status adalah 'DRAFT' atau 'NOT_TAKEN'.
     if (krsGlobalStatus !== 'DRAFT' && krsGlobalStatus !== 'NOT_TAKEN') {
         data = data.filter(row => row.is_taken);
     }
@@ -414,7 +425,11 @@ export default function StudentKRSView({ user }: { user: any }) {
               krsGlobalStatus === 'REJECTED' ? 'bg-gradient-to-br from-red-600 to-rose-700' : 
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
-            <div className="absolute top-0 right-0 p-8 opacity-10"><BookOpen size={120} /></div>
+            {/* Dynamic Icon Background */}
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+                <StatusIcon size={120} />
+            </div>
+
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
                     // LOADING SKELETON CARD 1

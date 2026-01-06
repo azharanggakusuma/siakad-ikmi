@@ -267,3 +267,37 @@ export interface KRSFormValues {
   academic_year_id: string;
   status?: KRSStatus;
 }
+
+// =========================================
+// MBKM
+// =========================================
+export interface StudentMBKM {
+  id: string;
+  student_id: string;
+  academic_year_id: string;
+  jenis_mbkm: string;
+  mitra: string;
+  keterangan?: string;
+  
+  // Relations
+  student?: {
+    nim: string;
+    nama: string;
+    study_program?: {
+      nama: string;
+      jenjang: string;
+    };
+  };
+  academic_year?: {
+    nama: string;
+    semester: string;
+  };
+}
+
+export interface StudentMBKMFormValues {
+  student_id: string;
+  academic_year_id: string;
+  jenis_mbkm: string;
+  mitra: string;
+  keterangan: string;
+}

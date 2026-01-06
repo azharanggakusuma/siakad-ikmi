@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"; 
 import { 
     Send, AlertTriangle, BookOpen, GraduationCap, PieChart, Printer, Loader2, RotateCcw,
-    CheckCircle, Clock, XCircle // [Added] Import icon tambahan untuk status
+    CheckCircle, Clock, XCircle 
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
@@ -132,6 +132,44 @@ export default function StudentKRSView({ user }: { user: any }) {
       const ay = academicYears.find(y => y.id === selectedYear);
       return ay ? `${ay.nama} ${ay.semester}` : "";
   }, [academicYears, selectedYear]);
+
+  // === FILTER & SORT TAHUN AKADEMIK ===
+  const filteredAcademicYears = useMemo(() => {
+    if (!studentProfile || !academicYears.length) return academicYears;
+    const angkatan = Number(studentProfile.angkatan);
+    
+    // 1. Copy array agar tidak memutasi state
+    let data = [...academicYears];
+
+    // 2. Filter: Hanya tampilkan tahun >= Angkatan
+    if (angkatan && !isNaN(angkatan)) {
+        data = data.filter((ay) => {
+            const startYear = parseInt(ay.nama.split('/')[0]);
+            if (isNaN(startYear)) return true; // Tampilkan jika format tahun tidak valid (fallback)
+            return startYear >= angkatan;
+        });
+    }
+
+    // 3. Sort: Urutkan dari yang terbaru (Tahun Besar -> Semester Genap -> Semester Ganjil)
+    return data.sort((a, b) => {
+        const yearA = parseInt(a.nama.split('/')[0]) || 0;
+        const yearB = parseInt(b.nama.split('/')[0]) || 0;
+
+        // Bandingkan Tahun (Descending)
+        if (yearA !== yearB) {
+            return yearB - yearA; 
+        }
+
+        // Jika Tahun Sama, Bandingkan Semester (Genap lebih baru dari Ganjil)
+        const isGenapA = a.semester.toLowerCase().includes('genap');
+        const isGenapB = b.semester.toLowerCase().includes('genap');
+
+        if (isGenapA && !isGenapB) return -1; // A (Genap) di atas
+        if (!isGenapA && isGenapB) return 1;  // B (Genap) di atas
+        
+        return 0;
+    });
+  }, [academicYears, studentProfile]);
 
   // === ICON LOGIC ===
   // Menentukan Icon Background Card berdasarkan Status
@@ -483,8 +521,10 @@ export default function StudentKRSView({ user }: { user: any }) {
                                 <SelectValue placeholder="Pilih Tahun Akademik" />
                             </SelectTrigger>
                             <SelectContent>
-                                {academicYears.map((ay) => (
-                                    <SelectItem key={ay.id} value={ay.id}>{ay.nama} - {ay.semester} {ay.is_active ? "(Aktif)" : ""}</SelectItem>
+                                {filteredAcademicYears.map((ay) => (
+                                    <SelectItem key={ay.id} value={ay.id}>
+                                        {ay.nama} - {ay.semester}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>

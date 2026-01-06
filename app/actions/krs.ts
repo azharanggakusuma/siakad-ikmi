@@ -287,6 +287,14 @@ export async function resetKRS(studentId: string, academicYearId: string) {
 // 7. Ambil Daftar Mahasiswa dengan Status KRS (SUBMITTED, APPROVED, REJECTED)
 export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   try {
+    // A. Ambil Info Tahun Akademik Dulu untuk Hitung Semester
+    const { data: academicYear } = await supabase
+      .from("academic_years")
+      .select("nama, semester")
+      .eq("id", academicYearId)
+      .single();
+
+    // B. Ambil Data Mahasiswa
     const { data: krsList, error } = await supabase
       .from("krs")
       .select(`
@@ -306,9 +314,26 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
 
     krsList.forEach((item: any) => {
       if (item.students && !studentMap.has(item.student_id)) {
+        // Logika Hitung Semester (Sama seperti di StudentCourseOfferings)
+        let calculatedSemester = 1;
+        if (item.students.angkatan && academicYear?.nama) {
+           const activeStartYear = parseInt(academicYear.nama.split('/')[0]);
+           const studentEntryYear = parseInt(item.students.angkatan);
+           
+           if (!isNaN(activeStartYear) && !isNaN(studentEntryYear)) {
+             const yearDiff = activeStartYear - studentEntryYear;
+             calculatedSemester = (yearDiff * 2);
+             if (academicYear.semester === 'Ganjil') calculatedSemester += 1;
+             else if (academicYear.semester === 'Genap') calculatedSemester += 2;
+             
+             if (calculatedSemester < 1) calculatedSemester = 1;
+           }
+        }
+
         studentMap.set(item.student_id, { 
             ...item.students, 
-            status: item.status 
+            status: item.status,
+            semester: calculatedSemester // Tambahkan hasil hitungan ke object
         });
       }
     });

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getStudents, getActiveOfficial } from "@/app/actions/students";
-import { validateStudentKrs } from "@/app/actions/krs"; // Import Validasi
 
 import { type StudentData, type TranscriptItem, type Official } from "@/lib/types";
 import { useSignature } from "@/hooks/useSignature";
@@ -15,16 +14,14 @@ import DocumentFooter from "@/components/features/document/DocumentFooter";
 import StudentInfo from "@/components/features/document/StudentInfo";
 import ControlPanel from "@/components/features/document/ControlPanel";
 import GradeTable from "@/components/features/transkrip/GradeTable";
-import KrsLock from "@/components/shared/KrsLock"; // Komponen Kunci
+
+// [REMOVED] Import KrsLock dan validateStudentKrs dihapus
 
 export default function KhsPage() {
   // State Data
   const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [official, setOfficial] = useState<Official | null>(null);
-
-  // State Gatekeeper KRS
-  const [isKrsValid, setIsKrsValid] = useState<boolean>(true); // Default true (allow history)
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState<number>(1);
@@ -34,19 +31,9 @@ export default function KhsPage() {
   const paperRef = useRef<HTMLDivElement>(null);
   const [totalPages, setTotalPages] = useState(1);
 
-  // === 1. CEK STATUS KRS (Tanpa Blocking Halaman Penuh) ===
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (user?.role === "mahasiswa" && user.student_id) {
-        const check = await validateStudentKrs(user.student_id);
-        // Kita simpan statusnya: TRUE jika sudah KRS/Approved, FALSE jika belum.
-        setIsKrsValid(check.allowed);
-      }
-    };
-    if (user) checkAccess();
-  }, [user]);
+  // [REMOVED] useEffect untuk checkAccess (KRS Validation) dihapus
 
-  // === 2. FETCH DATA UTAMA ===
+  // === 1. FETCH DATA UTAMA ===
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,7 +52,7 @@ export default function KhsPage() {
     fetchData();
   }, []);
 
-  // === 3. AUTO-SELECT MAHASISWA JIKA LOGIN SEBAGAI MAHASISWA ===
+  // === 2. AUTO-SELECT MAHASISWA JIKA LOGIN SEBAGAI MAHASISWA ===
   useEffect(() => {
     if (studentsData.length > 0 && user?.role === "mahasiswa" && user?.student_id) {
        // Cari index mahasiswa tersebut di array data
@@ -91,7 +78,7 @@ export default function KhsPage() {
     return () => observer.disconnect();
   }, [currentStudent, selectedSemester]);
 
-  // === LOGIC SEMESTER & LOCK ===
+  // === LOGIC SEMESTER ===
 
   // 1. List Semester: Gabungan dari Transkrip + Semester Aktif Mahasiswa
   const availableSemesters = useMemo<number[]>(() => {
@@ -101,8 +88,7 @@ export default function KhsPage() {
     const transcriptSmts = currentStudent.transcript?.map((t: TranscriptItem) => Number(t.smt)) || [];
     const uniqueSmts = new Set(transcriptSmts);
 
-    // Pastikan Semester Aktif (Profil) masuk dalam list, 
-    // agar mahasiswa bisa "mengklik" semester sekarang meskipun belum ada nilai
+    // Pastikan Semester Aktif (Profil) masuk dalam list
     if (currentStudent.profile?.semester) {
         uniqueSmts.add(currentStudent.profile.semester);
     }
@@ -110,15 +96,14 @@ export default function KhsPage() {
     return Array.from(uniqueSmts).sort((a, b) => a - b);
   }, [currentStudent]);
 
-  // 2. Default Select: Pilih semester terakhir (biasanya semester aktif)
+  // 2. Default Select: Pilih semester terakhir
   useEffect(() => {
     if (availableSemesters.length > 0) {
-        // Jika user belum memilih manual (atau saat load awal), set ke semester paling besar
         if (!availableSemesters.includes(selectedSemester)) {
             setSelectedSemester(availableSemesters[availableSemesters.length - 1]);
         }
     }
-  }, [availableSemesters]); // Hapus deps berlebih
+  }, [availableSemesters]);
 
   // 3. Filter Data Nilai Sesuai Semester Pilihan
   const semesterData = useMemo(() => {
@@ -144,18 +129,7 @@ export default function KhsPage() {
     return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
   }, [cumulativeData]);
 
-
-  // === 4. PENENTU KUNCI ===
-  // Terkunci JIKA:
-  // - Semester yang dipilih == Semester Aktif Mahasiswa
-  // - DAN Status KRS (isKrsValid) == False
-  // - DAN User adalah Mahasiswa
-  const isLocked = useMemo(() => {
-      if (user?.role !== "mahasiswa") return false;
-      const studentCurrentSemester = currentStudent?.profile?.semester;
-      return (selectedSemester === studentCurrentSemester) && !isKrsValid;
-  }, [user, selectedSemester, currentStudent, isKrsValid]);
-
+  // [REMOVED] Logic isLocked dihapus
 
   // === RENDER VIEW ===
 
@@ -196,32 +170,18 @@ export default function KhsPage() {
                 <DocumentHeader title="KARTU HASIL STUDI" />
                 <StudentInfo profile={currentStudent.profile} displaySemester={selectedSemester} />
                 
-                {/* === AREA KONTEN UTAMA DENGAN LOGIC LOCK === */}
-                {/* FIX: Hapus min-h-[400px] jika tidak terkunci agar footer naik */}
-                <div className={isLocked ? "min-h-[400px]" : ""}>
-                    {isLocked ? (
-                        <div className="mt-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-8 flex items-center justify-center h-[400px]">
-                            <div className="scale-90 transform">
-                                <KrsLock 
-                                    title={`Semester ${selectedSemester} Terkunci`}
-                                    message="Anda belum menyelesaikan administrasi KRS untuk semester ini. Silakan selesaikan terlebih dahulu untuk melihat hasil studi." 
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <GradeTable mode="khs" data={semesterData} ips={ips} ipk={ipk} />
-                    )}
+                {/* === AREA KONTEN UTAMA (LANGSUNG TAMPILKAN TABEL) === */}
+                <div className="mt-4">
+                    <GradeTable mode="khs" data={semesterData} ips={ips} ipk={ipk} />
                 </div>
                 
-                {/* Footer Tanda Tangan (Hidden jika terkunci) */}
-                {!isLocked && (
-                    <DocumentFooter 
-                        signatureType={signatureType} 
-                        signatureBase64={secureImage} 
-                        mode="khs"
-                        official={official} 
-                    />
-                )}
+                {/* Footer Tanda Tangan (Selalu Tampil) */}
+                <DocumentFooter 
+                    signatureType={signatureType} 
+                    signatureBase64={secureImage} 
+                    mode="khs"
+                    official={official} 
+                />
               </>
             )}
           </div>
@@ -246,9 +206,6 @@ export default function KhsPage() {
                 selectedSemester={selectedSemester}
                 onSelectSemester={setSelectedSemester}
                 totalPages={totalPages}
-                disablePrint={isLocked}
-                
-                // [PENTING] Kirim prop user ke sini untuk pengecekan role
                 user={user} 
             />
           )}

@@ -22,10 +22,9 @@ import { StudentData } from "@/lib/types";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip"; 
-import { RotateCcw, Save, Loader2 } from "lucide-react";
+import { RotateCcw, Save, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// [UBAH] ID sekarang string (UUID)
 interface CourseRaw {
   id: string; 
   kode: string;
@@ -36,8 +35,7 @@ interface CourseRaw {
 
 interface StudentGradeFormProps {
   student: StudentData;
-  allCourses: CourseRaw[];
-  // [UBAH] Parameter onSubmit menggunakan string ID
+  allCourses: CourseRaw[]; // Ini sekarang isinya mata kuliah dari KRS
   onSubmit: (studentId: string, grades: { course_id: string; hm: string }[]) => Promise<void>;
   onCancel: () => void;
 }
@@ -51,12 +49,12 @@ export function StudentGradeForm({
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   
-  // [UBAH] Key gradeChanges sekarang string (UUID course_id)
+  // State untuk menyimpan perubahan nilai sementara
   const [gradeChanges, setGradeChanges] = useState<Record<string, string>>({});
 
   // --- Helpers ---
 
-  // [UBAH] courseId string
+  // Ambil nilai: Cek perubahan lokal dulu, kalau tidak ada cek di transcript (database)
   const getGradeValue = (courseId: string) => {
     return gradeChanges[courseId] !== undefined
       ? gradeChanges[courseId]
@@ -68,27 +66,22 @@ export function StudentGradeForm({
     return points[hm] ?? 0;
   };
 
-  // [UBAH] courseId string
   const handleGradeChange = (courseId: string, value: string) => {
     setGradeChanges((prev) => ({ ...prev, [courseId]: value }));
   };
 
-  // [UBAH] courseId string
   const handleResetRow = (courseId: string) => {
     const newChanges = { ...gradeChanges };
     delete newChanges[courseId];
     setGradeChanges(newChanges);
   };
 
-  // Kalkulasi IPK
+  // Kalkulasi Rata-rata (Berdasarkan list mata kuliah KRS yang ditampilkan)
   const projectedStats = useMemo(() => {
-    const maxSemester = student.profile.semester;
-    const relevantCourses = allCourses.filter((c) => c.smt_default <= maxSemester);
-
     let totalSks = 0;
     let totalPoints = 0;
 
-    relevantCourses.forEach((course) => {
+    allCourses.forEach((course) => {
       const hm = getGradeValue(course.id);
       if (hm && ["A", "B", "C", "D", "E"].includes(hm)) {
         const point = getGradePoint(hm);
@@ -99,7 +92,7 @@ export function StudentGradeForm({
 
     const ipk = totalSks === 0 ? 0 : totalPoints / totalSks;
     return { ipk: ipk.toFixed(2), totalSks };
-  }, [allCourses, gradeChanges, student.transcript, student.profile.semester]);
+  }, [allCourses, gradeChanges, student.transcript]);
 
   // --- Handlers ---
 
@@ -117,18 +110,16 @@ export function StudentGradeForm({
 
     try {
       const payload = Object.entries(gradeChanges).map(([cId, hm]) => ({
-        // [UBAH] cId sudah string (UUID), jangan di parseInt
         course_id: cId,
         hm: hm,
       }));
 
-      // [UBAH] student.id sudah string (UUID), jangan di parseInt
       await toast.promise(
         onSubmit(student.id, payload),
         {
-          loading: 'Sedang memproses penyimpanan data akademik...',
-          success: `Nilai atas nama ${student.profile.nama} berhasil diperbarui.`,
-          error: 'Gagal menyimpan perubahan. Silakan periksa koneksi Anda dan coba lagi.',
+          loading: 'Sedang memproses penyimpanan...',
+          success: `Nilai berhasil diperbarui.`,
+          error: 'Gagal menyimpan perubahan.',
         }
       );
 
@@ -140,10 +131,10 @@ export function StudentGradeForm({
     }
   };
 
+  // Group mata kuliah KRS berdasarkan semester default-nya
   const relevantSemesters = Array.from(
-    { length: student.profile.semester },
-    (_, i) => i + 1
-  );
+    new Set(allCourses.map((c) => c.smt_default))
+  ).sort((a, b) => a - b);
 
   const prodiInfo = student.profile.study_program 
     ? student.profile.study_program.nama 
@@ -176,7 +167,7 @@ export function StudentGradeForm({
 
           <div className="flex flex-col items-end justify-center pt-0.5">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-              Proyeksi IPK
+              Rata-rata (KRS)
             </p>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-primary tracking-tight leading-none">
@@ -192,114 +183,132 @@ export function StudentGradeForm({
 
         {/* === CONTENT === */}
         <div className="flex-1 overflow-y-auto p-6 bg-muted/5">
-          <Accordion
-            type="multiple"
-            defaultValue={[String(student.profile.semester)]}
-            className="space-y-4"
-          >
-            {relevantSemesters.map((smt) => {
-              const coursesInSmt = allCourses.filter((c) => c.smt_default === smt);
-              if (coursesInSmt.length === 0) return null;
-              
-              const semesterSks = coursesInSmt.reduce((a, b) => a + b.sks, 0);
+          
+          {/* Empty State: Jika mahasiswa belum punya KRS Approved */}
+          {allCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 p-8 opacity-70">
+                <div className="bg-muted p-4 rounded-full">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                    <h3 className="text-lg font-semibold">Belum Ada KRS</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                        Mahasiswa ini belum mengambil mata kuliah (Status KRS belum Approved).
+                    </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={onCancel}>
+                    Tutup
+                </Button>
+            </div>
+          ) : (
+            <Accordion
+                type="multiple"
+                defaultValue={relevantSemesters.map(String)}
+                className="space-y-4"
+            >
+                {relevantSemesters.map((smt) => {
+                const coursesInSmt = allCourses.filter((c) => c.smt_default === smt);
+                const semesterSks = coursesInSmt.reduce((a, b) => a + b.sks, 0);
 
-              return (
-                <AccordionItem
-                  key={smt}
-                  value={String(smt)}
-                  className="border bg-background rounded-lg overflow-hidden shadow-sm"
-                >
-                  <AccordionTrigger className="hover:no-underline px-5 py-4 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3 w-full">
-                      <span className="font-semibold text-sm text-foreground">Semester {smt}</span>
-                      <span className="ml-auto text-xs text-muted-foreground font-normal">
-                        {coursesInSmt.length} Matkul • {semesterSks} SKS
-                      </span>
-                    </div>
-                  </AccordionTrigger>
+                return (
+                    <AccordionItem
+                    key={smt}
+                    value={String(smt)}
+                    className="border bg-background rounded-lg overflow-hidden shadow-sm"
+                    >
+                    <AccordionTrigger className="hover:no-underline px-5 py-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3 w-full">
+                        <span className="font-semibold text-sm text-foreground">Semester {smt}</span>
+                        <span className="ml-auto text-xs text-muted-foreground font-normal">
+                            {coursesInSmt.length} Matkul • {semesterSks} SKS
+                        </span>
+                        </div>
+                    </AccordionTrigger>
 
-                  <AccordionContent className="px-0 py-0 border-t">
-                    <div className="divide-y divide-border">
-                      {coursesInSmt.map((course) => {
-                        const currentValue = getGradeValue(course.id);
-                        const originalValue = student.transcript.find((t) => t.course_id === course.id)?.hm || "";
-                        const isModified = gradeChanges[course.id] !== undefined && gradeChanges[course.id] !== originalValue;
+                    <AccordionContent className="px-0 py-0 border-t">
+                        <div className="divide-y divide-border">
+                        {coursesInSmt.map((course) => {
+                            const currentValue = getGradeValue(course.id);
+                            const originalValue = student.transcript.find((t) => t.course_id === course.id)?.hm || "";
+                            const isModified = gradeChanges[course.id] !== undefined && gradeChanges[course.id] !== originalValue;
 
-                        return (
-                          <div
-                            key={course.id}
-                            className={cn(
-                              "group relative flex items-center justify-between py-3 px-5 transition-colors duration-200",
-                              isModified
-                                ? "bg-muted/30 border-l-4 border-l-primary" 
-                                : "hover:bg-muted/20 border-l-4 border-l-transparent"
-                            )}
-                          >
-                            {/* Info Matkul */}
-                            <div className="flex-1 pr-4 pl-1">
-                              <p className={cn("text-sm font-medium", isModified ? "text-foreground" : "text-foreground/80")}>
-                                {course.matkul}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-mono font-normal text-muted-foreground border-border">
-                                  {course.kode}
-                                </Badge>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {course.sks} SKS
-                                </span>
-                              </div>
-                            </div>
+                            return (
+                            <div
+                                key={course.id}
+                                className={cn(
+                                "group relative flex items-center justify-between py-3 px-5 transition-colors duration-200",
+                                isModified
+                                    ? "bg-muted/30 border-l-4 border-l-primary" 
+                                    : "hover:bg-muted/20 border-l-4 border-l-transparent"
+                                )}
+                            >
+                                {/* Info Matkul */}
+                                <div className="flex-1 pr-4 pl-1">
+                                <p className={cn("text-sm font-medium", isModified ? "text-foreground" : "text-foreground/80")}>
+                                    {course.matkul}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-mono font-normal text-muted-foreground border-border">
+                                    {course.kode}
+                                    </Badge>
+                                    <span className="text-[10px] text-muted-foreground">
+                                    {course.sks} SKS
+                                    </span>
+                                </div>
+                                </div>
 
-                            {/* Kontrol Nilai */}
-                            <div className="flex items-center gap-3">
-                              {/* Tombol Reset */}
-                              {isModified && (
-                                <Tooltip content="Kembalikan nilai awal" position="top">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-                                    onClick={() => handleResetRow(course.id)}
+                                {/* Kontrol Nilai */}
+                                <div className="flex items-center gap-3">
+                                {/* Tombol Reset */}
+                                {isModified && (
+                                    <Tooltip content="Kembalikan nilai awal" position="top">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                                        onClick={() => handleResetRow(course.id)}
+                                        disabled={loading}
+                                    >
+                                        <RotateCcw className="h-3.5 w-3.5" />
+                                    </Button>
+                                    </Tooltip>
+                                )}
+
+                                <Select
+                                    value={currentValue}
+                                    onValueChange={(val) => handleGradeChange(course.id, val)}
                                     disabled={loading}
-                                  >
-                                    <RotateCcw className="h-3.5 w-3.5" />
-                                  </Button>
-                                </Tooltip>
-                              )}
-
-                              <Select
-                                value={currentValue}
-                                onValueChange={(val) => handleGradeChange(course.id, val)}
-                                disabled={loading}
-                              >
-                                <SelectTrigger
-                                  className={cn(
-                                    "w-[70px] h-9 text-xs font-medium transition-all bg-background",
-                                    isModified
-                                      ? "border-primary/50 ring-1 ring-primary/10 text-foreground"
-                                      : "border-input text-muted-foreground"
-                                  )}
                                 >
-                                  <SelectValue placeholder="-" />
-                                </SelectTrigger>
-                                <SelectContent align="end">
-                                  {["A", "B", "C", "D", "E"].map((g) => (
-                                    <SelectItem key={g} value={g} className="text-xs">
-                                      {g}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                    <SelectTrigger
+                                    className={cn(
+                                        "w-[70px] h-9 text-xs font-medium transition-all bg-background",
+                                        isModified
+                                        ? "border-primary/50 ring-1 ring-primary/10 text-foreground"
+                                        : "border-input text-muted-foreground"
+                                    )}
+                                    >
+                                    <SelectValue placeholder="-" />
+                                    </SelectTrigger>
+                                    <SelectContent align="end">
+                                    {["A", "B", "C", "D", "E"].map((g) => (
+                                        <SelectItem key={g} value={g} className="text-xs">
+                                        {g}
+                                        </SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
+                            );
+                        })}
+                        </div>
+                    </AccordionContent>
+                    </AccordionItem>
+                );
+                })}
+            </Accordion>
+          )}
+
         </div>
 
         {/* === FOOTER === */}
@@ -328,7 +337,7 @@ export function StudentGradeForm({
         onClose={setShowConfirm}
         onConfirm={handleConfirmSave}
         title={`Simpan Nilai ${student.profile.nama}?`}
-        description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan data nilai sudah sesuai dan benar.`}
+        description={`Anda akan menyimpan perubahan nilai untuk ${Object.keys(gradeChanges).length} mata kuliah. Pastikan data nilai sudah sesuai.`}
         confirmLabel="Ya, Simpan"
         cancelLabel="Batal"
       />

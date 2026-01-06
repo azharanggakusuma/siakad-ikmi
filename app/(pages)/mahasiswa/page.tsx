@@ -1,3 +1,4 @@
+// app/(pages)/mahasiswa/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -104,7 +105,7 @@ export default function MahasiswaPage() {
       nim: student.profile.nim,
       nama: student.profile.nama,
       study_program_id: student.profile.study_program_id ? String(student.profile.study_program_id) : "",
-      semester: student.profile.semester,
+      angkatan: student.profile.angkatan, 
       alamat: student.profile.alamat,
       is_active: student.profile.is_active 
     });

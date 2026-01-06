@@ -91,15 +91,15 @@ export default function NilaiPage() {
       <FormModal
         isOpen={isFormOpen}
         onClose={setIsFormOpen}
-        title="Input Nilai (Berdasarkan KRS)"
-        description="Mata kuliah yang muncul adalah yang diambil dalam KRS (Status Approved)."
+        title="Input Nilai Mahasiswa"
+        description="Pastikan seluruh nilai telah terisi dengan benar sebelum disimpan."
         maxWidth="sm:max-w-[600px]"
       >
         {selectedStudent && (
             isFetchingCourses ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-3">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Memeriksa data KRS...</p>
+                    <p className="text-sm text-muted-foreground">Memuat data...</p>
                 </div>
             ) : (
                 <StudentGradeForm 

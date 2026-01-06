@@ -191,9 +191,9 @@ export function StudentGradeForm({
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">Belum Ada KRS</h3>
+                    <h3 className="text-lg font-semibold">Input Nilai Tidak Tersedia</h3>
                     <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                        Mahasiswa ini belum mengambil mata kuliah (Status KRS belum Approved).
+                        Mahasiswa belum mengambil mata kuliah atau KRS belum disetujui. Silakan pastikan KRS mahasiswa telah disetujui sebelum menginput nilai.
                     </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={onCancel}>

@@ -10,7 +10,7 @@ interface DBResponseStudent {
   nim: string;
   nama: string;
   alamat: string;
-  angkatan: number; // [Updated] Wajib ada
+  angkatan: number; 
   study_program_id: string | null;
   is_active: boolean;
   study_programs: StudyProgram | null;
@@ -25,8 +25,9 @@ interface DBResponseStudent {
       smt_default: number;
     } | null;
   }[];
-  // [UPDATE] Tambahan relasi KRS untuk hitung SKS
+  
   krs: {
+    status: string; 
     courses: {
       sks: number;
     } | null;
@@ -116,10 +117,10 @@ export async function getActiveOfficial(): Promise<Official | null> {
 }
 
 export async function getStudents(): Promise<StudentData[]> {
-  // 1. Ambil Tahun Akademik Aktif
+  // Ambil Tahun Akademik Aktif
   const activeYear = await getActiveAcademicYear();
 
-  // 2. Ambil Data Mahasiswa (Tanpa kolom semester)
+  // Ambil Data Mahasiswa
   const { data, error } = await supabase
     .from('students')
     .select(`
@@ -134,6 +135,7 @@ export async function getStudents(): Promise<StudentData[]> {
         )
       ),
       krs (
+        status,
         courses (
           sks
         )
@@ -154,9 +156,12 @@ export async function getStudents(): Promise<StudentData[]> {
     // Hitung semester dinamis
     const dynamicSemester = calculateSemester(s.angkatan, activeYear);
 
-    // [UPDATE] Hitung Total SKS dari tabel KRS (Semua semester)
-    const totalSksFromKrs = (s.krs || []).reduce((acc, curr) => {
-        return acc + (curr.courses?.sks || 0);
+    // Hitung Total SKS hanya jika status APPROVED
+    const totalSksApproved = (s.krs || []).reduce((acc, curr) => {
+        if (curr.status === "APPROVED") {
+            return acc + (curr.courses?.sks || 0);
+        }
+        return acc;
     }, 0);
 
     const transcript: TranscriptItem[] = (s.grades || [])
@@ -188,21 +193,19 @@ export async function getStudents(): Promise<StudentData[]> {
         nama: s.nama,
         alamat: s.alamat,
         angkatan: s.angkatan || 0,
-        semester: dynamicSemester, // Masukkan hasil hitungan ke property 'semester'
+        semester: dynamicSemester, 
         study_program_id: s.study_program_id,
         study_program: s.study_programs,
         is_active: s.is_active ?? true
       },
       transcript: transcript,
-      total_sks: totalSksFromKrs // [UPDATE] Masukkan hasil perhitungan ke sini
+      total_sks: totalSksApproved 
     };
   });
 }
 
 // --- CRUD OPERATIONS ---
-
 export async function createStudent(values: StudentFormValues) {
-  // [Updated] Insert angkatan, hapus semester
   const { error } = await supabase.from('students').insert([{
     nim: values.nim,
     nama: values.nama,
@@ -218,7 +221,6 @@ export async function createStudent(values: StudentFormValues) {
 }
 
 export async function updateStudent(id: string, values: StudentFormValues) {
-  // [Updated] Update angkatan, hapus semester
   const { error } = await supabase.from('students').update({
     nim: values.nim,
     nama: values.nama,

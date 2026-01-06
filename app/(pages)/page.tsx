@@ -1,3 +1,4 @@
+// app/(pages)/page.tsx
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
@@ -8,7 +9,7 @@ import {
   calculateSemesterTrend,
   calculateStudentSemesterTrend,
   calculateGradeDistribution,
-  calculateTotalSKS,
+  // calculateTotalSKS, // Hapus atau biarkan tidak terpakai
 } from "@/lib/dashboard-helper";
 
 import { getStudents } from "@/app/actions/students";
@@ -48,7 +49,6 @@ export default function DashboardPage() {
           getCourses(),
         ]);
 
-        // StudentData ID sudah bertipe string (UUID) dari lib/types.ts
         setStudentData(studentsRes as StudentData[]);
         setCourseCount(coursesRes ? coursesRes.length : 0);
       } catch (error) {
@@ -90,12 +90,13 @@ export default function DashboardPage() {
     const currentUsername = user?.username;
 
     if (isMahasiswa && currentUsername) {
-      // Pencarian menggunakan NIM (String), jadi aman dari perubahan ID
       const myData = studentData.find((s) => s.profile.nim === currentUsername);
       
       if (myData) {
         const myIPK = calculateIPK(myData.transcript).toFixed(2);
-        const totalSKS = calculateTotalSKS(myData.transcript);
+
+        const totalSKS = myData.total_sks || 0; 
+
         const currentSmt = myData.profile.semester; 
         const totalMK = myData.transcript.length;
 
@@ -110,14 +111,14 @@ export default function DashboardPage() {
           {
             label: "Total SKS",
             value: totalSKS.toString(),
-            description: "Akumulasi Kredit Lulus", 
+            description: "Akumulasi Kredit Diambil", // Deskripsi disesuaikan
             icon: <Activity className="w-6 h-6" />, 
             themeColor: "chart-2",
           },
           {
             label: "Mata Kuliah",
             value: totalMK.toString(),
-            description: "Total Mata Kuliah Diambil", 
+            description: "Total Mata Kuliah Lulus", // Deskripsi diperjelas (karena dari transcript)
             icon: <LibraryIcon className="w-6 h-6" />,
             themeColor: "chart-3",
           },
@@ -138,6 +139,7 @@ export default function DashboardPage() {
         ];
       }
     } else {
+      // === TAMPILAN ADMIN/DOSEN ===
       const currentStudentCount = studentData.length;
       let totalIPK = 0;
 

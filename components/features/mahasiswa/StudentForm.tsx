@@ -22,8 +22,14 @@ interface StudentFormProps {
   onCancel: () => void;
 }
 
+// Default value
 const defaultValues: StudentFormValues = {
-  nim: "", nama: "", study_program_id: "", semester: "", alamat: "", is_active: true
+  nim: "", 
+  nama: "", 
+  study_program_id: "", 
+  angkatan: new Date().getFullYear(), // Default tahun sekarang
+  alamat: "", 
+  is_active: true
 };
 
 export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, onCancel }: StudentFormProps) {
@@ -33,9 +39,8 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
     return {
       nim: data.nim || "",
       nama: data.nama || "",
-      // [UBAH] study_program_id adalah UUID string, pastikan string
       study_program_id: data.study_program_id ? String(data.study_program_id) : "",
-      semester: data.semester ? String(data.semester) : "",
+      angkatan: data.angkatan ? String(data.angkatan) : new Date().getFullYear().toString(),
       alamat: data.alamat || "",
       is_active: data.is_active ?? true 
     };
@@ -77,14 +82,14 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
       errorMessages.push("NIM harus 8 digit angka.");
     }
 
-    // 2. Validasi Semester
-    const sem = Number(formData.semester);
-    if (!formData.semester) {
-      newErrors.semester = true;
-      errorMessages.push("Semester wajib diisi.");
-    } else if (isNaN(sem) || sem < 1 || sem > 14) {
-      newErrors.semester = true;
-      errorMessages.push("Semester harus antara 1 - 14.");
+    // 2. Validasi Angkatan
+    const angkatan = Number(formData.angkatan);
+    if (!formData.angkatan) {
+      newErrors.angkatan = true;
+      errorMessages.push("Tahun Angkatan wajib diisi.");
+    } else if (isNaN(angkatan) || angkatan < 2000 || angkatan > 2100) {
+      newErrors.angkatan = true;
+      errorMessages.push("Tahun Angkatan tidak valid.");
     }
 
     // 3. Validasi Nama
@@ -123,10 +128,10 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      {/* Baris 1: NIM, Status (Edit), & Semester */}
+      {/* Baris 1: NIM, Status (Edit), & Angkatan */}
       <div className="grid grid-cols-12 gap-4">
         
-        {/* NIM: 6/12 (Edit) atau 9/12 (Add) */}
+        {/* NIM */}
         <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-9"}`}>
           <Label htmlFor="nim">
             <span>NIM <span className="text-red-500">*</span></span>
@@ -146,7 +151,7 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
           </div>
         </div>
 
-        {/* Status: 3/12 - Hanya muncul saat Edit */}
+        {/* Status: Hanya muncul saat Edit */}
         {isEditing && (
           <div className="grid gap-2 col-span-3">
             <Label htmlFor="status">Status</Label>
@@ -165,17 +170,17 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
           </div>
         )}
 
-        {/* Semester: 3/12 */}
+        {/* Angkatan (Dulu Semester) */}
         <div className="grid gap-2 col-span-3">
-          <Label htmlFor="semester">
-            <span>Semester <span className="text-red-500">*</span></span>
+          <Label htmlFor="angkatan">
+            <span>Angkatan <span className="text-red-500">*</span></span>
           </Label>
           <Input
-            id="semester"
-            value={formData.semester}
-            onChange={(e) => handleNumericInput("semester", e.target.value, 2)}
-            placeholder="1"
-            className={errorClass("semester")}
+            id="angkatan"
+            value={formData.angkatan}
+            onChange={(e) => handleNumericInput("angkatan", e.target.value, 4)}
+            placeholder="2023"
+            className={errorClass("angkatan")}
           />
         </div>
       </div>
@@ -208,7 +213,6 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
             </SelectTrigger>
             <SelectContent>
               {studyPrograms.map(p => (
-                // [UBAH] ID sekarang UUID String
                 <SelectItem key={p.id} value={p.id}>
                   {p.nama} ({p.jenjang})
                 </SelectItem>

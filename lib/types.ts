@@ -71,7 +71,8 @@ export interface StudentProfile {
   nim: string;
   nama: string;
   alamat: string;
-  semester: number;
+  angkatan: number; // Sumber data utama
+  semester: number; // Hasil kalkulasi (bukan dari DB)
   study_program_id: string | null;
   study_program?: StudyProgram | null;
   is_active: boolean;
@@ -80,7 +81,7 @@ export interface StudentProfile {
 export interface StudentFormValues {
   nim: string;
   nama: string;
-  semester: string | number;
+  angkatan: string | number; // Input Angkatan
   alamat: string;
   study_program_id: string;
   is_active: boolean;
@@ -231,13 +232,13 @@ export interface KRS {
   status: KRSStatus;
   
   // Nilai (Optional, diisi di akhir semester)
-  grade_letter?: string | null; // A, B, C, dst
-  grade_point?: number | null;  // 4.00, 3.00, dst
+  grade_letter?: string | null; 
+  grade_point?: number | null;  
   
   created_at?: string;
   updated_at?: string;
 
-  // Data Relasi (Untuk ditampilkan di UI)
+  // Data Relasi
   student?: {
     nim: string;
     nama: string;
@@ -260,7 +261,6 @@ export interface KRS {
   } | null;
 }
 
-// Tipe untuk Form Input / Payload saat Create
 export interface KRSFormValues {
   student_id: string;
   course_id: string;

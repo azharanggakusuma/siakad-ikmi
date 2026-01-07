@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"; 
 import { 
     Send, AlertTriangle, BookOpen, CalendarDays, PieChart, Printer, Loader2, RotateCcw,
-    CheckCircle, Clock, XCircle 
+    CheckCircle, Clock, XCircle, Info 
 } from "lucide-react";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StatusBadge } from "./StatusBadge";
@@ -36,8 +36,6 @@ import { AcademicYear, Official } from "@/lib/types";
 
 export default function StudentKRSView({ user }: { user: any }) {
   const { successAction, showError, showLoading, dismiss } = useToastMessage();
-
-  // Hook Signature dengan isLoading
   const { signatureType, setSignatureType, secureImage, isLoading: isSigLoading } = useSignature("none");
 
   const [offerings, setOfferings] = useState<CourseOffering[]>([]);
@@ -48,12 +46,12 @@ export default function StudentKRSView({ user }: { user: any }) {
   
   const [official, setOfficial] = useState<Official | null>(null);
   const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [mbkmData, setMbkmData] = useState<any>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
-  // Modal State
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
@@ -65,9 +63,7 @@ export default function StudentKRSView({ user }: { user: any }) {
 
   useEffect(() => {
     if (isSigLoading) {
-        if (!toastIdRef.current) {
-            toastIdRef.current = showLoading("Menyiapkan dokumen...");
-        }
+        if (!toastIdRef.current) toastIdRef.current = showLoading("Menyiapkan dokumen...");
     } else {
         if (toastIdRef.current) {
             dismiss(toastIdRef.current);
@@ -85,11 +81,9 @@ export default function StudentKRSView({ user }: { user: any }) {
              getAcademicYears(),
              getActiveOfficial()
         ]);
-        
         const active = years.find(y => y.is_active);
         setAcademicYears(years);
         setOfficial(activeOfficial);
-
         if (active) setSelectedYear(active.id);
         else if (years.length > 0) setSelectedYear(years[0].id);
       } catch (e) { console.error(e); }
@@ -109,6 +103,7 @@ export default function StudentKRSView({ user }: { user: any }) {
       setOfferings(res.offerings);
       setStudentSemester(res.student_semester);
       setStudentProfile(res.student_profile);
+      setMbkmData(res.mbkm_data);
     } catch (error: any) {
       showError("Gagal", error.message);
     } finally {
@@ -119,15 +114,10 @@ export default function StudentKRSView({ user }: { user: any }) {
   // === STATS & DATA ===
   const totalSKS = offerings.filter(c => c.is_taken).reduce((acc, curr) => acc + curr.sks, 0);
   const hasDraft = offerings.some(c => c.is_taken && c.krs_status === 'DRAFT');
-  
   const krsGlobalStatus = offerings.find(c => c.is_taken)?.krs_status || "NOT_TAKEN";
-  
   const progressPercent = Math.min((totalSKS / MAX_SKS) * 100, 100);
 
-  const takenCourses = useMemo(() => {
-     return offerings.filter(c => c.is_taken);
-  }, [offerings]);
-
+  const takenCourses = useMemo(() => offerings.filter(c => c.is_taken), [offerings]);
   const selectedAcademicYearName = useMemo(() => {
       const ay = academicYears.find(y => y.id === selectedYear);
       return ay ? `${ay.nama} ${ay.semester}` : "";
@@ -137,64 +127,44 @@ export default function StudentKRSView({ user }: { user: any }) {
   const filteredAcademicYears = useMemo(() => {
     if (!studentProfile || !academicYears.length) return academicYears;
     const angkatan = Number(studentProfile.angkatan);
-    
-    // 1. Copy array agar tidak memutasi state
     let data = [...academicYears];
 
-    // 2. Filter: Hanya tampilkan tahun >= Angkatan
     if (angkatan && !isNaN(angkatan)) {
         data = data.filter((ay) => {
             const startYear = parseInt(ay.nama.split('/')[0]);
-            if (isNaN(startYear)) return true; // Tampilkan jika format tahun tidak valid (fallback)
+            if (isNaN(startYear)) return true;
             return startYear >= angkatan;
         });
     }
 
-    // 3. Sort: Urutkan dari yang terbaru (Tahun Besar -> Semester Genap -> Semester Ganjil)
     return data.sort((a, b) => {
         const yearA = parseInt(a.nama.split('/')[0]) || 0;
         const yearB = parseInt(b.nama.split('/')[0]) || 0;
-
-        // Bandingkan Tahun (Descending)
-        if (yearA !== yearB) {
-            return yearB - yearA; 
-        }
-
-        // Jika Tahun Sama, Bandingkan Semester (Genap lebih baru dari Ganjil)
+        if (yearA !== yearB) return yearB - yearA; 
         const isGenapA = a.semester.toLowerCase().includes('genap');
         const isGenapB = b.semester.toLowerCase().includes('genap');
-
-        if (isGenapA && !isGenapB) return -1; // A (Genap) di atas
-        if (!isGenapA && isGenapB) return 1;  // B (Genap) di atas
-        
+        if (isGenapA && !isGenapB) return -1;
+        if (!isGenapA && isGenapB) return 1;
         return 0;
     });
   }, [academicYears, studentProfile]);
 
-  // === ICON LOGIC ===
-  // Menentukan Icon Background Card berdasarkan Status
   const StatusIcon = useMemo(() => {
     switch (krsGlobalStatus) {
-        case 'APPROVED': return CheckCircle; // Disetujui -> Centang
-        case 'SUBMITTED': return Clock;       // Menunggu -> Jam
-        case 'REJECTED': return XCircle;      // Ditolak -> Silang
-        default: return BookOpen;             // Draft/Belum -> Buku
+        case 'APPROVED': return CheckCircle;
+        case 'SUBMITTED': return Clock;
+        case 'REJECTED': return XCircle;
+        default: return BookOpen;
     }
   }, [krsGlobalStatus]);
 
   // Filter & Pagination Logic
   const filteredData = useMemo(() => {
     let data = offerings;
-
-    // Filter Visibility:
-    // Sembunyikan mata kuliah yang tidak diambil jika status sudah diajukan atau diproses (SUBMITTED, APPROVED, REJECTED).
     if (krsGlobalStatus !== 'DRAFT' && krsGlobalStatus !== 'NOT_TAKEN') {
         data = data.filter(row => row.is_taken);
     }
-
-    // Filter Search Query:
     if (!searchQuery) return data;
-    
     const lower = searchQuery.toLowerCase();
     return data.filter(c => 
         c.matkul.toLowerCase().includes(lower) || 
@@ -207,7 +177,6 @@ export default function StudentKRSView({ user }: { user: any }) {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // --- LOGIC SELECT ALL ---
   const editableRows = useMemo(() => {
     return currentData.filter(row => {
         const isLocked = row.is_taken && row.krs_status !== 'DRAFT';
@@ -243,13 +212,10 @@ export default function StudentKRSView({ user }: { user: any }) {
 
   const handleSelectAll = async () => {
     if (isLoading || editableRows.length === 0) return;
-
     if (isAllTaken) {
         const toastId = showLoading("Melepas mata kuliah...");
         try {
-            const promises = editableRows
-                .filter(row => row.krs_id)
-                .map(row => deleteKRS(row.krs_id!));
+            const promises = editableRows.filter(row => row.krs_id).map(row => deleteKRS(row.krs_id!));
             await Promise.all(promises);
             successAction("KRS", "delete", toastId);
             await fetchData();
@@ -257,12 +223,10 @@ export default function StudentKRSView({ user }: { user: any }) {
     } else {
         const toTake = editableRows.filter(row => !row.is_taken);
         const sKsToAdd = toTake.reduce((sum, row) => sum + row.sks, 0);
-        
         if (totalSKS + sKsToAdd > MAX_SKS) {
             showError("Batas SKS", `Total SKS akan menjadi ${totalSKS + sKsToAdd}. Batas maksimal adalah ${MAX_SKS}.`);
             return;
         }
-
         const toastId = showLoading("Mengambil mata kuliah...");
         try {
              const promises = toTake.map(row => 
@@ -297,12 +261,9 @@ export default function StudentKRSView({ user }: { user: any }) {
   
   const handlePrintProcess = () => {
     setIsPrintModalOpen(false);
-    setTimeout(() => {
-        window.print();
-    }, 300);
+    setTimeout(() => { window.print(); }, 300);
   };
 
-  // === COLUMNS DEFINITION ===
   const columns: Column<CourseOffering>[] = [
     {
       header: () => (
@@ -311,8 +272,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                 checked={isAllTaken}
                 onCheckedChange={handleSelectAll}
                 disabled={isLoading || editableRows.length === 0}
-                aria-label="Pilih Semua"
-                title={isAllTaken ? "Batalkan pilihan di halaman ini" : "Pilih semua di halaman ini"}
                 className="data-[state=checked]:bg-blue-800 data-[state=checked]:border-blue-800"
             />
           </div>
@@ -341,9 +300,7 @@ export default function StudentKRSView({ user }: { user: any }) {
       header: "Mata Kuliah",
       render: (row) => (
         <div>
-            <div className="font-semibold text-sm text-slate-800">
-                {row.matkul}
-            </div>
+            <div className="font-semibold text-sm text-slate-800">{row.matkul}</div>
             <div className="text-xs text-slate-400 mt-0.5">{row.kategori || "Reguler"}</div>
         </div>
       )
@@ -351,31 +308,17 @@ export default function StudentKRSView({ user }: { user: any }) {
     {
         header: "SKS",
         className: "text-center w-[60px]",
-        render: (row) => (
-            <span className="text-sm font-medium text-slate-600">
-                {row.sks}
-            </span>
-        )
+        render: (row) => <span className="text-sm font-medium text-slate-600">{row.sks}</span>
     },
     {
         header: "Semester",
         className: "text-center w-[60px]",
-        render: (row) => (
-            <span className="text-sm font-medium text-slate-600">
-                {row.smt_default}
-            </span>
-        )
+        render: (row) => <span className="text-sm font-medium text-slate-600">{row.smt_default}</span>
     },
     {
         header: "Status",
         className: "text-center w-[140px]",
-        render: (row) => (
-            row.is_taken ? (
-                <div className="flex justify-center scale-90">
-                    <StatusBadge status={row.krs_status} />
-                </div>
-            ) : <span className="text-xs text-slate-400 italic">-</span>
-        )
+        render: (row) => row.is_taken ? (<div className="flex justify-center scale-90"><StatusBadge status={row.krs_status} /></div>) : <span className="text-xs text-slate-400 italic">-</span>
     }
   ];
 
@@ -463,14 +406,12 @@ export default function StudentKRSView({ user }: { user: any }) {
               krsGlobalStatus === 'REJECTED' ? 'bg-gradient-to-br from-red-600 to-rose-700' : 
               'bg-gradient-to-br from-slate-700 to-slate-800' }`}>
             
-            {/* Dynamic Icon Background */}
             <div className="absolute top-0 right-0 p-8 opacity-10">
                 <StatusIcon size={120} />
             </div>
 
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
-                    // LOADING SKELETON CARD 1
                     <div className="flex flex-col justify-between h-full gap-6">
                         <div className="flex justify-between items-start">
                             <div className="space-y-3">
@@ -485,7 +426,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                         </div>
                     </div>
                 ) : (
-                    // CONTENT CARD 1
                     <>
                     <div className="flex justify-between items-start">
                         <div>
@@ -545,7 +485,6 @@ export default function StudentKRSView({ user }: { user: any }) {
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12"><PieChart size={140} /></div>
             <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
-                    // LOADING SKELETON CARD 2
                     <div className="space-y-6">
                         <div className="space-y-3">
                              <Skeleton className="h-4 w-32 bg-white/20" />
@@ -560,7 +499,6 @@ export default function StudentKRSView({ user }: { user: any }) {
                         </div>
                     </div>
                 ) : (
-                    // CONTENT CARD 2
                     <>
                     <div>
                         <div className="flex items-center gap-2 text-cyan-50 mb-1"><span className="text-sm font-medium">Total SKS Diambil</span></div>
@@ -583,7 +521,42 @@ export default function StudentKRSView({ user }: { user: any }) {
         </Card>
       </div>
 
-      {/* 2. ALERT & ACTION BUTTON */}
+      {/* 2. ALERT MBKM (DIBAWAH HEADER) */}
+      
+      {/* ALERT KHUSUS PMM (Warna Biru/Info) */}
+      {!isLoading && mbkmData && mbkmData.jenis_mbkm === 'Pertukaran Mahasiswa Merdeka' && (
+           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row items-start gap-4 shadow-sm animate-in slide-in-from-top-2">
+              <div className="p-2 bg-blue-100 rounded-full text-blue-700 mt-1 shrink-0">
+                  <Info className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900">Mahasiswa Program PMM</h4>
+                <p className="text-sm text-blue-800/80 mt-1 max-w-3xl">
+                  Anda terdaftar mengikuti program <strong>{mbkmData.jenis_mbkm}</strong> di <strong>{mbkmData.mitra}</strong>. 
+                  Sistem telah menyesuaikan daftar mata kuliah yang dapat Anda ambil (Mata Kuliah Konversi/MBKM). 
+                  Silakan ambil mata kuliah konversi yang tersedia di bawah ini sesuai arahan Kaprodi.
+                </p>
+              </div>
+           </div>
+      )}
+
+      {/* ALERT KHUSUS MBKM NON-PMM (Warna Biru/Info) */}
+      {!isLoading && mbkmData && mbkmData.jenis_mbkm !== 'Pertukaran Mahasiswa Merdeka' && (
+           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row items-start gap-4 shadow-sm animate-in slide-in-from-top-2">
+              <div className="p-2 bg-blue-100 rounded-full text-blue-700 mt-1 shrink-0">
+                  <Info className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900">Mahasiswa Program {mbkmData.jenis_mbkm}</h4>
+                <p className="text-sm text-blue-800/80 mt-1 max-w-3xl">
+                  Anda terdaftar mengikuti program <strong>{mbkmData.jenis_mbkm}</strong> di <strong>{mbkmData.mitra}</strong>. 
+                  Silakan lakukan pengisian KRS reguler seperti biasa atau konsultasikan dengan Ketua Program Studi mengenai konversi nilai dan pengambilan mata kuliah yang sesuai.
+                </p>
+              </div>
+           </div>
+      )}
+
+      {/* 3. ALERT & ACTION BUTTON */}
       {!isLoading && hasDraft && (
            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
               <div className="flex items-start gap-3">

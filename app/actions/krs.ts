@@ -15,10 +15,8 @@ export interface CourseOffering extends Course {
 // GATEKEEPER & VALIDATION
 // ==========================================
 
-// Cek Status KRS Mahasiswa untuk Gatekeeper Halaman Lain
 export async function validateStudentKrs(studentId: string) {
   try {
-    // 1. Cari Tahun Akademik Aktif
     const { data: activeYear, error: yearError } = await supabase
       .from("academic_years")
       .select("id, nama, semester")
@@ -29,7 +27,6 @@ export async function validateStudentKrs(studentId: string) {
       return { allowed: false, message: "Tahun akademik tidak aktif." };
     }
 
-    // 2. Cek apakah ada KRS di tahun tsb dengan status VALID (Submitted/Approved)
     const { data: krs, error: krsError } = await supabase
       .from("krs")
       .select("status")
@@ -55,20 +52,16 @@ export async function validateStudentKrs(studentId: string) {
   }
 }
 
-// Hitung Total SKS yang diambil
 export async function getStudentSksCount(studentId: string, academicYearId: string) {
     try {
       const { data, error } = await supabase
         .from("krs")
-        .select(`
-          course:courses (sks)
-        `)
+        .select(`course:courses (sks)`)
         .eq("student_id", studentId)
         .eq("academic_year_id", academicYearId);
       
       if (error || !data) return 0;
 
-      // Hitung total
       const totalSks = data.reduce((acc: number, curr: any) => {
         return acc + (curr.course?.sks || 0);
       }, 0);
@@ -83,19 +76,14 @@ export async function getStudentSksCount(studentId: string, academicYearId: stri
 // STUDENT ACTIONS (MAHASISWA)
 // ==========================================
 
-// 1. Ambil List KRS milik satu mahasiswa (untuk detail atau history)
 export async function getKRSByStudent(studentId: string, academicYearId: string) {
   try {
     const { data, error } = await supabase
       .from("krs")
       .select(`
         *,
-        course:courses (
-          id, kode, matkul, sks, smt_default, kategori
-        ),
-        academic_year:academic_years (
-          id, nama, semester
-        )
+        course:courses (id, kode, matkul, sks, smt_default, kategori),
+        academic_year:academic_years (id, nama, semester)
       `)
       .eq("student_id", studentId)
       .eq("academic_year_id", academicYearId)
@@ -109,19 +97,13 @@ export async function getKRSByStudent(studentId: string, academicYearId: string)
   }
 }
 
-// 2. Ambil Paket Mata Kuliah Ditawarkan (Full Dinamis)
+// [LOGIKA FILTER MBKM]
 export async function getStudentCourseOfferings(studentId: string, academicYearId: string) {
   try {
-    // A. Ambil Data Mahasiswa (Tanpa kolom semester)
+    // A. Ambil Data Mahasiswa
     const { data: student, error: studentError } = await supabase
       .from("students")
-      .select(`
-        *,
-        study_program:study_programs (
-          nama,
-          jenjang
-        )
-      `)
+      .select(`*, study_program:study_programs (nama, jenjang)`)
       .eq("id", studentId)
       .single();
 
@@ -137,8 +119,7 @@ export async function getStudentCourseOfferings(studentId: string, academicYearI
     if (yearError) throw new Error("Tahun akademik tidak ditemukan");
 
     // --- LOGIKA HITUNG SEMESTER ---
-    let calculatedSemester = 1; // Default
-    
+    let calculatedSemester = 1;
     if (student.angkatan && academicYear.nama) {
       const activeStartYear = parseInt(academicYear.nama.split('/')[0]);
       const studentEntryYear = parseInt(student.angkatan);
@@ -146,28 +127,40 @@ export async function getStudentCourseOfferings(studentId: string, academicYearI
       if (!isNaN(activeStartYear) && !isNaN(studentEntryYear)) {
         const yearDiff = activeStartYear - studentEntryYear;
         calculatedSemester = (yearDiff * 2);
-
-        if (academicYear.semester === 'Ganjil') {
-          calculatedSemester += 1;
-        } else if (academicYear.semester === 'Genap') {
-          calculatedSemester += 2;
-        }
-        
+        if (academicYear.semester === 'Ganjil') calculatedSemester += 1;
+        else if (academicYear.semester === 'Genap') calculatedSemester += 2;
         if (calculatedSemester < 1) calculatedSemester = 1;
       }
     }
-    // ------------------------------------
 
-    // C. Ambil Mata Kuliah yang sesuai semester hitungan
-    const { data: courses, error: courseError } = await supabase
+    // C. Cek Status MBKM Mahasiswa
+    const { data: mbkmData } = await supabase
+      .from("student_mbkm")
+      .select("jenis_mbkm, mitra")
+      .eq("student_id", studentId)
+      .eq("academic_year_id", academicYearId)
+      .single();
+
+    // D. Build Query Mata Kuliah
+    let courseQuery = supabase
       .from("courses")
       .select("*")
       .eq("smt_default", calculatedSemester) 
       .order("matkul", { ascending: true });
 
+    // [LOGIKA FILTER]: 
+    // 1. Jika PMM ("Pertukaran Mahasiswa Merdeka") -> Wajib ambil matkul kategori 'MBKM'
+    // 2. Jika MBKM Lain atau Reguler -> Ambil matkul 'Reguler' (Non-MBKM).
+    if (mbkmData && mbkmData.jenis_mbkm === "Pertukaran Mahasiswa Merdeka") {
+      courseQuery = courseQuery.eq("kategori", "MBKM");
+    } else {
+      courseQuery = courseQuery.neq("kategori", "MBKM");
+    }
+
+    const { data: courses, error: courseError } = await courseQuery;
     if (courseError) throw courseError;
 
-    // D. Ambil Data KRS yang SUDAH diambil
+    // E. Ambil Data KRS yang SUDAH diambil
     const { data: takenKRS, error: krsError } = await supabase
       .from("krs")
       .select("id, course_id, status")
@@ -176,7 +169,7 @@ export async function getStudentCourseOfferings(studentId: string, academicYearI
 
     if (krsError) throw krsError;
 
-    // E. Gabungkan Data
+    // F. Gabungkan Data
     const offerings: CourseOffering[] = courses.map((course) => {
       const taken = takenKRS.find((k) => k.course_id === course.id);
       return {
@@ -190,16 +183,16 @@ export async function getStudentCourseOfferings(studentId: string, academicYearI
     return {
       student_semester: calculatedSemester,
       student_profile: student, 
-      offerings: offerings
+      offerings: offerings,
+      mbkm_data: mbkmData || null 
     };
 
   } catch (error) {
     console.error("Error fetching offerings:", error);
-    return { student_semester: 0, student_profile: null, offerings: [] };
+    return { student_semester: 0, student_profile: null, offerings: [], mbkm_data: null };
   }
 }
 
-// 3. Create KRS (Ambil Mata Kuliah)
 export async function createKRS(payload: KRSFormValues) {
   try {
     const { data: existing } = await supabase
@@ -210,9 +203,7 @@ export async function createKRS(payload: KRSFormValues) {
         .eq("academic_year_id", payload.academic_year_id)
         .single();
 
-    if (existing) {
-        throw new Error("Mata kuliah ini sudah diambil.");
-    }
+    if (existing) throw new Error("Mata kuliah ini sudah diambil.");
 
     const { error } = await supabase.from("krs").insert({
       student_id: payload.student_id,
@@ -233,7 +224,6 @@ export async function createKRS(payload: KRSFormValues) {
   }
 }
 
-// 4. Delete KRS (Batal Ambil)
 export async function deleteKRS(id: string) {
   try {
     const { error } = await supabase.from("krs").delete().eq("id", id);
@@ -244,7 +234,6 @@ export async function deleteKRS(id: string) {
   }
 }
 
-// 5. Submit KRS (Ajukan ke Admin/Dosen)
 export async function submitKRS(studentId: string, academicYearId: string) {
     try {
       const { error } = await supabase
@@ -262,7 +251,6 @@ export async function submitKRS(studentId: string, academicYearId: string) {
     }
 }
 
-// 6. Reset KRS (Hapus Semua Pilihan untuk Tahun Akademik Terpilih)
 export async function resetKRS(studentId: string, academicYearId: string) {
   try {
     const { error } = await supabase
@@ -279,27 +267,22 @@ export async function resetKRS(studentId: string, academicYearId: string) {
   }
 }
 
-
 // ==========================================
 // ADMIN ACTIONS (VALIDASI)
 // ==========================================
 
-// 7. Ambil Daftar Mahasiswa dengan Status KRS (SUBMITTED, APPROVED, REJECTED)
 export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   try {
-    // A. Ambil Info Tahun Akademik Dulu untuk Hitung Semester
     const { data: academicYear } = await supabase
       .from("academic_years")
       .select("nama, semester")
       .eq("id", academicYearId)
       .single();
 
-    // B. Ambil Data Mahasiswa
     const { data: krsList, error } = await supabase
       .from("krs")
       .select(`
-        student_id,
-        status,
+        student_id, status,
         students:students (
           id, nim, nama, angkatan,
           study_program:study_programs (nama, jenjang)
@@ -314,7 +297,6 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
 
     krsList.forEach((item: any) => {
       if (item.students && !studentMap.has(item.student_id)) {
-        // Logika Hitung Semester (Sama seperti di StudentCourseOfferings)
         let calculatedSemester = 1;
         if (item.students.angkatan && academicYear?.nama) {
            const activeStartYear = parseInt(academicYear.nama.split('/')[0]);
@@ -325,15 +307,11 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
              calculatedSemester = (yearDiff * 2);
              if (academicYear.semester === 'Ganjil') calculatedSemester += 1;
              else if (academicYear.semester === 'Genap') calculatedSemester += 2;
-             
              if (calculatedSemester < 1) calculatedSemester = 1;
            }
         }
-
         studentMap.set(item.student_id, { 
-            ...item.students, 
-            status: item.status,
-            semester: calculatedSemester // Tambahkan hasil hitungan ke object
+            ...item.students, status: item.status, semester: calculatedSemester 
         });
       }
     });
@@ -345,7 +323,6 @@ export async function getStudentsWithSubmittedKRS(academicYearId: string) {
   }
 }
 
-// 8. Approve KRS (Setujui Semua DRAFT/SUBMITTED -> APPROVED)
 export async function approveKRS(studentId: string, academicYearId: string) {
   try {
     const { error } = await supabase
@@ -363,7 +340,6 @@ export async function approveKRS(studentId: string, academicYearId: string) {
   }
 }
 
-// 9. Reject KRS (Kembalikan ke REJECTED)
 export async function rejectKRS(studentId: string, academicYearId: string) {
   try {
     const { error } = await supabase

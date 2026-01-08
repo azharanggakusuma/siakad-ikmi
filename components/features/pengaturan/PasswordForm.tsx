@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShieldCheck, Lock, KeyRound, AlertCircle, Check } from "lucide-react"; // Perbaikan: Tambahkan Check
+import { Lock, KeyRound, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,9 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("Validasi Gagal", { description: "Konfirmasi kata sandi tidak cocok." }); return;
     }
+    if (passwordData.newPassword.length < 6) {
+        toast.error("Password Lemah", { description: "Password minimal 6 karakter." }); return;
+    }
     setIsSaving(true);
     try {
       await updateUserSettings(user.username, { password: passwordData.newPassword, role: user.role }, passwordData.currentPassword);
@@ -39,31 +42,43 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
   };
 
   return (
-    <Card className="h-full border-slate-200 shadow-md flex flex-col">
-      <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-        <div className="flex items-center gap-2 mb-1 text-slate-800">
-          <ShieldCheck size={20} className="text-emerald-600" />
-          <CardTitle className="text-base font-bold">Keamanan & Login</CardTitle>
+    <Card className="h-full border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col bg-white">
+      
+      {/* Header Bersih */}
+      <CardHeader className="space-y-1">
+        <div className="flex items-center justify-between mt-5">
+            <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">Keamanan</CardTitle>
         </div>
-        <CardDescription className="text-xs">Kelola akses akun Anda.</CardDescription>
+        <CardDescription className="text-slate-500 text-sm -mt-2">
+            Perbarui kata sandi untuk melindungi akun Anda.
+        </CardDescription>
       </CardHeader>
 
       <form onSubmit={handlePasswordUpdate} className="flex-1 flex flex-col">
-        <CardContent className="space-y-4 pt-6 flex-1">
-          <div className="p-3 bg-amber-50 border border-amber-100 rounded-md flex gap-3">
-             <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
-             <p className="text-xs text-amber-800 leading-relaxed">
-               Gunakan kombinasi huruf, angka, dan simbol untuk keamanan maksimal. Anda akan diminta login ulang setelah perubahan.
-             </p>
+        {/* Konten Fleksibel */}
+        <CardContent className="space-y-6 flex-1 flex flex-col">
+          
+          {/* Alert Box yang Lebih Modern */}
+          <div className="p-4 bg-amber-50/50 border border-amber-100/80 rounded-lg flex gap-3.5 items-start">
+             <div className="p-1.5 bg-amber-100 rounded-full shrink-0 mt-0.5">
+                <ShieldAlert className="text-amber-600" size={14} />
+             </div>
+             <div className="space-y-1">
+                <p className="text-xs font-semibold text-amber-900 uppercase tracking-wide">Penting</p>
+                <p className="text-[12px] text-amber-800/90 leading-relaxed">
+                   Sesi Anda akan berakhir otomatis setelah password berhasil diperbarui. Pastikan Anda mengingat password baru Anda.
+                </p>
+             </div>
           </div>
 
-          <div className="space-y-3">
-             <div className="space-y-1.5">
-                <Label htmlFor="current_password" className="text-xs font-semibold text-slate-600">Password Lama</Label>
-                <div className="relative">
-                    <KeyRound size={14} className="absolute left-3 top-3 text-slate-400" />
+          <div className="space-y-5">
+             <div className="space-y-2">
+                <Label htmlFor="current_password" className="text-sm font-medium text-slate-700">Password Lama</Label>
+                <div className="relative group">
+                    <KeyRound size={16} className="absolute left-3.5 top-3 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
                     <Input 
-                        id="current_password" type="password" required className="pl-9 bg-slate-50 focus:bg-white transition-all"
+                        id="current_password" type="password" required 
+                        className="pl-10 h-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-slate-100 transition-all rounded-lg"
                         placeholder="••••••••"
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
@@ -71,12 +86,13 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
                 </div>
              </div>
 
-             <div className="space-y-1.5 pt-2">
-                <Label htmlFor="new_password" className="text-xs font-semibold text-slate-600">Password Baru</Label>
-                <div className="relative">
-                    <Lock size={14} className="absolute left-3 top-3 text-slate-400" />
+             <div className="space-y-2">
+                <Label htmlFor="new_password" className="text-sm font-medium text-slate-700">Password Baru</Label>
+                <div className="relative group">
+                    <Lock size={16} className="absolute left-3.5 top-3 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
                     <Input 
-                        id="new_password" type="password" required className="pl-9"
+                        id="new_password" type="password" required 
+                        className="pl-10 h-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-slate-100 transition-all rounded-lg"
                         placeholder="Minimal 6 karakter"
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
@@ -84,12 +100,13 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
                 </div>
              </div>
 
-             <div className="space-y-1.5">
-                <Label htmlFor="confirm_password" className="text-xs font-semibold text-slate-600">Konfirmasi Password</Label>
-                <div className="relative">
-                    <Check size={14} className="absolute left-3 top-3 text-slate-400" />
+             <div className="space-y-2">
+                <Label htmlFor="confirm_password" className="text-sm font-medium text-slate-700">Konfirmasi Password</Label>
+                <div className="relative group">
+                    <CheckCircle2 size={16} className="absolute left-3.5 top-3 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
                     <Input 
-                        id="confirm_password" type="password" required className="pl-9"
+                        id="confirm_password" type="password" required 
+                        className="pl-10 h-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-slate-100 transition-all rounded-lg"
                         placeholder="Ulangi password baru"
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
@@ -99,9 +116,9 @@ export default function PasswordForm({ user, onUpdateSuccess }: PasswordFormProp
           </div>
         </CardContent>
 
-        <CardFooter className="bg-slate-50 border-t border-slate-100 p-4">
-          <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white gap-2" disabled={isSaving}>
-             {isSaving ? "Memproses..." : "Update Password"}
+        <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-6 mt-auto">
+          <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium h-11 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300" disabled={isSaving}>
+             {isSaving ? "Menyimpan Perubahan..." : "Update Password"}
           </Button>
         </CardFooter>
       </form>

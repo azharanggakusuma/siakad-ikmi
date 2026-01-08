@@ -47,9 +47,11 @@ export default function PengaturanPage() {
         breadcrumb={["Beranda", "Pengaturan"]} 
       />
       
-      <div className="grid gap-8 lg:grid-cols-12 items-start">
-        {/* Kolom Kiri: Profil (Lebih Lebar) */}
-        <div className="lg:col-span-7 xl:col-span-8">
+      {/* Container Grid: items-stretch membuat kedua kolom sama tinggi */}
+      <div className="grid gap-8 lg:grid-cols-12 items-stretch">
+        
+        {/* Kolom Kiri: Profil */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
            <ProfileForm 
               user={currentUser} 
               onUpdateSuccess={(newData) => 
@@ -58,8 +60,8 @@ export default function PengaturanPage() {
           />
         </div>
 
-        {/* Kolom Kanan: Password (Lebih Kecil) */}
-        <div className="lg:col-span-5 xl:col-span-4 sticky top-6">
+        {/* Kolom Kanan: Password */}
+        <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
            <PasswordForm 
               user={currentUser} 
               onUpdateSuccess={(newPassword) => 

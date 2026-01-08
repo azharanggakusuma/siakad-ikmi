@@ -152,13 +152,13 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
         </Dialog>
 
         {/* --- MAIN CARD --- */}
-          <Card className="overflow-hidden border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100">
-            {/* 1. Header dengan Gradient Biru (Khas KRS) */}
-            <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 relative overflow-hidden">
-                {/* Dekorasi Abstrak */}
+        <Card className="overflow-hidden border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100">
+            {/* 1. Header dengan Gradient Biru (KRS Style) */}
+            <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 relative">
+                {/* Dekorasi Abstrak (Subtle) */}
                 <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-                <div className="absolute -bottom-8 -right-8 text-white opacity-20 rotate-12 pointer-events-none">
-                     <User size={200} />
+                <div className="absolute -bottom-9 -right-8 text-white opacity-20 rotate-12 pointer-events-none">
+                    <User size={200} />
                 </div>
             </div>
 
@@ -199,7 +199,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                             </div>
                         </div>
 
-                        {/* Tombol Simpan (Desktop: Sejajar di kanan bawah header section) */}
+                        {/* Tombol Simpan (Desktop) - Tetap Hitam Sesuai Permintaan (Yang lain jangan berubah) */}
                         <div className="hidden md:block md:pb-2">
                              <Button type="submit" disabled={isSaving || isProcessing} className="bg-slate-900 hover:bg-slate-800 shadow-md transition-all h-10 px-6">
                                 {isSaving ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}

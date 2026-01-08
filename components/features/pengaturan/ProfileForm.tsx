@@ -58,7 +58,10 @@ export default function ProfileForm({
   const [previewImage, setPreviewImage] = useState<string | null>(
     user?.avatar_url || null
   );
+  
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  // State baru untuk menyimpan file asli sebelum di-crop
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   // --- STATE CROPPING ---
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -107,6 +110,10 @@ export default function ProfileForm({
         toast.error("Berkas terlalu besar");
         return;
       }
+      
+      // Simpan file asli ke state agar bisa digunakan nanti saat upload
+      setOriginalFile(file);
+
       const reader = new FileReader();
       reader.addEventListener("load", () => {
         setImageSrc(reader.result?.toString() || null);
@@ -125,13 +132,26 @@ export default function ProfileForm({
   const handleCropSave = async () => {
     try {
       if (!imageSrc || !croppedAreaPixels) return;
+
+      // 1. Ambil hasil crop untuk PREVIEW saja (Visual agar user senang)
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!croppedBlob) throw new Error("Crop failed");
-      const finalFile = await processImage(
-        new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" })
-      );
-      setFileToUpload(finalFile);
-      setPreviewImage(URL.createObjectURL(finalFile));
+      
+      // Update preview dengan gambar yang sudah di-crop (Visual Feedback)
+      setPreviewImage(URL.createObjectURL(croppedBlob));
+
+      // 2. Proses file ASLI untuk DIUPLOAD (Sesuai permintaan: simpan file asli yg dikompres)
+      if (originalFile) {
+        const compressedOriginal = await processImage(originalFile);
+        setFileToUpload(compressedOriginal);
+      } else {
+        // Fallback jika entah bagaimana originalFile null (jarang terjadi)
+        const finalFile = await processImage(
+             new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" })
+        );
+        setFileToUpload(finalFile);
+      }
+
       setIsCropModalOpen(false);
       setImageSrc(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -139,6 +159,7 @@ export default function ProfileForm({
         description: "Klik 'Simpan Perubahan' untuk menerapkan.",
       });
     } catch (e) {
+      console.error(e);
       toast.error("Gagal memproses gambar");
     }
   };
@@ -171,6 +192,7 @@ export default function ProfileForm({
         avatar_url: finalAvatarUrl,
       });
       setFileToUpload(null);
+      setOriginalFile(null); // Reset original file
     } catch (error: any) {
       toast.error("Gagal Menyimpan", {
         description: handleSystemError(error, "Terjadi kesalahan."),

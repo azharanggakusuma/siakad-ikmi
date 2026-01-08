@@ -3,7 +3,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import {
   User,
-  MapPin,
   Save,
   Camera,
   Loader2,
@@ -183,7 +182,7 @@ export default function ProfileForm({
 
   return (
     <>
-      {/* --- MODAL CROP (Sama) --- */}
+      {/* --- MODAL CROP --- */}
       <Dialog
         open={isCropModalOpen}
         onOpenChange={(open) => !isProcessing && setIsCropModalOpen(open)}
@@ -243,187 +242,135 @@ export default function ProfileForm({
       </Dialog>
 
       {/* --- MAIN CARD --- */}
-      <Card className="overflow-hidden border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100">
-        {/* 1. Header dengan Gradient Biru (KRS Style) */}
-        <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 relative">
-          {/* Dekorasi Abstrak (Subtle) */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle, #ffffff 2px, transparent 2px)",
-              backgroundSize: "24px 24px",
-            }}
-          ></div>
-          <div className="absolute -bottom-9 -right-8 text-white opacity-20 rotate-12 pointer-events-none">
-            <User size={200} />
-          </div>
+      <Card className="h-full border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100 flex flex-col overflow-hidden">
+        
+        {/* HEADER / BANNER GRADIENT */}
+        <div className="h-32 sm:h-40 bg-gradient-to-r from-[#0077b5] to-[#00a0dc] relative shrink-0">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, #ffffff 2px, transparent 2px)", backgroundSize: "24px 24px" }}></div>
         </div>
 
-        <CardContent className="px-6 sm:px-8 pb-8">
-          <form onSubmit={handleProfileUpdate}>
-            {/* 2. Container Profile Info (Responsive) */}
-            <div className="relative flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-end -mt-16 mb-8">
-              {/* Avatar Wrapper */}
-              <div className="relative z-10 shrink-0">
-                <div className="w-32 h-32 rounded-full border-[5px] border-white shadow-lg overflow-hidden bg-slate-100 relative group">
-                  {previewImage ? (
-                    <Image
-                      src={previewImage}
-                      alt="Profile"
-                      fill
-                      className="object-cover"
-                      unoptimized={!!fileToUpload}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100">
-                      <User size={64} />
-                    </div>
-                  )}
-                  {/* Overlay Edit saat Hover (Desktop) */}
-                  <div
-                    className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
+        <CardContent className="px-6 pb-8 flex-1">
+          <form onSubmit={handleProfileUpdate} className="flex flex-col h-full">
+            
+            {/* PROFILE SECTION (Stacked/LinkedIn Style) */}
+            <div className="relative mb-6">
+              
+              {/* Row 1: Avatar & Edit Button */}
+              <div className="flex justify-between items-start">
+                
+                {/* Avatar Wrapper (Naik ke atas) */}
+                <div className="-mt-16 sm:-mt-20 relative z-10">
+                   <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[5px] border-white shadow-md overflow-hidden bg-slate-100 relative group cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}>
+                      {previewImage ? (
+                        <Image src={previewImage} alt="Profile" fill className="object-cover" unoptimized={!!fileToUpload} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100">
+                          <User size={64} />
+                        </div>
+                      )}
+                      {/* Overlay Edit */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera className="text-white" size={28} />
+                      </div>
+                   </div>
+                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                </div>
+
+                {/* Tombol Simpan (Desktop) */}
+                <div className="mt-4 hidden sm:block">
+                  <Button
+                    type="submit"
+                    disabled={isSaving || isProcessing}
+                    className="bg-slate-900 hover:bg-slate-800 rounded-full px-6 font-semibold"
                   >
-                    <Camera className="text-white drop-shadow-md" size={24} />
-                  </div>
+                    {isSaving ? (
+                      <Loader2 size={16} className="animate-spin mr-2" />
+                    ) : (
+                      <Save size={16} className="mr-2" />
+                    )}
+                    Simpan Perubahan
+                  </Button>
+                </div>
+                
+                {/* Mobile Save Button (Icon Only) */}
+                <div className="mt-4 sm:hidden">
+                    <Button size="icon" type="submit" disabled={isSaving} className="rounded-full bg-slate-900">
+                        <Save size={18} />
+                    </Button>
                 </div>
 
-                {/* Tombol Kamera Kecil (Mobile/Always visible fallback) */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="md:hidden absolute bottom-1 right-1 bg-slate-900 text-white p-2 rounded-full shadow-md border-[2px] border-white hover:bg-slate-800 transition-all"
-                  title="Ubah Foto"
-                >
-                  <Camera size={14} />
-                </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
               </div>
 
-              {/* Nama & Role */}
-              <div className="flex-1 text-center md:text-left space-y-1 md:pb-2 min-w-0 w-full">
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 truncate">
-                  {formData.nama || "Pengguna Baru"}
+              {/* Row 2: Nama & Info */}
+              <div className="mt-4 text-left space-y-1">
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                  {formData.nama || "Pengguna"}
                 </h2>
-                <p className="text-slate-500 font-medium">
-                  @{formData.username}
-                </p>
-                <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 capitalize border border-slate-200">
-                    {user.role}
-                  </span>
+                <p className="text-slate-500 font-medium text-base">@{formData.username}</p>
+                
+                {/* PERUBAHAN: Badge Alamat dihapus, Badge Role didesain ulang (abu-abu) */}
+                <div className="pt-2 flex flex-wrap gap-2">
+                   <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 capitalize">
+                      {user.role}
+                   </span>
                 </div>
               </div>
 
-              {/* Tombol Simpan (Desktop) - Tetap Hitam Sesuai Permintaan (Yang lain jangan berubah) */}
-              <div className="hidden md:block md:pb-2">
-                <Button
-                  type="submit"
-                  disabled={isSaving || isProcessing}
-                  className="bg-slate-900 hover:bg-slate-800 shadow-md transition-all h-10 px-6"
-                >
-                  {isSaving ? (
-                    <Loader2 size={18} className="animate-spin mr-2" />
-                  ) : (
-                    <Save size={18} className="mr-2" />
-                  )}
-                  Simpan Perubahan
-                </Button>
-              </div>
             </div>
 
-            <Separator className="my-8 opacity-60" />
+            <Separator className="mb-8" />
 
-            {/* 3. Form Inputs Grid */}
-            <div className="space-y-6">
+            {/* FORM INPUTS */}
+            <div className="space-y-6 max-w-3xl">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2.5">
-                  <Label
-                    htmlFor="username"
-                    className="text-slate-700 font-medium flex items-center gap-2"
-                  >
-                    <AtSign size={16} className="text-slate-400" /> Username
-                  </Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    disabled={user.role !== "admin"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value })
-                    }
-                    className="bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 transition-all h-11"
-                  />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-slate-700 font-medium">Username</Label>
+                  <div className="relative">
+                    <AtSign size={16} className="absolute left-3 top-3 text-slate-400" />
+                    <Input
+                        id="username"
+                        value={formData.username}
+                        disabled={user.role !== "admin"} 
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-all h-11"
+                    />
+                  </div>
                   {user.role !== "admin" && (
-                    <p className="text-[11px] text-slate-400 ml-1">
-                      Username dikelola oleh administrator.
-                    </p>
+                    <p className="text-[11px] text-slate-400">Hubungi admin untuk mengubah username.</p>
                   )}
                 </div>
 
-                <div className="space-y-2.5">
-                  <Label
-                    htmlFor="nama"
-                    className="text-slate-700 font-medium flex items-center gap-2"
-                  >
-                    <UserCircle size={16} className="text-slate-400" /> Nama
-                    Lengkap
-                  </Label>
-                  <Input
-                    id="nama"
-                    value={formData.nama}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nama: e.target.value })
-                    }
-                    className="bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 transition-all h-11"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="nama" className="text-slate-700 font-medium">Nama Lengkap</Label>
+                  <div className="relative">
+                    <UserCircle size={16} className="absolute left-3 top-3 text-slate-400" />
+                    <Input
+                        id="nama"
+                        value={formData.nama}
+                        onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                        className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-all h-11"
+                    />
+                  </div>
                 </div>
               </div>
 
               {user.role === "mahasiswa" && (
-                <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2">
-                  <Label
-                    htmlFor="alamat"
-                    className="text-slate-700 font-medium flex items-center gap-2"
-                  >
-                    <MapPin size={16} className="text-slate-400" /> Alamat
-                    Domisili
-                  </Label>
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                  <Label htmlFor="alamat" className="text-slate-700 font-medium">Alamat Domisili</Label>
                   <Textarea
                     id="alamat"
-                    rows={4}
+                    rows={3}
                     value={formData.alamat}
-                    onChange={(e) =>
-                      setFormData({ ...formData, alamat: e.target.value })
-                    }
-                    className="bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 resize-none transition-all"
+                    onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+                    className="bg-slate-50 border-slate-200 focus:bg-white resize-none transition-all"
                     placeholder="Masukkan alamat lengkap..."
                   />
                 </div>
               )}
             </div>
 
-            {/* Tombol Simpan (Mobile Only) */}
-            <div className="md:hidden mt-8 pt-4 border-t border-slate-100">
-              <Button
-                type="submit"
-                disabled={isSaving || isProcessing}
-                className="w-full bg-slate-900 hover:bg-slate-800 h-11 text-base font-medium"
-              >
-                {isSaving ? (
-                  <Loader2 size={18} className="animate-spin mr-2" />
-                ) : (
-                  <Save size={18} className="mr-2" />
-                )}
-                Simpan Perubahan
-              </Button>
-            </div>
           </form>
         </CardContent>
       </Card>

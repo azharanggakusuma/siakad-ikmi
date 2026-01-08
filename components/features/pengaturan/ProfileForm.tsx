@@ -244,21 +244,38 @@ export default function ProfileForm({
       {/* --- MAIN CARD --- */}
       <Card className="h-full border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100 flex flex-col overflow-hidden">
         
-        {/* HEADER / BANNER GRADIENT */}
-        <div className="h-32 sm:h-40 bg-gradient-to-r from-[#0077b5] to-[#00a0dc] relative shrink-0">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, #ffffff 2px, transparent 2px)", backgroundSize: "24px 24px" }}></div>
+        {/* HEADER / BANNER GRADIENT + PATTERN BARU */}
+        <div className="h-32 sm:h-40 bg-gradient-to-r from-[#0077b5] to-[#00a0dc] relative shrink-0 overflow-hidden">
+          
+          {/* Pattern 1: Modern Grid Lines (Lebih Rapi & Teknikal) */}
+          <div className="absolute inset-0 opacity-20"
+               style={{
+                   backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
+                   backgroundSize: '32px 32px'
+               }}
+          ></div>
+
+          {/* Pattern 2: Subtle Diagonal Overlay */}
+          <div className="absolute inset-0 opacity-10"
+               style={{
+                   backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)"
+               }}
+          ></div>
+          
+          {/* Shadow Overlay (Bottom) untuk kedalaman */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
         </div>
 
         <CardContent className="px-6 pb-8 flex-1">
           <form onSubmit={handleProfileUpdate} className="flex flex-col h-full">
             
-            {/* PROFILE SECTION (Stacked/LinkedIn Style) */}
+            {/* PROFILE SECTION */}
             <div className="relative mb-6">
               
-              {/* Row 1: Avatar & Edit Button */}
+              {/* Row: Avatar & Tombol */}
               <div className="flex justify-between items-start">
                 
-                {/* Avatar Wrapper (Naik ke atas) */}
+                {/* Avatar Wrapper (Stacked) */}
                 <div className="-mt-16 sm:-mt-20 relative z-10">
                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[5px] border-white shadow-md overflow-hidden bg-slate-100 relative group cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}>
@@ -269,7 +286,6 @@ export default function ProfileForm({
                           <User size={64} />
                         </div>
                       )}
-                      {/* Overlay Edit */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Camera className="text-white" size={28} />
                       </div>
@@ -293,7 +309,7 @@ export default function ProfileForm({
                   </Button>
                 </div>
                 
-                {/* Mobile Save Button (Icon Only) */}
+                {/* Tombol Simpan (Mobile Icon) */}
                 <div className="mt-4 sm:hidden">
                     <Button size="icon" type="submit" disabled={isSaving} className="rounded-full bg-slate-900">
                         <Save size={18} />
@@ -302,14 +318,13 @@ export default function ProfileForm({
 
               </div>
 
-              {/* Row 2: Nama & Info */}
+              {/* Nama & Info */}
               <div className="mt-4 text-left space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
                   {formData.nama || "Pengguna"}
                 </h2>
                 <p className="text-slate-500 font-medium text-base">@{formData.username}</p>
                 
-                {/* PERUBAHAN: Badge Alamat dihapus, Badge Role didesain ulang (abu-abu) */}
                 <div className="pt-2 flex flex-wrap gap-2">
                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 capitalize">
                       {user.role}

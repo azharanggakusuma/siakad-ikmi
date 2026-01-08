@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { User, Lock, Save, Info, Camera, Loader2, X, Check } from "lucide-react"; 
+import { User, Lock, Save, Info, Camera, Loader2, Check } from "lucide-react"; 
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ import {
 // Library
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage"; 
-import imageCompression from "browser-image-compression"; // <--- IMPORT BARU
+import imageCompression from "browser-image-compression"; 
 
 import { updateUserSettings } from "@/app/actions/auth";
 import { uploadAvatar } from "@/app/actions/upload"; 
@@ -41,7 +41,7 @@ interface ProfileFormProps {
 
 export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false); // Indikator proses kompresi
+  const [isProcessing, setIsProcessing] = useState(false); // Mengganti istilah 'Compressing' jadi 'Processing'
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -63,28 +63,26 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
 
   if (!user) return null; 
 
-  // --- FUNGSI KOMPRESI GAMBAR ---
-  const compressImage = async (file: File): Promise<File> => {
+  // --- FUNGSI PEMROSESAN GAMBAR ---
+  const processImage = async (file: File): Promise<File> => {
     const options = {
-      maxSizeMB: 0.5,           // Target ukuran maksimal 0.5 MB (500KB)
-      maxWidthOrHeight: 1024,   // Resize resolusi max 1024px (Cukup tajam untuk foto profil)
-      useWebWorker: true,       // Gunakan thread terpisah agar UI tidak lag
-      fileType: "image/jpeg",   // Paksa jadi JPEG agar kompresi maksimal
-      initialQuality: 0.9,      // Kualitas 90% (Sangat jernih)
+      maxSizeMB: 0.5,           
+      maxWidthOrHeight: 1024,   
+      useWebWorker: true,       
+      fileType: "image/jpeg",   
+      initialQuality: 0.9,      
     };
 
     try {
-      setIsCompressing(true);
-      const compressedFile = await imageCompression(file, options);
-      
-      // Kembalikan sebagai File object dengan nama asli
-      return new File([compressedFile], file.name, { type: compressedFile.type });
+      setIsProcessing(true);
+      const processedFile = await imageCompression(file, options);
+      return new File([processedFile], file.name, { type: processedFile.type });
     } catch (error) {
-      console.error("Gagal kompresi:", error);
-      toast.error("Gagal mengoptimalkan gambar.");
-      return file; // Jika gagal, kembalikan file asli
+      console.error("Kesalahan pemrosesan gambar:", error);
+      // Tidak perlu toast error di sini, biarkan flow berlanjut dengan file asli atau handle di pemanggil
+      return file; 
     } finally {
-      setIsCompressing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -93,9 +91,11 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Kita batasi input awal agar browser tidak crash jika user upload file 100MB+
+      // Validasi Input Awal (Pesan Profesional)
       if (file.size > 20 * 1024 * 1024) { 
-         toast.error("File terlalu besar", { description: "Maksimal file 20MB." });
+         toast.error("Ukuran file terlalu besar", { 
+            description: "Mohon unggah foto dengan ukuran di bawah 20MB." 
+         });
          return;
       }
 
@@ -114,7 +114,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // 2. Saat User Klik "Gunakan Foto" (Crop + Kompresi terjadi di sini)
+  // 2. Saat User Klik "Gunakan Foto"
   const handleCropSave = async () => {
     try {
       if (!imageSrc || !croppedAreaPixels) return;
@@ -123,30 +123,34 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!croppedBlob) throw new Error("Gagal memotong gambar.");
 
-      // b. Ubah Blob hasil crop jadi File
+      // b. Siapkan File
       const croppedFile = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
 
-      // c. Lakukan Kompresi
-      const optimizedFile = await compressImage(croppedFile);
+      // c. Proses Optimasi (Silent Process)
+      const finalFile = await processImage(croppedFile);
 
-      // d. Simpan file yang SUDAH OPTIMAL ke state upload
-      setFileToUpload(optimizedFile);
+      // d. Simpan ke State
+      setFileToUpload(finalFile);
 
       // e. Update Preview
-      const objectUrl = URL.createObjectURL(optimizedFile);
+      const objectUrl = URL.createObjectURL(finalFile);
       setPreviewImage(objectUrl);
 
       setIsCropModalOpen(false);
       setImageSrc(null);
       if (fileInputRef.current) fileInputRef.current.value = ""; 
 
-      toast.success("Foto diproses", { 
-        description: `Ukuran: ${(optimizedFile.size / 1024).toFixed(0)} KB (Siap disimpan)` 
+      // Pesan Sukses Profesional
+      toast.success("Foto berhasil disiapkan", { 
+        description: "Silakan klik tombol 'Simpan Perubahan' untuk menerapkan." 
       });
 
     } catch (e) {
       console.error(e);
-      toast.error("Gagal memproses gambar.");
+      // Pesan Error Profesional
+      toast.error("Gagal memproses foto", { 
+        description: "Terjadi kesalahan saat mengolah gambar. Silakan coba file lain." 
+      });
     }
   };
 
@@ -162,7 +166,6 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
         uploadFormData.append("file", fileToUpload);
         uploadFormData.append("username", user.username); 
 
-        // Upload file kecil (hasil kompresi) ke server
         finalAvatarUrl = await uploadAvatar(uploadFormData, user.avatar_url);
       }
 
@@ -174,7 +177,10 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
         avatar_url: finalAvatarUrl, 
       });
 
-      toast.success("Berhasil", { description: "Profil diperbarui." });
+      // Pesan Sukses Final
+      toast.success("Profil diperbarui", { 
+        description: "Data identitas Anda telah berhasil disimpan." 
+      });
 
       onUpdateSuccess({ 
         name: formData.nama, 
@@ -186,7 +192,10 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
       setFileToUpload(null);
 
     } catch (error: any) {
-      toast.error("Gagal menyimpan", { description: error.message });
+      // Pesan Error Final
+      toast.error("Penyimpanan gagal", { 
+        description: error.message || "Terjadi kendala saat menyimpan data. Silakan coba lagi nanti." 
+      });
     } finally {
       setIsSaving(false);
     }
@@ -195,12 +204,12 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
   return (
     <div className="flex flex-col h-full">
       {/* --- MODAL CROPPER --- */}
-      <Dialog open={isCropModalOpen} onOpenChange={(open) => !isCompressing && setIsCropModalOpen(open)}>
+      <Dialog open={isCropModalOpen} onOpenChange={(open) => !isProcessing && setIsCropModalOpen(open)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Sesuaikan Foto</DialogTitle>
             <DialogDescription>
-              Geser dan zoom untuk menyesuaikan foto profil Anda.
+              Geser dan perbesar untuk menyesuaikan tampilan foto profil Anda.
             </DialogDescription>
           </DialogHeader>
           
@@ -217,18 +226,18 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
               />
             )}
             
-            {/* Loading Overlay saat Kompresi */}
-            {isCompressing && (
+            {/* Loading Overlay Profesional */}
+            {isProcessing && (
               <div className="absolute inset-0 bg-black/60 z-50 flex flex-col items-center justify-center text-white gap-2">
                 <Loader2 className="animate-spin" size={32} />
-                <p className="text-sm font-medium">Mengoptimalkan gambar...</p>
+                <p className="text-sm font-medium">Sedang memproses...</p>
               </div>
             )}
           </div>
 
           <div className="py-2 space-y-2">
              <div className="flex justify-between text-xs text-slate-500">
-                <span>Zoom</span>
+                <span>Perbesar</span>
                 <span>{zoom.toFixed(1)}x</span>
              </div>
              <input
@@ -237,18 +246,18 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                 min={1}
                 max={3}
                 step={0.1}
-                disabled={isCompressing}
+                disabled={isProcessing}
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
              />
           </div>
 
           <DialogFooter className="flex gap-2 sm:justify-end">
-            <Button variant="outline" disabled={isCompressing} onClick={() => setIsCropModalOpen(false)}>
+            <Button variant="outline" disabled={isProcessing} onClick={() => setIsCropModalOpen(false)}>
                 Batal
             </Button>
-            <Button onClick={handleCropSave} disabled={isCompressing} className="gap-2">
-                {isCompressing ? "Memproses..." : <><Check size={16} /> Gunakan Foto</>}
+            <Button onClick={handleCropSave} disabled={isProcessing} className="gap-2">
+                {isProcessing ? "Memproses..." : <><Check size={16} /> Gunakan Foto</>}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -263,7 +272,7 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
             </div>
             <CardTitle className="text-lg">Identitas Pengguna</CardTitle>
           </div>
-          <CardDescription>Informasi akun dan foto profil Anda.</CardDescription>
+          <CardDescription>Kelola informasi akun dan foto profil Anda.</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleProfileUpdate} className="flex flex-col flex-1">
@@ -301,26 +310,37 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                     type="file" 
                     ref={fileInputRef} 
                     className="hidden" 
-                    accept="image/*" // Terima semua gambar
+                    accept="image/*" 
                     onChange={handleFileChange}
                 />
                 
                 {fileToUpload && (
-                    <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-full animate-pulse">
-                        Foto siap disimpan
+                    <span className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full animate-pulse border border-blue-100">
+                        Foto baru siap disimpan
                     </span>
                 )}
             </div>
 
-            {/* Form Fields Lainnya (Sama seperti sebelumnya) */}
+            {/* Form Fields Lainnya */}
             <div className="space-y-2">
               <Label htmlFor="username" className="text-slate-600">Username</Label>
-              <Input
-                id="username"
-                value={formData.username}
-                disabled={true} 
-                className="bg-slate-50 text-slate-500 pl-3 border-slate-200"
-              />
+              <div className="relative">
+                <Input
+                  id="username"
+                  value={formData.username}
+                  disabled={user.role !== "admin"} 
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className={`pl-3 border-slate-200 ${user.role === "admin" ? "bg-white" : "bg-slate-50 text-slate-500"}`}
+                />
+                {user.role !== "admin" && (
+                  <div className="absolute right-3 top-2.5">
+                    <Lock size={14} className="text-slate-400" />
+                  </div>
+                )}
+              </div>
+              {user.role === "mahasiswa" && (
+                <p className="text-[11px] text-slate-400 italic">*Username dikelola oleh sistem dan tidak dapat diubah.</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -342,12 +362,19 @@ export default function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps)
                     value={formData.alamat}
                     onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
                   />
+                  <div className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-md text-blue-700 text-xs mt-2">
+                      <Info className="shrink-0 mt-0.5" size={16} />
+                      <div className="space-y-1">
+                          <p className="font-semibold">Informasi Sinkronisasi</p>
+                          <p className="opacity-90 leading-relaxed">Perubahan pada Nama dan Alamat akan otomatis memperbarui data induk Mahasiswa.</p>
+                      </div>
+                  </div>
                 </div>
             )}
           </CardContent>
 
           <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-4 mt-auto">
-            <Button type="submit" disabled={isSaving || isCompressing} className="w-full sm:w-auto ml-auto gap-2">
+            <Button type="submit" disabled={isSaving || isProcessing} className="w-full sm:w-auto ml-auto gap-2">
               {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>

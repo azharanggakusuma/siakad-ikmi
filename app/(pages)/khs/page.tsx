@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getStudents, getActiveOfficial } from "@/app/actions/students";
-
 import { type StudentData, type TranscriptItem, type Official } from "@/lib/types";
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -15,8 +14,10 @@ import StudentInfo from "@/components/features/document/StudentInfo";
 import ControlPanel from "@/components/features/document/ControlPanel";
 import GradeTable from "@/components/features/transkrip/GradeTable";
 
+// [UPDATE] Import Logic Terpusat
+import { calculateIPS, calculateIPK } from "@/lib/grade-calculations";
+
 export default function KhsPage() {
-  // State Data
   const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [official, setOfficial] = useState<Official | null>(null);
@@ -29,7 +30,7 @@ export default function KhsPage() {
   const paperRef = useRef<HTMLDivElement>(null);
   const [totalPages, setTotalPages] = useState(1);
 
-  // === 1. FETCH DATA UTAMA ===
+  // === FETCH DATA ===
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,20 +49,17 @@ export default function KhsPage() {
     fetchData();
   }, []);
 
-  // === 2. AUTO-SELECT MAHASISWA JIKA LOGIN SEBAGAI MAHASISWA ===
+  // Auto-select mahasiswa login
   useEffect(() => {
     if (studentsData.length > 0 && user?.role === "mahasiswa" && user?.student_id) {
-       // Cari index mahasiswa tersebut di array data
        const myIndex = studentsData.findIndex((s) => s.id === user.student_id);
-       if (myIndex !== -1) {
-          setSelectedIndex(myIndex); 
-       }
+       if (myIndex !== -1) setSelectedIndex(myIndex); 
     }
   }, [studentsData, user]);
 
   const currentStudent = useMemo(() => studentsData[selectedIndex], [studentsData, selectedIndex]);
 
-  // Helper untuk hitung halaman kertas (Print)
+  // Observer Halaman Kertas
   useEffect(() => {
     if (!paperRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -75,24 +73,15 @@ export default function KhsPage() {
   }, [currentStudent, selectedSemester]);
 
   // === LOGIC SEMESTER ===
-
-  // 1. [UPDATE] List Semester: Generate 1 sampai Semester Saat Ini (Max)
   const availableSemesters = useMemo<number[]>(() => {
     if (!currentStudent) return [];
-    
-    // Ambil semester tertinggi antara Profile (Semester Aktif) dan Data Transkrip
     const currentSem = currentStudent.profile?.semester || 1;
     const transcriptSmts = currentStudent.transcript?.map((t: TranscriptItem) => Number(t.smt)) || [];
     const maxDataSem = Math.max(0, ...transcriptSmts);
-    
-    // Batas loop adalah nilai maksimum dari keduanya
     const limit = Math.max(currentSem, maxDataSem);
-
-    // Generate array [1, 2, ..., limit]
     return Array.from({ length: limit }, (_, i) => i + 1);
   }, [currentStudent]);
 
-  // 2. Default Select: Pilih semester terakhir
   useEffect(() => {
     if (availableSemesters.length > 0) {
         if (!availableSemesters.includes(selectedSemester)) {
@@ -101,36 +90,26 @@ export default function KhsPage() {
     }
   }, [availableSemesters]);
 
-  // 3. Filter Data Nilai Sesuai Semester Pilihan
+  // Data Semester Ini
   const semesterData = useMemo(() => {
     if (!currentStudent?.transcript) return [];
     return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === selectedSemester);
   }, [currentStudent, selectedSemester]);
 
-  // Hitung IPK/IPS
+  // Data Kumulatif (Sampai Semester Ini)
   const cumulativeData = useMemo(() => {
     if (!currentStudent?.transcript) return [];
-    // Filter hanya yang sudah punya nilai (bukan '-')
     return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= selectedSemester && t.hm !== '-');
   }, [currentStudent, selectedSemester]);
 
+  // [UPDATE] Menggunakan Fungsi Terpusat
   const ips = useMemo(() => {
-    // Filter hanya yang sudah punya nilai untuk IPS
-    const validData = semesterData.filter(t => t.hm !== '-');
-    const totalSKS = validData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
-    const totalNM = validData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
-    return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
-  }, [semesterData]);
+    return calculateIPS(currentStudent?.transcript || [], selectedSemester).replace('.', ',');
+  }, [currentStudent, selectedSemester]);
 
   const ipk = useMemo(() => {
-     // Cumulative data sudah difilter t.hm !== '-' di atas
-    const totalSKS = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.sks, 0);
-    const totalNM = cumulativeData.reduce((acc: number, row: TranscriptItem) => acc + row.nm, 0);
-    return totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace(".", ",") : "0,00";
+    return calculateIPK(cumulativeData).replace('.', ',');
   }, [cumulativeData]);
-
-
-  // === RENDER VIEW ===
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -139,7 +118,6 @@ export default function KhsPage() {
       </div>
 
       <div className="flex flex-col xl:flex-row items-stretch justify-start gap-6 min-h-screen">
-        {/* AREA KERTAS */}
         <div className={`
             hidden xl:flex print:flex print:w-full print:justify-center
             shrink-0 justify-start w-full transition-all duration-300
@@ -157,7 +135,6 @@ export default function KhsPage() {
             {loading ? (
               <div className="animate-pulse flex flex-col h-full space-y-8">
                  <Skeleton className="w-full h-32" />
-                 <Skeleton className="w-full h-12" />
                  <Skeleton className="w-full h-64" />
               </div>
             ) : !currentStudent ? (
@@ -169,12 +146,16 @@ export default function KhsPage() {
                 <DocumentHeader title="KARTU HASIL STUDI" />
                 <StudentInfo profile={currentStudent.profile} displaySemester={selectedSemester} />
                 
-                {/* === AREA KONTEN UTAMA (LANGSUNG TAMPILKAN TABEL) === */}
                 <div className="mt-4">
-                    <GradeTable mode="khs" data={semesterData} ips={ips} ipk={ipk} />
+                    {/* Pass calculated IPK & IPS */}
+                    <GradeTable 
+                        mode="khs" 
+                        data={semesterData} 
+                        ips={ips} 
+                        ipk={ipk} 
+                    />
                 </div>
                 
-                {/* Footer Tanda Tangan (Selalu Tampil) */}
                 <DocumentFooter 
                     signatureType={signatureType} 
                     signatureBase64={secureImage} 
@@ -186,13 +167,8 @@ export default function KhsPage() {
           </div>
         </div>
 
-        {/* SIDEBAR CONTROL */}
         <div className="w-full flex-1 print:hidden z-10 pb-10 xl:pb-0">
-          {loading ? (
-             <div className="space-y-4">
-                <Skeleton className="h-[240px] w-full rounded-xl" />
-             </div>
-          ) : (
+          {!loading && (
             <ControlPanel
                 students={studentsData}
                 selectedIndex={selectedIndex}

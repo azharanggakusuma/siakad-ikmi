@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-// Import getActiveOfficial
 import { getStudents, getActiveOfficial } from "@/app/actions/students";
 import { type StudentData, type Official, type TranscriptItem } from "@/lib/types";
-
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,20 +14,22 @@ import StudentInfo from "@/components/features/document/StudentInfo";
 import ControlPanel from "@/components/features/document/ControlPanel";
 import GradeTable from "@/components/features/transkrip/GradeTable";
 
+// [UPDATE] Import Logic Terpusat
+import { calculateIPK, calculateTotalSKSLulus, calculateTotalMutu } from "@/lib/grade-calculations";
+
 export default function TranskripPage() {
   const [studentsData, setStudentsData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // State Pejabat
   const [official, setOfficial] = useState<Official | null>(null);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { signatureType, setSignatureType, secureImage } = useSignature("none");
-  const { isCollapsed } = useLayout();
+  const { isCollapsed, user } = useLayout();
 
   const paperRef = useRef<HTMLDivElement>(null);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,7 +37,6 @@ export default function TranskripPage() {
            getStudents(),
            getActiveOfficial()
         ]);
-        
         setStudentsData(data);
         setOfficial(activeOfficial);
       } catch (err) {
@@ -49,15 +48,34 @@ export default function TranskripPage() {
     fetchData();
   }, []);
 
+  // Auto Select for Student User
+  useEffect(() => {
+    if (studentsData.length > 0 && user?.role === "mahasiswa" && user?.student_id) {
+       const myIndex = studentsData.findIndex((s) => s.id === user.student_id);
+       if (myIndex !== -1) setSelectedIndex(myIndex); 
+    }
+  }, [studentsData, user]);
+
   const currentStudent = useMemo(() => studentsData[selectedIndex], [studentsData, selectedIndex]);
 
-  // [UPDATE] Filter khusus Transkrip: Hanya tampilkan yang sudah ada nilainya (exclude KRS Only / strip '-')
+  // Data Transkrip Bersih (Tanpa KRS kosong)
   const transcriptData = useMemo(() => {
     if (!currentStudent?.transcript) return [];
-    
     return currentStudent.transcript.filter((item: TranscriptItem) => item.hm !== '-');
   }, [currentStudent]);
 
+  // [UPDATE] Hitung Summary menggunakan Library (Deduplikasi Otomatis)
+  const summaryData = useMemo(() => {
+      if (!transcriptData) return { ipk: "0,00", totalSKS: 0, totalNM: 0 };
+      
+      const ipkVal = calculateIPK(transcriptData).replace('.', ',');
+      const sksVal = calculateTotalSKSLulus(transcriptData);
+      const mutuVal = calculateTotalMutu(transcriptData);
+
+      return { ipk: ipkVal, totalSKS: sksVal, totalNM: mutuVal };
+  }, [transcriptData]);
+
+  // Page Count Logic
   useEffect(() => {
     if (!paperRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -68,7 +86,7 @@ export default function TranskripPage() {
     });
     observer.observe(paperRef.current);
     return () => observer.disconnect();
-  }, [currentStudent, transcriptData]); // Update dependency
+  }, [currentStudent, transcriptData]);
 
   const handlePrint = () => window.print();
 
@@ -94,23 +112,9 @@ export default function TranskripPage() {
             `}>
              
              {loading ? (
-              <div className="animate-pulse flex flex-col h-full">
-                 <div className="grid grid-cols-[1fr_auto] gap-4 mb-1">
-                    <div className="flex items-center gap-3">
-                        <Skeleton className="w-[80px] h-[80px]" /> 
-                        <div className="flex flex-col gap-2">
-                            <Skeleton className="h-3 w-48" />
-                            <Skeleton className="h-8 w-32" />
-                            <Skeleton className="h-4 w-24" />
-                        </div>
-                    </div>
-                    <Skeleton className="w-[250px] h-[78px]" />
-                </div>
-                <div className="space-y-4 mt-4">
-                     <Skeleton className="h-4 w-full" />
-                     <Skeleton className="h-4 w-3/4" />
-                     <Skeleton className="h-40 w-full" />
-                </div>
+              <div className="animate-pulse flex flex-col h-full space-y-4">
+                 <Skeleton className="w-full h-32" />
+                 <Skeleton className="w-full h-96" />
               </div>
             ) : !currentStudent ? (
               <div className="flex flex-col h-full items-center justify-center text-slate-400">
@@ -120,14 +124,21 @@ export default function TranskripPage() {
               <>
                  <DocumentHeader title="TRANSKRIP NILAI" />
                  <StudentInfo profile={currentStudent.profile} />
-                 {/* Gunakan data yang sudah difilter */}
-                 <GradeTable data={transcriptData} mode="transkrip" />
+                 
+                 {/* [UPDATE] Pass calculated Summary */}
+                 <GradeTable 
+                    data={transcriptData} 
+                    mode="transkrip" 
+                    ipk={summaryData.ipk}
+                    totalSKS={summaryData.totalSKS}
+                    totalNM={summaryData.totalNM}
+                 />
                  
                  <DocumentFooter 
                     signatureType={signatureType} 
                     signatureBase64={secureImage} 
                     mode="transkrip" 
-                    official={official} // Pass data pejabat
+                    official={official}
                  />
               </>
             )}
@@ -135,12 +146,7 @@ export default function TranskripPage() {
         </div>
 
         <div className="w-full flex-1 print:hidden z-10 pb-10 xl:pb-0">
-          {loading ? (
-             <div className="space-y-4">
-                <Skeleton className="h-[240px] w-full rounded-xl" />
-                <Skeleton className="h-[120px] w-full rounded-xl" />
-             </div>
-          ) : (
+          {!loading && (
             <ControlPanel
                 students={studentsData}
                 selectedIndex={selectedIndex}
@@ -149,6 +155,7 @@ export default function TranskripPage() {
                 onSignatureChange={setSignatureType}
                 onPrint={handlePrint}
                 totalPages={totalPages}
+                user={user}
             />
           )}
         </div>

@@ -5,21 +5,34 @@ interface GradeTableProps {
   data: TranscriptItem[];
   ipk?: string;
   ips?: string;
+  // [UPDATE] Tambahkan props untuk nilai total yang sudah dihitung parent
+  totalSKS?: number;
+  totalNM?: number;
   mode?: "transkrip" | "khs";
 }
 
-export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: GradeTableProps) {
-  const totalSKS = data.reduce((acc, row) => acc + row.sks, 0);
+export default function GradeTable({ 
+  data, 
+  ipk, 
+  ips, 
+  totalSKS: propsTotalSKS,
+  totalNM: propsTotalNM,
+  mode = "transkrip" 
+}: GradeTableProps) {
   
-  // Filter NM agar tidak menghitung nilai kosong ('-')
-  const totalNM = data.reduce((acc, row) => {
+  // Fallback: Jika props tidak dikirim, hitung manual (raw sum)
+  // Untuk Transkrip sebaiknya propsTotalSKS SELALU dikirim agar deduplikasi berjalan
+  const calculatedTotalSKS = propsTotalSKS ?? data.reduce((acc, row) => acc + row.sks, 0);
+  
+  const calculatedTotalNM = propsTotalNM ?? data.reduce((acc, row) => {
      if (row.hm === '-') return acc;
      return acc + row.nm;
   }, 0);
 
+  // Jika IPK dikirim, pakai itu. Jika tidak, hitung sederhana.
   const displayedIPK = ipk 
     ? ipk 
-    : (totalSKS > 0 ? (totalNM / totalSKS).toFixed(2).replace('.', ',') : "0,00");
+    : (calculatedTotalSKS > 0 ? (calculatedTotalNM / calculatedTotalSKS).toFixed(2).replace('.', ',') : "0,00");
 
   return (
     <table className="w-full text-[9px] border-collapse border border-black mb-2 font-['Cambria']">
@@ -36,7 +49,6 @@ export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: Grade
         </tr>
       </thead>
       <tbody className="font-normal">
-        {/* [UPDATE] Handle Empty Data for KHS */}
         {data.length === 0 && mode === 'khs' ? (
            <tr className="h-[13px]">
               <td colSpan={7} className="border border-black text-center italic py-2">
@@ -51,8 +63,6 @@ export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: Grade
               <td className="border border-black text-left pl-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">{row.matkul}</td>
               {mode === "transkrip" && <td className="border border-black">{row.smt}</td>}
               <td className="border border-black">{row.sks}</td>
-              
-              {/* [UPDATE] Tampilkan '-' jika HM adalah '-' */}
               <td className="border border-black">{row.hm}</td>
               <td className="border border-black">{row.hm === '-' ? '-' : row.am}</td>
               <td className="border border-black">{row.hm === '-' ? '-' : row.nm}</td>
@@ -65,10 +75,10 @@ export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: Grade
           <>
              <tr className="font-bold bg-white h-4 border-t border-black">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah</td>
-              <td className="border border-black text-center">{totalSKS}</td>
+              <td className="border border-black text-center">{calculatedTotalSKS}</td>
               <td className="border border-black bg-gray-100"></td>
               <td className="border border-black bg-gray-100"></td>
-              <td className="border border-black text-center">{totalNM}</td>
+              <td className="border border-black text-center">{calculatedTotalNM}</td>
             </tr>
             <tr className="font-bold bg-white h-4">
               <td colSpan={3} className="border border-black px-2 text-left">Indeks Prestasi Semester (IPS)</td>
@@ -83,11 +93,11 @@ export default function GradeTable({ data, ipk, ips, mode = "transkrip" }: Grade
           <>
             <tr className="font-bold bg-white h-4 border-t border-black">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah Beban SKS</td>
-              <td colSpan={5} className="border border-black px-2 text-left">{totalSKS}</td>
+              <td colSpan={5} className="border border-black px-2 text-left">{calculatedTotalSKS}</td>
             </tr>
             <tr className="font-bold bg-white h-4">
               <td colSpan={3} className="border border-black px-2 text-left">Jumlah Nilai Mutu</td>
-              <td colSpan={5} className="border border-black px-2 text-left">{totalNM}</td>
+              <td colSpan={5} className="border border-black px-2 text-left">{calculatedTotalNM}</td>
             </tr>
             <tr className="font-bold bg-white h-4">
               <td colSpan={3} className="border border-black px-2 text-left">Indeks Prestasi Kumulatif (IPK)</td>

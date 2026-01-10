@@ -29,7 +29,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 // Component Confirm Modal
-import { ConfirmModal } from "@/components/shared/ConfirmModal"; // Pastikan path import benar
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
 
 // Library
 import Cropper from "react-easy-crop";
@@ -75,7 +75,6 @@ export default function ProfileForm({
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
-  // STATE BARU: Untuk Modal Konfirmasi Hapus
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   if (!user) return null;
@@ -180,7 +179,6 @@ export default function ProfileForm({
     }
   };
 
-  // --- LOGIC HAPUS FOTO (Dipanggil oleh ConfirmModal) ---
   const executeDeletePhoto = async () => {
     setIsDeleting(true);
     try {
@@ -200,8 +198,8 @@ export default function ProfileForm({
 
       toast.success("Foto Dihapus", { description: "Foto profil berhasil dihapus." });
       
-      setIsViewModalOpen(false); // Tutup modal view gambar
-      setIsDeleteConfirmOpen(false); // Tutup modal konfirmasi
+      setIsViewModalOpen(false);
+      setIsDeleteConfirmOpen(false);
     } catch (error: any) {
       toast.error("Gagal Menghapus", {
         description: handleSystemError(error, "Terjadi kesalahan saat menghapus."),
@@ -262,41 +260,60 @@ export default function ProfileForm({
         >
             <DialogTitle className="sr-only">Lihat Foto Profil</DialogTitle>
 
-            <div className="relative group">
-                <div className="relative w-[80vw] h-[80vw] sm:w-[500px] sm:h-[500px] rounded-xl overflow-hidden bg-black">
+            {/* WRAPPER UTAMA */}
+            <div className="relative group flex flex-col items-center justify-center">
+                
+                {/* CONTAINER GAMBAR (Parent Relative) */}
+                {/* UPDATE: Menghapus 'border border-white/10 ring-1 ring-black/50' */}
+                <div className="relative w-[85vw] h-[85vw] sm:w-[500px] sm:h-[500px] rounded-2xl overflow-hidden bg-neutral-950 shadow-2xl">
+                    
                     {previewImage ? (
                         <Image 
                             src={previewImage} 
                             alt="Full Avatar" 
                             fill 
-                            className="object-cover"
+                            className="object-cover transition-transform duration-500 ease-in-out hover:scale-105"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-500 bg-slate-100">
-                            <User size={120} />
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-100/10 backdrop-blur-sm">
+                            <User size={100} className="text-slate-400 opacity-50" />
+                            <p className="text-sm text-slate-400 mt-4 font-medium">Tidak ada foto</p>
                         </div>
+                    )}
+
+                    {/* Gradient Overlay (Bawah) */}
+                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+                    
+                    {/* Gradient Overlay (Atas - agar tombol close terlihat jelas) */}
+                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+
+                    {/* --- TOMBOL CLOSE (Di dalam gambar, Pojok Kanan Atas) --- */}
+                    <Button
+                        onClick={() => setIsViewModalOpen(false)}
+                        className="absolute top-4 right-4 rounded-full w-9 h-9 p-0 bg-black/40 hover:bg-black/70 text-white backdrop-blur-md border-none transition-all z-50 shadow-lg opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 duration-300"
+                        title="Tutup"
+                    >
+                        <X size={18} />
+                    </Button>
+
+                    {/* --- TOOLBAR AKSI (Di dalam gambar, Tengah Bawah) --- */}
+                    {previewImage && (
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out">
+                        <div className="flex items-center gap-2 p-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl">
+                            <Button
+                                onClick={() => setIsDeleteConfirmOpen(true)}
+                                disabled={isDeleting}
+                                variant="ghost"
+                                className="rounded-full h-10 w-10 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-colors"
+                                title="Hapus Foto"
+                            >
+                                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                            </Button>
+                        </div>
+                      </div>
                     )}
                 </div>
 
-                {previewImage && (
-                  <Button
-                      // UBAH DISINI: Membuka modal konfirmasi, bukan langsung hapus
-                      onClick={() => setIsDeleteConfirmOpen(true)}
-                      disabled={isDeleting}
-                      className="absolute top-3 left-3 rounded-full w-8 h-8 p-0 bg-red-600/80 hover:bg-red-700 text-white backdrop-blur-md transition-all z-50 border-none shadow-sm"
-                      title="Hapus Foto"
-                  >
-                      {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                  </Button>
-                )}
-
-                <Button
-                    onClick={() => setIsViewModalOpen(false)}
-                    className="absolute top-3 right-3 rounded-full w-8 h-8 p-0 bg-black/50 hover:bg-black/70 text-white backdrop-blur-md transition-all z-50 border-none"
-                    title="Tutup"
-                >
-                    <X size={16} />
-                </Button>
             </div>
         </DialogContent>
       </Dialog>

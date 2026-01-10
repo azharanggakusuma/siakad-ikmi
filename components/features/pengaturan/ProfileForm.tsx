@@ -12,7 +12,11 @@ import {
   Maximize2,
   Trash2,
 } from "lucide-react";
-import { toast } from "sonner";
+
+// Hapus import toast langsung dari sonner, ganti dengan hook
+// import { toast } from "sonner"; 
+import { useToastMessage } from "@/hooks/use-toast-message"; 
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 // Component Confirm Modal
-import { ConfirmModal } from "@/components/shared/ConfirmModal"; // Pastikan path import benar
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
 
 // Library
 import Cropper from "react-easy-crop";
@@ -50,6 +54,9 @@ export default function ProfileForm({
   user,
   onUpdateSuccess,
 }: ProfileFormProps) {
+  // --- HOOK TOAST ---
+  const { showLoading, showSuccess, showError } = useToastMessage();
+
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,8 +81,6 @@ export default function ProfileForm({
   
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
-  // STATE BARU: Untuk Modal Konfirmasi Hapus
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   if (!user) return null;
@@ -112,7 +117,8 @@ export default function ProfileForm({
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       if (file.size > 20 * 1024 * 1024) {
-        toast.error("Berkas terlalu besar");
+        // Gunakan showError dari hook
+        showError("Gagal Memuat", "Ukuran berkas terlalu besar (Maks 20MB).");
         return;
       }
       const reader = new FileReader();
@@ -130,8 +136,13 @@ export default function ProfileForm({
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  // --- LOGIC UPLOAD FOTO (AUTO) ---
   const handleAutoUpload = async (file: File) => {
     setIsProcessing(true);
+    
+    // 1. Tampilkan Loading Toast & Simpan ID-nya
+    const toastId = showLoading("Mengunggah foto profil...");
+
     try {
         const fd = new FormData();
         fd.append("file", file);
@@ -147,18 +158,17 @@ export default function ProfileForm({
         setFormData(prev => ({ ...prev, avatar_url: newAvatarUrl }));
         onUpdateSuccess({ avatar_url: newAvatarUrl });
 
-        toast.success("Foto Diperbarui", { 
-            description: "Foto profil baru berhasil disimpan." 
-        });
+        // 2. Update Toast jadi Sukses (menggunakan ID yg sama)
+        showSuccess("Foto Diperbarui", "Foto profil berhasil diganti.", toastId);
 
         setIsCropModalOpen(false);
         setImageSrc(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
 
     } catch (e: any) {
-        toast.error("Gagal Upload", { 
-            description: handleSystemError(e, "Gagal mengunggah foto.") 
-        });
+        // 3. Update Toast jadi Error (menggunakan ID yg sama)
+        const errMsg = handleSystemError(e, "Gagal mengunggah foto.");
+        showError("Gagal Upload", errMsg, toastId);
     } finally {
         setIsProcessing(false);
     }
@@ -175,14 +185,18 @@ export default function ProfileForm({
       );
       await handleAutoUpload(finalFile);
     } catch (e) {
-      toast.error("Gagal memproses gambar");
+      showError("Gagal Memproses", "Terjadi kesalahan saat memotong gambar.");
       setIsProcessing(false);
     }
   };
 
-  // --- LOGIC HAPUS FOTO (Dipanggil oleh ConfirmModal) ---
+  // --- LOGIC HAPUS FOTO ---
   const executeDeletePhoto = async () => {
     setIsDeleting(true);
+    
+    // 1. Tampilkan Loading Toast
+    const toastId = showLoading("Menghapus foto profil...");
+
     try {
       if (formData.avatar_url) {
         await deleteAvatarFile(formData.avatar_url);
@@ -198,22 +212,28 @@ export default function ProfileForm({
       setFormData({ ...formData, avatar_url: "" });
       onUpdateSuccess({ avatar_url: null });
 
-      toast.success("Foto Dihapus", { description: "Foto profil berhasil dihapus." });
+      // 2. Update Toast jadi Sukses
+      showSuccess("Foto Dihapus", "Foto profil berhasil dihapus.", toastId);
       
-      setIsViewModalOpen(false); // Tutup modal view gambar
-      setIsDeleteConfirmOpen(false); // Tutup modal konfirmasi
+      setIsViewModalOpen(false);
+      setIsDeleteConfirmOpen(false);
     } catch (error: any) {
-      toast.error("Gagal Menghapus", {
-        description: handleSystemError(error, "Terjadi kesalahan saat menghapus."),
-      });
+      // 3. Update Toast jadi Error
+      const errMsg = handleSystemError(error, "Terjadi kesalahan saat menghapus.");
+      showError("Gagal Menghapus", errMsg, toastId);
     } finally {
       setIsDeleting(false);
     }
   };
 
+  // --- LOGIC SIMPAN PROFIL (TEXT) ---
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    
+    // 1. Tampilkan Loading Toast
+    const toastId = showLoading("Menyimpan perubahan...");
+
     try {
       await updateUserSettings(user.username, {
         nama: formData.nama,
@@ -222,9 +242,8 @@ export default function ProfileForm({
         role: user.role,
       });
 
-      toast.success("Profil Diperbarui", {
-        description: "Data teks berhasil disimpan.",
-      });
+      // 2. Update Toast jadi Sukses
+      showSuccess("Profil Diperbarui", "Data diri berhasil disimpan.", toastId);
       
       onUpdateSuccess({
         name: formData.nama,
@@ -232,9 +251,9 @@ export default function ProfileForm({
         alamat: formData.alamat,
       });
     } catch (error: any) {
-      toast.error("Gagal Menyimpan", {
-        description: handleSystemError(error, "Terjadi kesalahan."),
-      });
+      // 3. Update Toast jadi Error
+      const errMsg = handleSystemError(error, "Terjadi kesalahan.");
+      showError("Gagal Menyimpan", errMsg, toastId);
     } finally {
       setIsSaving(false);
     }
@@ -280,7 +299,6 @@ export default function ProfileForm({
 
                 {previewImage && (
                   <Button
-                      // UBAH DISINI: Membuka modal konfirmasi, bukan langsung hapus
                       onClick={() => setIsDeleteConfirmOpen(true)}
                       disabled={isDeleting}
                       className="absolute top-3 left-3 rounded-full w-8 h-8 p-0 bg-red-600/80 hover:bg-red-700 text-white backdrop-blur-md transition-all z-50 border-none shadow-sm"

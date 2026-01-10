@@ -7,117 +7,118 @@ import { Separator } from "@/components/ui/separator";
 export default function SettingsSkeleton() {
   return (
     <div className="flex flex-col gap-8 pb-10 animate-in fade-in duration-500">
-      <PageHeader title="Pengaturan" breadcrumb={["SIAKAD", "Pengaturan"]} />
+      <PageHeader title="Pengaturan Akun" breadcrumb={["Beranda", "Pengaturan"]} />
 
-      <div className="grid gap-8 lg:grid-cols-2 items-start">
+      {/* Grid disesuaikan dengan PengaturanPage: 12 kolom */}
+      <div className="grid gap-8 lg:grid-cols-12 items-stretch">
         
-        {/* --- SKELETON 1: PROFILE FORM (Mirip Tampilan Asli) --- */}
-        <Card className="flex flex-col overflow-hidden border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100">
-          
-          {/* 1. Fake Banner Area (Gradient Placeholder) */}
-          <div className="h-40 bg-slate-100 relative">
-             <Skeleton className="w-full h-full bg-slate-200/50" />
-          </div>
-
-          <CardContent className="px-6 sm:px-8 pb-8">
-            {/* 2. Avatar Overlapping & Name Info */}
-            <div className="relative flex flex-col md:flex-row gap-6 items-center md:items-end -mt-16 mb-8">
-                {/* Avatar Circle dengan Border Putih */}
-                <div className="shrink-0 relative z-10">
-                    <div className="rounded-full border-[5px] border-white bg-white shadow-md">
-                        <Skeleton className="h-32 w-32 rounded-full" />
-                    </div>
-                </div>
-
-                {/* Nama & Role Placeholder */}
-                <div className="flex-1 text-center md:text-left space-y-3 pb-2 w-full md:w-auto flex flex-col items-center md:items-start">
-                    <Skeleton className="h-8 w-48 bg-slate-200" /> {/* Nama */}
-                    <Skeleton className="h-4 w-24" /> {/* Username */}
-                    <Skeleton className="h-6 w-20 rounded-full" /> {/* Badge Role */}
-                </div>
+        {/* --- SKELETON 1: PROFILE FORM (Kiri: 7/12 atau 8/12) --- */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
+          <Card className="h-full border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100 flex flex-col overflow-hidden">
+            
+            {/* 1. Fake Banner Area (Sesuai tinggi asli: h-32 sm:h-40) */}
+            <div className="h-32 sm:h-40 bg-slate-100 relative shrink-0">
+               <Skeleton className="w-full h-full bg-slate-200/50" />
             </div>
 
-            <Separator className="my-8 opacity-60" />
+            <CardContent className="px-6 pb-8 flex-1">
+              {/* 2. Avatar & Header Info */}
+              <div className="relative mb-6">
+                  <div className="flex justify-between items-start">
+                      {/* Avatar Circle (Margin negatif sesuai asli: -mt-20 sm:-mt-24) */}
+                      <div className="-mt-20 sm:-mt-24 relative z-10">
+                          <div className="rounded-full border-[5px] border-white bg-white shadow-md">
+                              <Skeleton className="h-32 w-32 sm:h-40 sm:w-40 rounded-full" />
+                          </div>
+                      </div>
+                      
+                      {/* Tombol Simpan Placeholder (Desktop) */}
+                      <div className="mt-4 hidden sm:block">
+                          <Skeleton className="h-10 w-48 rounded-full" />
+                      </div>
+                  </div>
 
-            {/* 3. Form Inputs Grid */}
-            <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                    {/* Username Input */}
-                    <div className="space-y-3">
-                        <Skeleton className="h-4 w-20" /> {/* Label */}
-                        <Skeleton className="h-11 w-full rounded-md" /> {/* Input Box */}
-                        <Skeleton className="h-3 w-32" /> {/* Helper text */}
-                    </div>
-                    {/* Nama Input */}
-                    <div className="space-y-3">
-                        <Skeleton className="h-4 w-24" /> {/* Label */}
-                        <Skeleton className="h-11 w-full rounded-md" /> {/* Input Box */}
-                    </div>
-                </div>
+                  {/* Nama & Username */}
+                  <div className="mt-4 space-y-2">
+                      <Skeleton className="h-8 w-48 bg-slate-200" /> {/* Nama */}
+                      <Skeleton className="h-5 w-32" /> {/* Username */}
+                  </div>
+              </div>
 
-                {/* Alamat Input (Full Width) */}
-                <div className="space-y-3">
-                    <Skeleton className="h-4 w-28" /> {/* Label */}
-                    <Skeleton className="h-28 w-full rounded-md" /> {/* Textarea */}
-                </div>
-            </div>
+              <Separator className="mb-8 opacity-60" />
 
-            {/* Tombol Simpan Mobile */}
-            <div className="md:hidden mt-8 pt-4 border-t border-slate-100">
-                 <Skeleton className="h-11 w-full rounded-md" />
-            </div>
-          </CardContent>
-          
-          {/* Footer Tombol Simpan Desktop */}
-          <div className="hidden md:flex justify-end p-6 bg-slate-50/50 border-t border-slate-100">
-             <Skeleton className="h-10 w-40 rounded-md" />
-          </div>
-        </Card>
+              {/* 3. Form Inputs Grid */}
+              <div className="space-y-6 max-w-3xl">
+                  <div className="grid md:grid-cols-2 gap-6">
+                      {/* Input 1: Username */}
+                      <div className="space-y-2">
+                          <Skeleton className="h-4 w-20" /> 
+                          <Skeleton className="h-11 w-full rounded-md" /> 
+                      </div>
+                      {/* Input 2: Nama Lengkap */}
+                      <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" /> 
+                          <Skeleton className="h-11 w-full rounded-md" /> 
+                      </div>
+                  </div>
 
+                  {/* Input 3: Alamat (Full Width Textarea) */}
+                  <div className="space-y-2">
+                      <Skeleton className="h-4 w-28" /> 
+                      <Skeleton className="h-24 w-full rounded-md" /> 
+                  </div>
+              </div>
 
-        {/* --- SKELETON 2: PASSWORD FORM --- */}
-        <Card className="flex flex-col h-full shadow-lg border-none ring-1 ring-slate-100 rounded-xl overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-6">
-            <div className="flex flex-col gap-2">
-               <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                  <Skeleton className="h-7 w-40" />
+              {/* Tombol Simpan Mobile Placeholder (Icon only) */}
+               <div className="mt-6 sm:hidden">
+                    <Skeleton className="h-10 w-10 rounded-full" />
                </div>
-               <Skeleton className="h-4 w-full max-w-[300px] mt-1" />
-            </div>
-          </CardHeader>
 
-          <CardContent className="space-y-6 pt-8 flex-1">
-            {/* Password Lama */}
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-11 w-full" />
-            </div>
-            
-            <div className="h-px bg-slate-100 my-2" />
-            
-            {/* Grid Password Baru */}
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-11 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+
+
+        {/* --- SKELETON 2: PASSWORD FORM (Kanan: 5/12 atau 4/12) --- */}
+        <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
+          <Card className="h-full flex flex-col overflow-hidden border-none shadow-xl bg-white rounded-xl ring-1 ring-slate-100">
+            <CardHeader className="space-y-1 mt-2">
+               {/* Title & Desc */}
+               <Skeleton className="h-6 w-32 mb-2" />
+               <Skeleton className="h-4 w-full max-w-[250px]" />
+            </CardHeader>
+
+            <CardContent className="space-y-6 flex-1 flex flex-col">
+              {/* Alert Box Placeholder (Penting) */}
+              <Skeleton className="h-20 w-full rounded-lg bg-slate-50" />
+
+              <div className="space-y-5">
+                 {/* Input 1: Password Lama */}
+                 <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                 </div>
+                 
+                 {/* Input 2: Password Baru */}
+                 <div className="space-y-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                 </div>
+
+                 {/* Input 3: Konfirmasi Password */}
+                 <div className="space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                 </div>
               </div>
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-11 w-full" />
-              </div>
-            </div>
+            </CardContent>
 
-            {/* Indikator Kekuatan Password (Alert Box style) */}
-            <div className="pt-2">
-                <Skeleton className="h-24 w-full rounded-lg" />
-            </div>
-          </CardContent>
-
-          <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-6 mt-auto flex justify-end">
-            <Skeleton className="h-10 w-36 rounded-md" />
-          </CardFooter>
-        </Card>
+            <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-6 mt-auto">
+              {/* Tombol Update Password */}
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </CardFooter>
+          </Card>
+        </div>
 
       </div>
     </div>

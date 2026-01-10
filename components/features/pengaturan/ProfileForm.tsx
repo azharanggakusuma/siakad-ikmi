@@ -9,7 +9,8 @@ import {
   UserCircle,
   AtSign,
   X,
-  Maximize2, // MENGGANTI 'Eye' dengan 'Maximize2'
+  Maximize2,
+  Trash2, // Import icon Trash
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ import getCroppedImg from "@/lib/cropImage";
 import imageCompression from "browser-image-compression";
 
 import { updateUserSettings } from "@/app/actions/auth";
-import { uploadAvatar } from "@/app/actions/upload";
+import { uploadAvatar, deleteAvatarFile } from "@/app/actions/upload"; // Import deleteAvatarFile
 import { type UserProfile } from "@/lib/types";
 import Image from "next/image";
 
@@ -48,6 +49,7 @@ export default function ProfileForm({
 }: ProfileFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); // State untuk loading hapus
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -147,17 +149,65 @@ export default function ProfileForm({
     }
   };
 
+  // --- LOGIC HAPUS FOTO ---
+  const handleDeletePhoto = async () => {
+    // Konfirmasi sederhana
+    if (!confirm("Apakah Anda yakin ingin menghapus foto profil ini?")) return;
+
+    setIsDeleting(true);
+    try {
+      // 1. Jika ada file di storage (bukan file lokal yg belum disave), hapus dari storage
+      if (user.avatar_url && !fileToUpload) {
+        await deleteAvatarFile(user.avatar_url);
+      }
+
+      // 2. Update database user setting avatar_url menjadi null
+      // Kita panggil updateUserSettings dengan avatar_url: null
+      await updateUserSettings(user.username, {
+        nama: formData.nama,
+        role: user.role,
+        avatar_url: null, // Set null ke database
+      });
+
+      // 3. Reset State Lokal
+      setPreviewImage(null);
+      setFileToUpload(null);
+      setFormData({ ...formData, avatar_url: "" });
+      
+      // 4. Update Parent / Global State
+      onUpdateSuccess({
+        avatar_url: null,
+      });
+
+      toast.success("Foto Dihapus", {
+        description: "Foto profil berhasil dihapus.",
+      });
+      
+      setIsViewModalOpen(false); // Tutup modal view
+    } catch (error: any) {
+      toast.error("Gagal Menghapus", {
+        description: handleSystemError(error, "Terjadi kesalahan saat menghapus."),
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       let finalAvatarUrl = formData.avatar_url;
+      
+      // Jika ada file baru yang mau diupload
       if (fileToUpload) {
         const fd = new FormData();
         fd.append("file", fileToUpload);
         fd.append("username", user.username);
+        // Upload avatar baru (fungsi ini skrg otomatis hapus yg lama jika ada parameter ke-2)
         finalAvatarUrl = await uploadAvatar(fd, user.avatar_url);
       }
+
       await updateUserSettings(user.username, {
         nama: formData.nama,
         username: formData.username,
@@ -165,9 +215,11 @@ export default function ProfileForm({
         role: user.role,
         avatar_url: finalAvatarUrl,
       });
+
       toast.success("Profil Diperbarui", {
         description: "Data Anda berhasil disimpan.",
       });
+      
       onUpdateSuccess({
         name: formData.nama,
         username: formData.username,
@@ -211,7 +263,19 @@ export default function ProfileForm({
                     )}
                 </div>
 
-                {/* Custom Close Button */}
+                {/* Tombol Delete (Kiri Atas) - Hanya muncul jika ada gambar */}
+                {previewImage && (
+                  <Button
+                      onClick={handleDeletePhoto}
+                      disabled={isDeleting}
+                      className="absolute top-3 left-3 rounded-full w-8 h-8 p-0 bg-red-600/80 hover:bg-red-700 text-white backdrop-blur-md transition-all z-50 border-none shadow-sm"
+                      title="Hapus Foto"
+                  >
+                      {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  </Button>
+                )}
+
+                {/* Tombol Close (Kanan Atas) */}
                 <Button
                     onClick={() => setIsViewModalOpen(false)}
                     className="absolute top-3 right-3 rounded-full w-8 h-8 p-0 bg-black/50 hover:bg-black/70 text-white backdrop-blur-md transition-all z-50 border-none"
@@ -326,8 +390,7 @@ export default function ProfileForm({
                       
                       {/* Hover Overlay: Indikasi View */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        {/* ICON DIGANTI MENJADI MAXIMIZE2 */}
-                        <Maximize2 className="text-white" size={24} />
+                        <Maximize2 className="text-white" size={32} />
                       </div>
                    </div>
 

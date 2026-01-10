@@ -3,7 +3,6 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Inisialisasi Client Admin menggunakan Service Role Key dari ENV
-// Ini AMAN karena berjalan di sisi server ("use server")
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -17,7 +16,7 @@ export async function uploadAvatar(formData: FormData, oldUrl?: string | null) {
     throw new Error("File dan Username diperlukan.");
   }
 
-  // Validasi tipe file di sisi server
+  // Validasi tipe file
   const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
   if (!validTypes.includes(file.type)) {
     throw new Error("Format file harus JPG, PNG, atau WEBP.");
@@ -32,15 +31,11 @@ export async function uploadAvatar(formData: FormData, oldUrl?: string | null) {
     // 1. Buat nama file unik
     const fileExt = file.name.split(".").pop();
     const fileName = `${username}-${Date.now()}.${fileExt}`;
-    // Simpan di dalam folder avatars (pastikan bucket 'avatars' sudah dibuat di Supabase)
     const filePath = `${fileName}`;
 
-    // 2. Hapus file lama jika ada (opsional, agar hemat storage)
+    // 2. Hapus file lama jika ada
     if (oldUrl) {
-      const oldFileName = oldUrl.split("/").pop();
-      if (oldFileName) {
-        await supabaseAdmin.storage.from("avatars").remove([oldFileName]);
-      }
+      await deleteAvatarFile(oldUrl);
     }
 
     // 3. Upload file baru
@@ -63,5 +58,30 @@ export async function uploadAvatar(formData: FormData, oldUrl?: string | null) {
   } catch (error: any) {
     console.error("Upload Error:", error);
     throw new Error("Gagal mengunggah gambar: " + error.message);
+  }
+}
+
+// --- FUNGSI BARU UNTUK MENGHAPUS FILE ---
+export async function deleteAvatarFile(fileUrl: string) {
+  try {
+    // URL biasanya: https://[project].supabase.co/storage/v1/object/public/avatars/[filename.jpg]
+    // Kita perlu mengambil bagian terakhir (filename)
+    const fileName = fileUrl.split("/").pop();
+
+    if (!fileName) return;
+
+    const { error } = await supabaseAdmin.storage
+      .from("avatars")
+      .remove([fileName]);
+
+    if (error) {
+      console.error("Gagal menghapus file dari storage:", error);
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Delete File Error:", error);
+    return { success: false }; // Tidak throw error agar proses DB tetap bisa lanjut jika perlu
   }
 }

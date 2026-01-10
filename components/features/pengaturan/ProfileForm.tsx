@@ -9,7 +9,7 @@ import {
   UserCircle,
   AtSign,
   X,
-  Eye,
+  Maximize2, // MENGGANTI 'Eye' dengan 'Maximize2'
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle, // Pastikan ini diimport
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
@@ -192,7 +192,6 @@ export default function ProfileForm({
           className="p-0 bg-transparent border-none shadow-none max-w-fit flex items-center justify-center overflow-hidden"
           showCloseButton={false} 
         >
-            {/* PERBAIKAN: Menambahkan DialogTitle dengan sr-only */}
             <DialogTitle className="sr-only">Lihat Foto Profil</DialogTitle>
 
             <div className="relative group">
@@ -327,7 +326,8 @@ export default function ProfileForm({
                       
                       {/* Hover Overlay: Indikasi View */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Eye className="text-white" size={32} />
+                        {/* ICON DIGANTI MENJADI MAXIMIZE2 */}
+                        <Maximize2 className="text-white" size={24} />
                       </div>
                    </div>
 

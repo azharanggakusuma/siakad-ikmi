@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle, // Pastikan ini diimport
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
@@ -192,11 +192,10 @@ export default function ProfileForm({
           className="p-0 bg-transparent border-none shadow-none max-w-fit flex items-center justify-center overflow-hidden"
           showCloseButton={false} 
         >
+            {/* PERBAIKAN: Menambahkan DialogTitle dengan sr-only */}
+            <DialogTitle className="sr-only">Lihat Foto Profil</DialogTitle>
+
             <div className="relative group">
-                {/* UPDATE: 
-                   Menghapus class 'shadow-2xl' dan 'border border-white/20' 
-                   untuk menghilangkan bayangan dan garis tepi.
-                */}
                 <div className="relative w-[80vw] h-[80vw] sm:w-[500px] sm:h-[500px] rounded-xl overflow-hidden bg-black">
                     {previewImage ? (
                         <Image 
@@ -216,7 +215,6 @@ export default function ProfileForm({
                 {/* Custom Close Button */}
                 <Button
                     onClick={() => setIsViewModalOpen(false)}
-                    // Button styling juga disederhanakan sedikit shadow-nya agar senada
                     className="absolute top-3 right-3 rounded-full w-8 h-8 p-0 bg-black/50 hover:bg-black/70 text-white backdrop-blur-md transition-all z-50 border-none"
                     title="Tutup"
                 >

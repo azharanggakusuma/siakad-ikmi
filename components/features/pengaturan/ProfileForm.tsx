@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
+// Component Confirm Modal
+import { ConfirmModal } from "@/components/shared/ConfirmModal"; // Pastikan path import benar
+
 // Library
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
@@ -48,8 +51,8 @@ export default function ProfileForm({
   onUpdateSuccess,
 }: ProfileFormProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // Loading saat crop/upload
-  const [isDeleting, setIsDeleting] = useState(false);     // Loading saat hapus
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -62,10 +65,8 @@ export default function ProfileForm({
   const [previewImage, setPreviewImage] = useState<string | null>(
     user?.avatar_url || null
   );
-  
-  // Kita HAPUS state `fileToUpload` karena sekarang langsung upload
 
-  // --- STATE CROPPING & VIEW MODAL ---
+  // --- STATE MODALS ---
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -73,6 +74,9 @@ export default function ProfileForm({
   
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  
+  // STATE BARU: Untuk Modal Konfirmasi Hapus
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   if (!user) return null;
 
@@ -97,7 +101,6 @@ export default function ProfileForm({
       initialQuality: 0.9,
     };
     try {
-      // Note: isProcessing di-handle di parent caller (handleAutoUpload)
       const processedFile = await imageCompression(file, options);
       return new File([processedFile], file.name, { type: processedFile.type });
     } catch {
@@ -127,7 +130,6 @@ export default function ProfileForm({
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // --- FUNGSI BARU: AUTO UPLOAD ---
   const handleAutoUpload = async (file: File) => {
     setIsProcessing(true);
     try {
@@ -135,17 +137,12 @@ export default function ProfileForm({
         fd.append("file", file);
         fd.append("username", user.username);
 
-        // 1. Upload ke Storage (Otomatis hapus yg lama jika ada di formData.avatar_url)
-        // Gunakan formData.avatar_url sebagai referensi oldUrl agar jika user upload berkali-kali tanpa refresh, file lama tetap terhapus
         const newAvatarUrl = await uploadAvatar(fd, formData.avatar_url);
 
-        // 2. Update URL di Database User
         await updateUserSettings(user.username, {
             avatar_url: newAvatarUrl
-            // Kita hanya update avatar_url, data lain biarkan user simpan manual
         });
 
-        // 3. Update State Lokal & Parent
         setPreviewImage(newAvatarUrl);
         setFormData(prev => ({ ...prev, avatar_url: newAvatarUrl }));
         onUpdateSuccess({ avatar_url: newAvatarUrl });
@@ -154,7 +151,6 @@ export default function ProfileForm({
             description: "Foto profil baru berhasil disimpan." 
         });
 
-        // 4. Cleanup
         setIsCropModalOpen(false);
         setImageSrc(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -171,30 +167,21 @@ export default function ProfileForm({
   const handleCropSave = async () => {
     try {
       if (!imageSrc || !croppedAreaPixels) return;
-      
-      // Mulai loading processing crop
       setIsProcessing(true);
-
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!croppedBlob) throw new Error("Crop failed");
-      
       const finalFile = await processImage(
         new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" })
       );
-
-      // LANGSUNG UPLOAD
       await handleAutoUpload(finalFile);
-
     } catch (e) {
       toast.error("Gagal memproses gambar");
-      setIsProcessing(false); // Matikan loading jika error di tahap crop
+      setIsProcessing(false);
     }
   };
 
-  // --- LOGIC HAPUS FOTO (SAMA SEPERTI SEBELUMNYA) ---
-  const handleDeletePhoto = async () => {
-    if (!confirm("Apakah Anda yakin ingin menghapus foto profil ini?")) return;
-
+  // --- LOGIC HAPUS FOTO (Dipanggil oleh ConfirmModal) ---
+  const executeDeletePhoto = async () => {
     setIsDeleting(true);
     try {
       if (formData.avatar_url) {
@@ -212,7 +199,9 @@ export default function ProfileForm({
       onUpdateSuccess({ avatar_url: null });
 
       toast.success("Foto Dihapus", { description: "Foto profil berhasil dihapus." });
-      setIsViewModalOpen(false);
+      
+      setIsViewModalOpen(false); // Tutup modal view gambar
+      setIsDeleteConfirmOpen(false); // Tutup modal konfirmasi
     } catch (error: any) {
       toast.error("Gagal Menghapus", {
         description: handleSystemError(error, "Terjadi kesalahan saat menghapus."),
@@ -222,18 +211,15 @@ export default function ProfileForm({
     }
   };
 
-  // --- SIMPAN MANUAL (HANYA TEKS) ---
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      // Di sini kita HAPUS logika uploadAvatar karena sudah otomatis
       await updateUserSettings(user.username, {
         nama: formData.nama,
         username: formData.username,
         alamat: formData.alamat,
         role: user.role,
-        // avatar_url tidak perlu dikirim lagi karena sudah di-update di handleAutoUpload
       });
 
       toast.success("Profil Diperbarui", {
@@ -256,6 +242,18 @@ export default function ProfileForm({
 
   return (
     <>
+      {/* --- CONFIRMATION MODAL --- */}
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={setIsDeleteConfirmOpen}
+        onConfirm={executeDeletePhoto}
+        title="Hapus Foto Profil"
+        description="Apakah Anda yakin ingin menghapus foto profil? Tindakan ini tidak dapat dibatalkan dan foto akan hilang permanen."
+        confirmLabel="Ya, Hapus"
+        cancelLabel="Batal"
+        variant="destructive"
+      />
+
       {/* --- MODAL VIEW IMAGE --- */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
         <DialogContent 
@@ -272,7 +270,6 @@ export default function ProfileForm({
                             alt="Full Avatar" 
                             fill 
                             className="object-cover"
-                            // Unoptimized tidak wajib jika URL berubah (unique timestamp), tapi boleh dibiarkan untuk aman
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-500 bg-slate-100">
@@ -283,7 +280,8 @@ export default function ProfileForm({
 
                 {previewImage && (
                   <Button
-                      onClick={handleDeletePhoto}
+                      // UBAH DISINI: Membuka modal konfirmasi, bukan langsung hapus
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                       disabled={isDeleting}
                       className="absolute top-3 left-3 rounded-full w-8 h-8 p-0 bg-red-600/80 hover:bg-red-700 text-white backdrop-blur-md transition-all z-50 border-none shadow-sm"
                       title="Hapus Foto"
@@ -405,7 +403,6 @@ export default function ProfileForm({
                         </div>
                       )}
                       
-                      {/* Indikator Loading di Avatar jika sedang upload (optional feedback) */}
                       {isProcessing && !isCropModalOpen && (
                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
                              <Loader2 className="text-white animate-spin" />

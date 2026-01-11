@@ -34,11 +34,11 @@ export default function NotFound() {
         </div>
       </div>
 
-      {/* Footer Decoration */}
-      <div className="absolute bottom-8 text-xs text-muted-foreground">
+      {/* Footer */}
+      {/*<div className="absolute bottom-8 text-xs text-muted-foreground">
         &copy; {new Date().getFullYear()} STMIK IKMI Cirebon. All rights
         reserved.
-      </div>
+      </div>*/}
     </div>
   );
 }

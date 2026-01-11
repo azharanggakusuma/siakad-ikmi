@@ -44,7 +44,8 @@ const handleDbError = (error: any, context: string) => {
 export async function getUsers() {
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("id, name, username, role, student_id, is_active")
+    // [!code ++] Menambahkan avatar_url di sini
+    .select("id, name, username, role, student_id, is_active, avatar_url") 
     .order("name", { ascending: true });
 
   if (error) {

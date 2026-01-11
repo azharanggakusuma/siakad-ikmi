@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image"; 
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle } from "lucide-react";
+import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle, User, AtSign } from "lucide-react"; 
 import { UserData } from "@/lib/types"; 
 import {
   DropdownMenuLabel,
@@ -73,13 +74,31 @@ export default function UserTable({
     {
       header: "Nama User",
       render: (row) => (
-        <span className="font-semibold text-slate-700">{row.name}</span>
+        <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="relative h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
+                {row.avatar_url ? (
+                    <Image 
+                        src={row.avatar_url} 
+                        alt={row.name} 
+                        fill 
+                        className="object-cover"
+                    />
+                ) : (
+                    <User className="h-4 w-4 text-slate-400" />
+                )}
+            </div>
+            <span className="font-semibold text-slate-700 text-sm">{row.name}</span>
+        </div>
       ),
     },
     {
       header: "Username",
       render: (row) => (
-        <span className="text-slate-700">{row.username}</span>
+        <div className="flex items-center text-slate-600 font-medium">
+            <AtSign className="h-3.5 w-3.5 mr-1 text-slate-400" />
+            {row.username}
+        </div>
       ),
     },
     {
@@ -108,7 +127,6 @@ export default function UserTable({
         );
       },
     },
-    // [UPDATE] Kolom Status dengan Icon
     {
         header: "Status",
         className: "text-center w-[120px]",

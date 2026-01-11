@@ -120,6 +120,7 @@ export interface UserData {
   role: Role | string;
   student_id?: string | null;
   is_active: boolean;
+  avatar_url?: string | null; // [!code ++] Property baru ditambahkan
 }
 
 export interface UserPayload {

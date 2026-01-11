@@ -71,20 +71,22 @@ export interface StudentProfile {
   nim: string;
   nama: string;
   alamat: string;
-  angkatan: number; // Sumber data utama
-  semester: number; // Hasil kalkulasi (bukan dari DB)
+  angkatan: number; 
+  semester: number; 
   study_program_id: string | null;
   study_program?: StudyProgram | null;
   is_active: boolean;
+  avatar_url?: string | null; // [!code ++] Property baru untuk foto
 }
 
 export interface StudentFormValues {
   nim: string;
   nama: string;
-  angkatan: string | number; // Input Angkatan
+  angkatan: string | number;
   alamat: string;
   study_program_id: string;
   is_active: boolean;
+  avatar_url?: string | null; // [!code ++] Property baru untuk foto
 }
 
 // =========================================
@@ -107,7 +109,7 @@ export interface StudentData {
   id: string;
   profile: StudentProfile;
   transcript: TranscriptItem[];
-  total_sks?: number; // [UPDATE] Property baru untuk menampung total SKS dari KRS
+  total_sks?: number; 
 }
 
 // =========================================
@@ -120,7 +122,7 @@ export interface UserData {
   role: Role | string;
   student_id?: string | null;
   is_active: boolean;
-  avatar_url?: string | null; // [!code ++] Property baru ditambahkan
+  avatar_url?: string | null; 
 }
 
 export interface UserPayload {
@@ -234,14 +236,12 @@ export interface KRS {
   academic_year_id: string;
   status: KRSStatus;
   
-  // Nilai (Optional, diisi di akhir semester)
   grade_letter?: string | null; 
   grade_point?: number | null;  
   
   created_at?: string;
   updated_at?: string;
 
-  // Data Relasi
   student?: {
     nim: string;
     nama: string;

@@ -3,7 +3,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useToastMessage } from "@/hooks/use-toast-message"; 
-import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react"; 
+import Image from "next/image"; 
+import { Pencil, Trash2, CheckCircle2, XCircle, User } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +22,6 @@ import { type StudentData, type StudentFormValues, type StudyProgram } from "@/l
 import { getStudents, getStudyPrograms, createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
 export default function MahasiswaPage() {
-  // Hook Toast Custom: Tambahkan showLoading
   const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
 
   const [dataList, setDataList] = useState<StudentData[]>([]);
@@ -106,20 +106,19 @@ export default function MahasiswaPage() {
       study_program_id: student.profile.study_program_id ? String(student.profile.study_program_id) : "",
       angkatan: student.profile.angkatan, 
       alamat: student.profile.alamat,
-      is_active: student.profile.is_active 
+      is_active: student.profile.is_active,
+      avatar_url: student.profile.avatar_url 
     });
     setIsEditing(true);
     setIsFormOpen(true);
   };
 
   const handleFormSubmit = async (values: StudentFormValues) => {
-    // 1. Tampilkan Loading
     const toastId = showLoading("Sedang menyimpan data...");
     
     try {
       if (isEditing && selectedId) {
         await updateStudent(selectedId, values);
-        // 2. Pass toastId ke successAction
         successAction("Mahasiswa", "update", toastId);
       } else {
         await createStudent(values);
@@ -128,19 +127,15 @@ export default function MahasiswaPage() {
       await fetchData(); 
       setIsFormOpen(false);
     } catch (error: any) {
-      // 3. Pass toastId ke showError
       showError("Gagal Menyimpan", error.message, toastId);
     }
   };
 
   const handleDelete = async () => {
     if (selectedId) {
-      // 1. Tampilkan Loading
       const toastId = showLoading("Sedang menghapus data...");
-
       try {
         await deleteStudent(selectedId);
-        // 2. Pass toastId ke successAction
         successAction("Mahasiswa", "delete", toastId);
         
         if (currentData.length === 1 && currentPage > 1) {
@@ -148,7 +143,6 @@ export default function MahasiswaPage() {
         }
         await fetchData();
       } catch (error: any) {
-        // 3. Pass toastId ke showError
         showError("Gagal Menghapus", error.message, toastId);
       }
     }
@@ -163,13 +157,32 @@ export default function MahasiswaPage() {
       render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
     {
+      header: "Nama Mahasiswa",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="relative h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
+                {row.profile.avatar_url ? (
+                    <Image 
+                        src={row.profile.avatar_url} 
+                        alt={row.profile.nama} 
+                        fill 
+                        className="object-cover"
+                    />
+                ) : (
+                    <User className="h-4 w-4 text-slate-400" />
+                )}
+            </div>
+            {/* Nama Saja */}
+            <span className="font-semibold text-gray-800 text-sm">{row.profile.nama}</span>
+        </div>
+      ),
+    },
+    // [!code ++] Kolom NIM (Dipindah ke kanan / setelah Nama)
+    {
       header: "NIM",
       className: "w-[120px]",
       render: (row) => <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
-    },
-    { 
-      header: "Nama Lengkap", 
-      render: (row) => <span className="font-semibold text-gray-800">{row.profile.nama}</span>
     },
     { 
       header: "Program Studi", 
@@ -319,4 +332,4 @@ export default function MahasiswaPage() {
       />
     </div>
   );
-} 
+}

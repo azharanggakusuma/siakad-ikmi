@@ -29,7 +29,8 @@ const defaultValues: StudentFormValues = {
   study_program_id: "", 
   angkatan: new Date().getFullYear(), // Default tahun sekarang
   alamat: "", 
-  is_active: true
+  is_active: true,
+  avatar_url: null, // [!code ++] Default null
 };
 
 export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, onCancel }: StudentFormProps) {
@@ -42,7 +43,8 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
       study_program_id: data.study_program_id ? String(data.study_program_id) : "",
       angkatan: data.angkatan ? String(data.angkatan) : new Date().getFullYear().toString(),
       alamat: data.alamat || "",
-      is_active: data.is_active ?? true 
+      is_active: data.is_active ?? true,
+      avatar_url: data.avatar_url || null, // [!code ++] Keep avatar_url existing
     };
   };
 

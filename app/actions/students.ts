@@ -1,8 +1,20 @@
 'use server'
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { StudentData, TranscriptItem, StudentFormValues, StudyProgram, AcademicYear, Official } from "@/lib/types";
+
+// Inisialisasi Supabase Admin untuk akses lintas tabel (users & students) tanpa batasan RLS
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 // Internal Interface untuk Response DB
 interface DBResponseStudent {
@@ -26,7 +38,6 @@ interface DBResponseStudent {
     } | null;
   }[];
   
-  // [UPDATE] Menambahkan detail course di relation krs
   krs: {
     status: string; 
     courses: {
@@ -46,7 +57,7 @@ const getAM = (hm: string): number => {
 
 // --- HELPER CALCULATE SEMESTER ---
 const calculateSemester = (angkatan: number | null, activeYear: { nama: string, semester: string } | null): number => {
-  if (!angkatan || !activeYear) return 1; // Default
+  if (!angkatan || !activeYear) return 1; 
   
   const currentStartYear = parseInt(activeYear.nama.split('/')[0]);
   if (isNaN(currentStartYear)) return 1;
@@ -84,7 +95,7 @@ const handleDbError = (error: any, context: string) => {
 // --- READ OPERATIONS ---
 
 export async function getStudyPrograms(): Promise<StudyProgram[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('study_programs')
     .select('*')
     .order('nama', { ascending: true });
@@ -94,7 +105,7 @@ export async function getStudyPrograms(): Promise<StudyProgram[]> {
 }
 
 export async function getActiveAcademicYear(): Promise<AcademicYear | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('academic_years')
     .select('*')
     .eq('is_active', true)
@@ -108,7 +119,7 @@ export async function getActiveAcademicYear(): Promise<AcademicYear | null> {
 }
 
 export async function getActiveOfficial(): Promise<Official | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('officials')
     .select('*')
     .eq('is_active', true)
@@ -122,12 +133,27 @@ export async function getActiveOfficial(): Promise<Official | null> {
 }
 
 export async function getStudents(): Promise<StudentData[]> {
-  // Ambil Tahun Akademik Aktif
   const activeYear = await getActiveAcademicYear();
 
-  // Ambil Data Mahasiswa
-  // [UPDATE] select courses di dalam relation KRS
-  const { data, error } = await supabase
+  // [!code ++] 1. AMBIL DATA USERS SECARA TERPISAH (Untuk Foto)
+  // Ini lebih aman daripada join jika relasi tidak terdeteksi otomatis
+  const { data: usersData } = await supabaseAdmin
+    .from('users')
+    .select('student_id, avatar_url')
+    .not('student_id', 'is', null);
+  
+  // Buat Map: student_id -> avatar_url
+  const avatarMap = new Map<string, string>();
+  if (usersData) {
+    usersData.forEach((u) => {
+      if (u.student_id && u.avatar_url) {
+        avatarMap.set(u.student_id, u.avatar_url);
+      }
+    });
+  }
+
+  // 2. AMBIL DATA MAHASISWA
+  const { data, error } = await supabaseAdmin
     .from('students')
     .select(`
       *,
@@ -159,10 +185,11 @@ export async function getStudents(): Promise<StudentData[]> {
   const students = data as unknown as DBResponseStudent[];
 
   return students.map((s) => {
-    // Hitung semester dinamis
     const dynamicSemester = calculateSemester(s.angkatan, activeYear);
 
-    // Hitung Total SKS hanya jika status APPROVED
+    // [!code ++] Ambil foto dari Map yang sudah kita buat
+    const userAvatar = avatarMap.get(s.id) || null;
+
     const totalSksApproved = (s.krs || []).reduce((acc, curr) => {
         if (curr.status === "APPROVED") {
             return acc + (curr.courses?.sks || 0);
@@ -170,7 +197,6 @@ export async function getStudents(): Promise<StudentData[]> {
         return acc;
     }, 0);
 
-    // 1. Ambil data dari GRADES
     const gradesTranscript: TranscriptItem[] = (s.grades || []).map((g) => {
         const course = g.courses;
         const am = getAM(g.hm);
@@ -178,7 +204,7 @@ export async function getStudents(): Promise<StudentData[]> {
         const nm = am * sks;
 
         return {
-          no: 0, // di-reindex nanti
+          no: 0, 
           course_id: course?.id,
           kode: course?.kode || "CODE",
           matkul: course?.matkul || "Unknown",
@@ -190,7 +216,6 @@ export async function getStudents(): Promise<StudentData[]> {
         };
     });
 
-    // 2. [UPDATE] Gabungkan dengan data KRS (Status APPROVED) yang belum ada di Grades
     const gradeCourseIds = new Set(gradesTranscript.map(t => t.course_id));
     
     const krsTranscript: TranscriptItem[] = (s.krs || [])
@@ -204,13 +229,12 @@ export async function getStudents(): Promise<StudentData[]> {
             matkul: c.matkul,
             smt: c.smt_default,
             sks: c.sks,
-            hm: "-", // Penanda belum ada nilai
+            hm: "-", 
             am: 0,
             nm: 0
           };
       });
 
-    // 3. Gabung dan Sortir
     const fullTranscript = [...gradesTranscript, ...krsTranscript]
       .sort((a, b) => a.smt - b.smt || a.kode.localeCompare(b.kode))
       .map((item, index) => ({ ...item, no: index + 1 }));
@@ -226,9 +250,10 @@ export async function getStudents(): Promise<StudentData[]> {
         semester: dynamicSemester, 
         study_program_id: s.study_program_id,
         study_program: s.study_programs,
-        is_active: s.is_active ?? true
+        is_active: s.is_active ?? true,
+        avatar_url: userAvatar, // [!code ++] Assign avatar dari map
       },
-      transcript: fullTranscript, // Gunakan hasil gabungan
+      transcript: fullTranscript, 
       total_sks: totalSksApproved 
     };
   });
@@ -236,13 +261,13 @@ export async function getStudents(): Promise<StudentData[]> {
 
 // --- CRUD OPERATIONS ---
 export async function createStudent(values: StudentFormValues) {
-  const { error } = await supabase.from('students').insert([{
+  const { error } = await supabaseAdmin.from('students').insert([{
     nim: values.nim,
     nama: values.nama,
     angkatan: Number(values.angkatan), 
     alamat: values.alamat,
     study_program_id: values.study_program_id || null, 
-    is_active: values.is_active 
+    is_active: values.is_active,
   }]);
   
   if (error) handleDbError(error, "createStudent");
@@ -251,13 +276,13 @@ export async function createStudent(values: StudentFormValues) {
 }
 
 export async function updateStudent(id: string, values: StudentFormValues) {
-  const { error } = await supabase.from('students').update({
+  const { error } = await supabaseAdmin.from('students').update({
     nim: values.nim,
     nama: values.nama,
     angkatan: Number(values.angkatan),
     alamat: values.alamat,
     study_program_id: values.study_program_id || null,
-    is_active: values.is_active
+    is_active: values.is_active,
   }).eq('id', id);
 
   if (error) handleDbError(error, "updateStudent");
@@ -266,7 +291,7 @@ export async function updateStudent(id: string, values: StudentFormValues) {
 }
 
 export async function deleteStudent(id: string) {
-  const { error } = await supabase.from('students').delete().eq('id', id);
+  const { error } = await supabaseAdmin.from('students').delete().eq('id', id);
   
   if (error) handleDbError(error, "deleteStudent");
   

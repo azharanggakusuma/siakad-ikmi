@@ -35,7 +35,7 @@ export default function NotFound() {
       
       {/* Footer Decoration */}
       <div className="absolute bottom-8 text-xs text-muted-foreground">
-        &copy; {new Date().getFullYear()} SIAKAD IKMI. All rights reserved.
+        &copy; {new Date().getFullYear()} STMIK IKMI Cirebon. All rights reserved.
       </div>
     </div>
   );

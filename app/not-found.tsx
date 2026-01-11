@@ -6,10 +6,10 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-center animate-in fade-in zoom-in duration-500">
       <div className="space-y-6 max-w-md mx-auto">
-        {/* Icon & Status Code */}
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <h1 className="text-7xl font-bold text-primary tracking-tighter">404</h1>
-        </div>
+        {/* Status Code */}
+        <h1 className="select-none text-9xl font-extrabold text-primary/20 tracking-tighter">
+          404
+        </h1>
 
         {/* Text Content */}
         <div className="space-y-2">

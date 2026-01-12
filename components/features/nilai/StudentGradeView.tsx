@@ -24,6 +24,9 @@ export default function StudentGradeView({ user }: { user: any }) {
 
   const { showError } = useToastMessage();
 
+  // Batas minimal SKS kelulusan
+  const MIN_SKS_LULUS = 144;
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -70,8 +73,8 @@ export default function StudentGradeView({ user }: { user: any }) {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // Persentase kelulusan (Contoh: minimal 144 SKS)
-  const progressPercent = Math.min((summary.totalSKS / 144) * 100, 100);
+  // Persentase kelulusan
+  const progressPercent = Math.min((summary.totalSKS / MIN_SKS_LULUS) * 100, 100);
 
   // --- COLUMN DEFINITION ---
   const columns: Column<any>[] = [
@@ -136,7 +139,7 @@ export default function StudentGradeView({ user }: { user: any }) {
       {/* --- HEADER STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
         
-        {/* CARD 1: IPK (Warna disamakan dengan Card Status KRS - Blue 800-900) */}
+        {/* CARD 1: IPK (Warna disamakan dengan Card Status KRS: Blue 800-900) */}
         <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
@@ -181,7 +184,7 @@ export default function StudentGradeView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* CARD 2: Total SKS (Warna disamakan dengan Card SKS KRS - Cyan to Blue) */}
+        {/* CARD 2: Total SKS (Warna disamakan dengan Card SKS KRS: Cyan to Blue) */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />
@@ -209,7 +212,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-extrabold tracking-tight">{summary.totalSKS}</span>
-                    <span className="text-lg text-cyan-100 font-medium">SKS</span>
+                    <span className="text-lg text-cyan-100 font-medium">/ {MIN_SKS_LULUS} SKS</span>
                   </div>
                 </div>
                 <div className="mt-4">
@@ -217,7 +220,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                       <div className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }} />
                    </div>
                    <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
-                      {progressPercent.toFixed(0)}% dari minimal 144 SKS untuk kelulusan Sarjana.
+                      {progressPercent.toFixed(0)}% dari minimal {MIN_SKS_LULUS} SKS untuk kelulusan Sarjana.
                    </p>
                 </div>
               </>
@@ -226,7 +229,7 @@ export default function StudentGradeView({ user }: { user: any }) {
         </Card>
       </div>
 
-      {/* --- TABEL NILAI (Dengan DataTable: Search & Pagination) --- */}
+      {/* --- TABEL NILAI --- */}
       <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardContent className="p-6">
             <DataTable

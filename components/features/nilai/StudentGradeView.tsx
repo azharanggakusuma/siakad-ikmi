@@ -136,8 +136,8 @@ export default function StudentGradeView({ user }: { user: any }) {
       {/* --- HEADER STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
         
-        {/* CARD 1: IPK (Style matched with KRS Status Card) */}
-        <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-indigo-600 to-violet-800">
+        {/* CARD 1: IPK (Warna disamakan dengan Card Status KRS - Blue 800-900) */}
+        <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
           </div>
@@ -158,7 +158,7 @@ export default function StudentGradeView({ user }: { user: any }) {
               <>
                 <div className="flex justify-between items-start">
                   <div>
-                      <p className="text-indigo-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
+                      <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
                       <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{summary.ipk}</h2>
                   </div>
                   <div className="hidden sm:block p-3 bg-white/10 rounded-full backdrop-blur-sm shadow-inner border border-white/10">
@@ -168,12 +168,12 @@ export default function StudentGradeView({ user }: { user: any }) {
                 
                 <div className="mt-6 flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
-                    <GraduationCap className="w-4 h-4" />
-                    <span className="text-sm font-medium">Total Nilai Mutu: {summary.totalNM}</span>
+                    <GraduationCap className="w-4 h-4 text-blue-50" />
+                    <span className="text-sm font-medium text-blue-50">Total Nilai Mutu: {summary.totalNM}</span>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
-                    <ScrollText className="w-4 h-4" />
-                    <span className="text-sm font-medium">Total Mata Kuliah: {data.length}</span>
+                    <ScrollText className="w-4 h-4 text-blue-50" />
+                    <span className="text-sm font-medium text-blue-50">Total Mata Kuliah: {data.length}</span>
                   </div>
                 </div>
               </>
@@ -181,8 +181,8 @@ export default function StudentGradeView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* CARD 2: Total SKS (Style matched with KRS SKS Card) */}
-        <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-pink-600 to-rose-600">
+        {/* CARD 2: Total SKS (Warna disamakan dengan Card SKS KRS - Cyan to Blue) */}
+        <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />
           </div>
@@ -204,19 +204,19 @@ export default function StudentGradeView({ user }: { user: any }) {
             ) : (
               <>
                 <div>
-                  <div className="flex items-center gap-2 text-pink-50 mb-1">
+                  <div className="flex items-center gap-2 text-cyan-50 mb-1">
                     <span className="text-sm font-medium">Total SKS Lulus</span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-extrabold tracking-tight">{summary.totalSKS}</span>
-                    <span className="text-lg text-pink-100 font-medium">SKS</span>
+                    <span className="text-lg text-cyan-100 font-medium">SKS</span>
                   </div>
                 </div>
                 <div className="mt-4">
                    <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
                       <div className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }} />
                    </div>
-                   <p className="text-xs text-pink-50/90 leading-relaxed font-medium">
+                   <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
                       {progressPercent.toFixed(0)}% dari minimal 144 SKS untuk kelulusan Sarjana.
                    </p>
                 </div>

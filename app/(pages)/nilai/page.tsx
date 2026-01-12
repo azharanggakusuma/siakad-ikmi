@@ -34,7 +34,7 @@ export default function NilaiPage() {
   const [studentKrsCourses, setStudentKrsCourses] = useState<any[]>([]);
   const [isFetchingCourses, setIsFetchingCourses] = useState(false);
 
-  // === FETCH DATA UTAMA ADMIN ===
+  // === FETCH DATA ADMIN (Hanya jika role != mahasiswa) ===
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
@@ -53,7 +53,6 @@ export default function NilaiPage() {
   };
 
   useEffect(() => {
-    // Hanya fetch data admin jika user BUKAN mahasiswa
     if (user && user.role !== 'mahasiswa') {
       fetchAdminData();
     }
@@ -66,7 +65,7 @@ export default function NilaiPage() {
     
     // Fetch mata kuliah KHUSUS dari KRS mahasiswa ini
     setIsFetchingCourses(true);
-    setStudentKrsCourses([]); // Reset list dulu
+    setStudentKrsCourses([]); // Reset list
     try {
         const courses = await getStudentCoursesForGrading(student.id);
         setStudentKrsCourses(courses || []);
@@ -79,7 +78,7 @@ export default function NilaiPage() {
 
   const handleSaveGrades = async (studentId: string, grades: { course_id: string; hm: string }[]) => {
     await saveStudentGrades(studentId, grades);
-    await fetchAdminData(); // Refresh data utama agar tabel terupdate
+    await fetchAdminData(); // Refresh data utama
   };
 
   // 1. Loading State (Menunggu User Session)
@@ -93,7 +92,7 @@ export default function NilaiPage() {
      );
   }
 
-  // 2. View Mahasiswa (TAMPILAN BARU)
+  // 2. View Mahasiswa
   if (user.role === 'mahasiswa') {
     return (
       <div className="pb-10">
@@ -103,7 +102,7 @@ export default function NilaiPage() {
     );
   }
 
-  // 3. View Admin / Dosen (TAMPILAN LAMA)
+  // 3. View Admin / Dosen
   return (
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
       <PageHeader title="Input Nilai Mahasiswa" breadcrumb={["Beranda", "Nilai"]} />
@@ -135,7 +134,7 @@ export default function NilaiPage() {
             ) : (
                 <StudentGradeForm 
                     student={selectedStudent}
-                    allCourses={studentKrsCourses} // List matkul dari KRS
+                    allCourses={studentKrsCourses}
                     onSubmit={handleSaveGrades}
                     onCancel={() => setIsFormOpen(false)}
                 />

@@ -5,7 +5,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, BookOpen, Trophy, Star } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Star, ScrollText } from "lucide-react";
 import { getStudentGradeSummary } from "@/app/actions/grades";
 import { useToastMessage } from "@/hooks/use-toast-message";
 
@@ -43,7 +43,7 @@ export default function StudentGradeView({ user }: { user: any }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Helper warna badge nilai
+  // Helper warna badge nilai (Styling mirip KRS)
   const getGradeBadge = (grade: string) => {
     switch (grade) {
       case "A": return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
@@ -75,12 +75,12 @@ export default function StudentGradeView({ user }: { user: any }) {
     {
       header: "No",
       className: "w-[50px] text-center",
-      render: (_, index) => <div className="text-center text-slate-500">{startIndex + index + 1}</div>
+      render: (_, index) => <div className="text-center text-slate-500 text-xs">{startIndex + index + 1}</div>
     },
     {
       header: "Kode",
       className: "w-[100px]",
-      render: (row) => <span className="font-mono text-slate-600 font-medium">{row.kode}</span>
+      render: (row) => <span className="font-mono text-slate-600 font-medium text-xs">{row.kode}</span>
     },
     {
       header: "Mata Kuliah",
@@ -91,12 +91,12 @@ export default function StudentGradeView({ user }: { user: any }) {
     {
         header: "SKS",
         className: "text-center w-[80px]",
-        render: (row) => <span className="text-slate-600">{row.sks}</span>
+        render: (row) => <span className="text-slate-600 text-sm">{row.sks}</span>
     },
     {
         header: "SMT",
         className: "text-center w-[80px]",
-        render: (row) => <span className="text-slate-600">{row.semester}</span>
+        render: (row) => <span className="text-slate-600 text-sm">{row.semester}</span>
     },
     {
         header: "Nilai (HM)",
@@ -112,7 +112,7 @@ export default function StudentGradeView({ user }: { user: any }) {
     {
         header: "Mutu (AM)",
         className: "text-center w-[100px]",
-        render: (row) => <span className="font-semibold text-slate-600">{row.am}</span>
+        render: (row) => <span className="font-semibold text-slate-600 text-sm">{row.am}</span>
     }
   ];
 
@@ -136,15 +136,13 @@ export default function StudentGradeView({ user }: { user: any }) {
               </div>
             ) : (
               <>
-                <div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                        <p className="text-indigo-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
-                        <h2 className="text-5xl font-bold tracking-tight">{summary.ipk}</h2>
-                    </div>
-                    <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm shadow-inner border border-white/10">
-                        <Star className="w-6 h-6 text-yellow-300 fill-yellow-300" />
-                    </div>
+                <div className="flex justify-between items-start">
+                  <div>
+                      <p className="text-indigo-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
+                      <h2 className="text-5xl font-bold tracking-tight">{summary.ipk}</h2>
+                  </div>
+                  <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm shadow-inner border border-white/10">
+                      <Star className="w-6 h-6 text-yellow-300 fill-yellow-300" />
                   </div>
                 </div>
                 
@@ -154,7 +152,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                     <span>Total Nilai Mutu: {summary.totalNM}</span>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full text-xs font-medium text-indigo-50 border border-white/10 backdrop-blur-sm">
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <ScrollText className="w-3.5 h-3.5" />
                     <span>Total Mata Kuliah: {data.length}</span>
                   </div>
                 </div>
@@ -190,7 +188,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                    <div className="w-full bg-black/20 rounded-full h-2 mb-2 overflow-hidden backdrop-blur-sm">
                       <div className="h-full bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min((summary.totalSKS / 144) * 100, 100)}%` }} />
                    </div>
-                   <p className="text-xs text-pink-50/90 font-medium">
+                   <p className="text-xs text-pink-50/90 font-medium mt-1">
                       {((summary.totalSKS / 144) * 100).toFixed(0)}% dari minimal 144 SKS
                    </p>
                 </div>
@@ -209,7 +207,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                 isLoading={isLoading}
                 searchQuery={searchQuery}
                 onSearchChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                searchPlaceholder="Cari Matkul atau Kode..."
+                searchPlaceholder="Cari Mata Kuliah atau Kode..."
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}

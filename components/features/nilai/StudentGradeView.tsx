@@ -24,8 +24,9 @@ export default function StudentGradeView({ user }: { user: any }) {
 
   const { showError } = useToastMessage();
 
-  // Batas minimal SKS kelulusan
+  // Konfigurasi batas
   const MIN_SKS_LULUS = 144;
+  const MAX_IPK = "4.00";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,7 +140,7 @@ export default function StudentGradeView({ user }: { user: any }) {
       {/* --- HEADER STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
         
-        {/* CARD 1: IPK (Warna disamakan dengan Card Status KRS: Blue 800-900) */}
+        {/* CARD 1: IPK */}
         <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
@@ -162,7 +163,11 @@ export default function StudentGradeView({ user }: { user: any }) {
                 <div className="flex justify-between items-start">
                   <div>
                       <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
-                      <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{summary.ipk}</h2>
+                      {/* UPDATE: Menambahkan format / 4.00 agar konsisten dengan card SKS */}
+                      <div className="flex items-baseline gap-2">
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{summary.ipk}</h2>
+                        <span className="text-lg text-blue-200 font-medium">/ {MAX_IPK}</span>
+                      </div>
                   </div>
                   <div className="hidden sm:block p-3 bg-white/10 rounded-full backdrop-blur-sm shadow-inner border border-white/10">
                       <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
@@ -184,7 +189,7 @@ export default function StudentGradeView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* CARD 2: Total SKS (Warna disamakan dengan Card SKS KRS: Cyan to Blue) */}
+        {/* CARD 2: Total SKS */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />

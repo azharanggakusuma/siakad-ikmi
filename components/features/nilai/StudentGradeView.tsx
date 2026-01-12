@@ -140,7 +140,7 @@ export default function StudentGradeView({ user }: { user: any }) {
       {/* --- HEADER STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
         
-        {/* CARD 1: IPK */}
+        {/* CARD 1: IPK (Warna Blue 800-900 | Font Size & Badge disesuaikan dengan KRS) */}
         <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
@@ -163,9 +163,9 @@ export default function StudentGradeView({ user }: { user: any }) {
                 <div className="flex justify-between items-start">
                   <div>
                       <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
-                      {/* UPDATE: Menambahkan format / 4.00 agar konsisten dengan card SKS */}
+                      {/* UPDATE: Font size disamakan persis dengan Card SKS di KRS (text-4xl font-extrabold) */}
                       <div className="flex items-baseline gap-2">
-                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{summary.ipk}</h2>
+                        <h2 className="text-4xl font-extrabold tracking-tight">{summary.ipk}</h2>
                         <span className="text-lg text-blue-200 font-medium">/ {MAX_IPK}</span>
                       </div>
                   </div>
@@ -175,6 +175,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                 </div>
                 
                 <div className="mt-6 flex flex-wrap items-center gap-4">
+                  {/* UPDATE: Ukuran Badge disamakan dengan badge Semester di KRS (px-3 py-2, text-sm) */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
                     <GraduationCap className="w-4 h-4 text-blue-50" />
                     <span className="text-sm font-medium text-blue-50">Total Nilai Mutu: {summary.totalNM}</span>
@@ -189,7 +190,7 @@ export default function StudentGradeView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* CARD 2: Total SKS */}
+        {/* CARD 2: Total SKS (Warna Cyan to Blue | Font Size disesuaikan dengan KRS) */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />
@@ -215,6 +216,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                   <div className="flex items-center gap-2 text-cyan-50 mb-1">
                     <span className="text-sm font-medium">Total SKS Lulus</span>
                   </div>
+                  {/* UPDATE: Font size disamakan persis dengan Card SKS di KRS */}
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-extrabold tracking-tight">{summary.totalSKS}</span>
                     <span className="text-lg text-cyan-100 font-medium">/ {MIN_SKS_LULUS} SKS</span>

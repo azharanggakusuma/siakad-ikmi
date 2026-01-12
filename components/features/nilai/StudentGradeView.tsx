@@ -47,15 +47,16 @@ export default function StudentGradeView({ user }: { user: any }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Helper warna badge nilai
+  // Helper warna badge nilai (TETAP PERTAHANKAN WARNA)
+  // Menambahkan opacity border agar lebih halus
   const getGradeBadge = (grade: string) => {
     switch (grade) {
-      case "A": return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
-      case "B": return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100";
-      case "C": return "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
-      case "D": return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100";
-      case "E": return "bg-red-100 text-red-700 border-red-200 hover:bg-red-100";
-      default: return "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100";
+      case "A": return "bg-emerald-100 text-emerald-700 border-emerald-200/60";
+      case "B": return "bg-blue-100 text-blue-700 border-blue-200/60";
+      case "C": return "bg-yellow-100 text-yellow-700 border-yellow-200/60";
+      case "D": return "bg-orange-100 text-orange-700 border-orange-200/60";
+      case "E": return "bg-red-100 text-red-700 border-red-200/60";
+      default: return "bg-slate-100 text-slate-700 border-slate-200/60";
     }
   };
 
@@ -110,7 +111,13 @@ export default function StudentGradeView({ user }: { user: any }) {
         className: "text-center w-[100px]",
         render: (row) => (
            <div className="flex justify-center">
-             <Badge variant="outline" className={`${getGradeBadge(row.hm)} w-8 h-8 flex items-center justify-center rounded-md font-bold shadow-sm`}>
+             {/* UPDATE: 
+                 - w-7 h-7 (lebih kecil dari w-8)
+                 - rounded-full (lingkaran) 
+                 - p-0 (reset padding badge bawaan)
+                 - text-xs (font lebih kecil)
+             */}
+             <Badge variant="outline" className={`${getGradeBadge(row.hm)} w-7 h-7 p-0 flex items-center justify-center rounded-full text-xs font-bold shadow-none`}>
                 {row.hm}
              </Badge>
            </div>
@@ -126,7 +133,8 @@ export default function StudentGradeView({ user }: { user: any }) {
         className: "text-center w-[100px]",
         render: (row) => (
             <div className="flex justify-center">
-                <span className="font-bold text-slate-700 text-sm bg-slate-100 px-2 py-1 rounded border border-slate-200 min-w-[30px] text-center">
+                {/* NM juga disesuaikan sedikit agar tidak terlalu kotak kaku */}
+                <span className="font-bold text-slate-700 text-xs bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 min-w-[30px] text-center">
                     {row.nm}
                 </span>
             </div>
@@ -140,7 +148,7 @@ export default function StudentGradeView({ user }: { user: any }) {
       {/* --- HEADER STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
         
-        {/* CARD 1: IPK (Warna Blue 800-900 | Font Size & Badge disesuaikan dengan KRS) */}
+        {/* CARD 1: IPK */}
         <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
@@ -163,7 +171,6 @@ export default function StudentGradeView({ user }: { user: any }) {
                 <div className="flex justify-between items-start">
                   <div>
                       <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
-                      {/* UPDATE: Font size disamakan persis dengan Card SKS di KRS (text-4xl font-extrabold) */}
                       <div className="flex items-baseline gap-2">
                         <h2 className="text-4xl font-extrabold tracking-tight">{summary.ipk}</h2>
                         <span className="text-lg text-blue-200 font-medium">/ {MAX_IPK}</span>
@@ -175,7 +182,6 @@ export default function StudentGradeView({ user }: { user: any }) {
                 </div>
                 
                 <div className="mt-6 flex flex-wrap items-center gap-4">
-                  {/* UPDATE: Ukuran Badge disamakan dengan badge Semester di KRS (px-3 py-2, text-sm) */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
                     <GraduationCap className="w-4 h-4 text-blue-50" />
                     <span className="text-sm font-medium text-blue-50">Total Nilai Mutu: {summary.totalNM}</span>
@@ -190,7 +196,7 @@ export default function StudentGradeView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* CARD 2: Total SKS (Warna Cyan to Blue | Font Size disesuaikan dengan KRS) */}
+        {/* CARD 2: Total SKS */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />
@@ -216,7 +222,6 @@ export default function StudentGradeView({ user }: { user: any }) {
                   <div className="flex items-center gap-2 text-cyan-50 mb-1">
                     <span className="text-sm font-medium">Total SKS Lulus</span>
                   </div>
-                  {/* UPDATE: Font size disamakan persis dengan Card SKS di KRS */}
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-extrabold tracking-tight">{summary.totalSKS}</span>
                     <span className="text-lg text-cyan-100 font-medium">/ {MIN_SKS_LULUS} SKS</span>

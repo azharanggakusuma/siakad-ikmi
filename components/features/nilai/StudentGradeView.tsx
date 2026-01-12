@@ -43,15 +43,16 @@ export default function StudentGradeView({ user }: { user: any }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Helper warna badge nilai (Styling mirip KRS)
+  // Helper warna badge nilai
+  // [UPDATE] Hover effect dihapus (warna hover disamakan dengan background asli)
   const getGradeBadge = (grade: string) => {
     switch (grade) {
-      case "A": return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
-      case "B": return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
-      case "C": return "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-200";
-      case "D": return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
-      case "E": return "bg-red-100 text-red-700 border-red-200 hover:bg-red-200";
-      default: return "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200";
+      case "A": return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
+      case "B": return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100";
+      case "C": return "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
+      case "D": return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100";
+      case "E": return "bg-red-100 text-red-700 border-red-200 hover:bg-red-100";
+      default: return "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100";
     }
   };
 
@@ -90,17 +91,17 @@ export default function StudentGradeView({ user }: { user: any }) {
     },
     {
         header: "SKS",
-        className: "text-center w-[80px]",
+        className: "text-center w-[60px]",
         render: (row) => <span className="text-slate-600 text-sm">{row.sks}</span>
     },
     {
         header: "SMT",
-        className: "text-center w-[80px]",
+        className: "text-center w-[60px]",
         render: (row) => <span className="text-slate-600 text-sm">{row.semester}</span>
     },
     {
         header: "Nilai (HM)",
-        className: "text-center w-[120px]",
+        className: "text-center w-[100px]",
         render: (row) => (
            <div className="flex justify-center">
              <Badge variant="outline" className={`${getGradeBadge(row.hm)} w-8 h-8 flex items-center justify-center rounded-md font-bold shadow-sm`}>
@@ -110,14 +111,25 @@ export default function StudentGradeView({ user }: { user: any }) {
         )
     },
     {
-        header: "Mutu (AM)",
+        header: "Bobot (AM)",
         className: "text-center w-[100px]",
         render: (row) => <span className="font-semibold text-slate-600 text-sm">{row.am}</span>
+    },
+    {
+        header: "Mutu (NM)",
+        className: "text-center w-[100px]",
+        render: (row) => (
+            <div className="flex justify-center">
+                <span className="font-bold text-slate-700 text-sm bg-slate-100 px-2 py-1 rounded border border-slate-200 min-w-[30px] text-center">
+                    {row.nm}
+                </span>
+            </div>
+        )
     }
   ];
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-4">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       
       {/* --- HEADER STATS (Layout Grid persis KRS) --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

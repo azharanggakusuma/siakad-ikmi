@@ -1,15 +1,11 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin"; 
 import { revalidatePath } from "next/cache";
 import { Menu, MenuFormValues } from "@/lib/types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+// Gunakan admin client
+const supabaseAdmin = createAdminClient();
 
 // === GET MENUS ===
 export async function getMenus() {
@@ -35,7 +31,6 @@ export async function getMenus() {
 export async function createMenu(values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  // UUID: Jika string kosong atau "0", ubah jadi null
   const formattedParentId = (!parent_id || parent_id === "0") ? null : parent_id;
 
   const payload = {
@@ -63,7 +58,6 @@ export async function createMenu(values: MenuFormValues) {
 export async function updateMenu(id: string, values: MenuFormValues) {
   const { label, href, icon, section, allowed_roles, sequence, is_active, parent_id } = values;
 
-  // Logika parent_id
   let formattedParentId = parent_id;
   if (!formattedParentId || formattedParentId === "0") {
     formattedParentId = null;
@@ -100,9 +94,8 @@ export async function deleteMenu(id: string) {
   revalidatePath("/menus");
 }
 
-// === REORDER MENUS (DRAG & DROP) ===
+// === REORDER MENUS ===
 export async function reorderMenus(items: { id: string; sequence: number }[]) {
-  // Update batch hanya untuk sequence
   const updates = items.map((item) =>
     supabaseAdmin
       .from("menus")

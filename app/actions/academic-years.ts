@@ -1,16 +1,16 @@
 'use server'
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server"; 
 import { revalidatePath } from "next/cache";
 import { AcademicYear, AcademicYearFormValues } from "@/lib/types";
 
 // --- HELPER: RESET ACTIVE STATUS ---
-// Jika ada tahun akademik baru yang diset AKTIF, maka yang lain harus NON-AKTIF
 const resetActiveStatus = async () => {
+  const supabase = await createClient(); 
   const { error } = await supabase
     .from('academic_years')
     .update({ is_active: false })
-    .neq('is_active', false); // Update semua yang true jadi false
+    .neq('is_active', false);
 
   if (error) console.error("Error resetting active status:", error);
 };
@@ -18,10 +18,11 @@ const resetActiveStatus = async () => {
 // --- CRUD OPERATIONS ---
 
 export async function getAcademicYears() {
+  const supabase = await createClient(); 
   const { data, error } = await supabase
     .from('academic_years')
     .select('*')
-    .order('nama', { ascending: false }); // Urutkan dari tahun terbaru
+    .order('nama', { ascending: false });
 
   if (error) {
     console.error("Error fetching academic years:", error.message);
@@ -31,12 +32,12 @@ export async function getAcademicYears() {
 }
 
 export async function createAcademicYear(values: AcademicYearFormValues) {
-  // 1. Jika user memilih Aktif, matikan dulu yang lain
+  const supabase = await createClient(); 
+  
   if (values.is_active) {
     await resetActiveStatus();
   }
 
-  // 2. Insert data baru
   const { error } = await supabase
     .from('academic_years')
     .insert([{
@@ -50,12 +51,12 @@ export async function createAcademicYear(values: AcademicYearFormValues) {
 }
 
 export async function updateAcademicYear(id: string, values: AcademicYearFormValues) {
-  // 1. Jika user memilih Aktif, matikan dulu yang lain
+  const supabase = await createClient(); 
+  
   if (values.is_active) {
     await resetActiveStatus();
   }
 
-  // 2. Update data
   const { error } = await supabase
     .from('academic_years')
     .update({
@@ -70,6 +71,7 @@ export async function updateAcademicYear(id: string, values: AcademicYearFormVal
 }
 
 export async function deleteAcademicYear(id: string) {
+  const supabase = await createClient(); 
   const { error } = await supabase
     .from('academic_years')
     .delete()

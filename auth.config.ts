@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin"; // [UBAH] Gunakan admin client
 
 // Waktu interval pengecekan ke database
 const MAX_AGE = 15 * 60 * 1000; 
@@ -7,10 +7,8 @@ const MAX_AGE = 15 * 60 * 1000;
 // Fungsi Helper: Cek status user ke Database Supabase
 async function refreshAccessToken(token: any) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // [UBAH] Inisialisasi Admin Client
+    const supabase = createAdminClient();
 
     // Cek apakah user masih aktif di DB
     const { data: user, error } = await supabase

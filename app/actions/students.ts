@@ -1,22 +1,12 @@
 'use server'
 
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { StudentData, TranscriptItem, StudentFormValues, StudyProgram, AcademicYear, Official } from "@/lib/types";
 
-// Inisialisasi Supabase Admin untuk akses lintas tabel (users & students) tanpa batasan RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+const supabaseAdmin = createAdminClient();
 
-// Internal Interface untuk Response DB
+// Internal Interface
 interface DBResponseStudent {
   id: string;
   nim: string;
@@ -135,14 +125,12 @@ export async function getActiveOfficial(): Promise<Official | null> {
 export async function getStudents(): Promise<StudentData[]> {
   const activeYear = await getActiveAcademicYear();
 
-  // [!code ++] 1. AMBIL DATA USERS SECARA TERPISAH (Untuk Foto)
-  // Ini lebih aman daripada join jika relasi tidak terdeteksi otomatis
+  // 1. AMBIL DATA USERS SECARA TERPISAH (Untuk Foto)
   const { data: usersData } = await supabaseAdmin
     .from('users')
     .select('student_id, avatar_url')
     .not('student_id', 'is', null);
   
-  // Buat Map: student_id -> avatar_url
   const avatarMap = new Map<string, string>();
   if (usersData) {
     usersData.forEach((u) => {
@@ -186,8 +174,6 @@ export async function getStudents(): Promise<StudentData[]> {
 
   return students.map((s) => {
     const dynamicSemester = calculateSemester(s.angkatan, activeYear);
-
-    // [!code ++] Ambil foto dari Map yang sudah kita buat
     const userAvatar = avatarMap.get(s.id) || null;
 
     const totalSksApproved = (s.krs || []).reduce((acc, curr) => {
@@ -251,7 +237,7 @@ export async function getStudents(): Promise<StudentData[]> {
         study_program_id: s.study_program_id,
         study_program: s.study_programs,
         is_active: s.is_active ?? true,
-        avatar_url: userAvatar, // [!code ++] Assign avatar dari map
+        avatar_url: userAvatar,
       },
       transcript: fullTranscript, 
       total_sks: totalSksApproved 

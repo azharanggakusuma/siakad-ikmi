@@ -2,7 +2,7 @@
 
 import { signIn, signOut, auth } from "@/auth";
 import { AuthError } from "next-auth";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server"; 
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs"; 
 
@@ -15,12 +15,10 @@ export type UserSession = {
   avatar_url?: string | null;
 };
 
-// --- [BARU] Fungsi Verifikasi Turnstile ---
+// --- Fungsi Verifikasi Turnstile ---
 async function verifyTurnstile(token: string) {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
   
-  // Jika di development dan tidak ada key, bisa di-bypass (opsional)
-  // Tapi sebaiknya tetap gunakan key dummy atau key asli
   if (!secretKey) {
     console.warn("Peringatan: TURNSTILE_SECRET_KEY tidak ditemukan.");
     return false; 
@@ -47,7 +45,7 @@ async function verifyTurnstile(token: string) {
 
 export async function authenticate(formData: FormData) {
   try {
-    // --- [BARU] Logika Verifikasi Captcha ---
+    // --- Logika Verifikasi Captcha ---
     const token = formData.get("cf-turnstile-response") as string;
     
     if (!token) {
@@ -67,6 +65,9 @@ export async function authenticate(formData: FormData) {
 
     const username = data.username as string;
     let name = "Pengguna";
+
+    // Inisialisasi Supabase Client per-request
+    const supabase = await createClient();
 
     // Cek nama user untuk feedback UI
     const { data: userFound } = await supabase
@@ -114,10 +115,14 @@ export async function logout() {
   await signOut({ redirectTo: "/login" });
 }
 
+// === INI FUNGSI YANG HILANG SEBELUMNYA ===
 export async function getSession(): Promise<UserSession | null> {
   const session = await auth();
   if (!session?.user) return null;
   
+  // Inisialisasi Supabase Client
+  const supabase = await createClient();
+
   // Fetch ulang data user untuk mendapatkan avatar terbaru
   const { data: userData } = await supabase
     .from("users")
@@ -136,6 +141,9 @@ export async function getSession(): Promise<UserSession | null> {
 }
 
 export async function getUserSettings(username: string) {
+  // Inisialisasi Supabase Client
+  const supabase = await createClient();
+
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
@@ -146,6 +154,7 @@ export async function getUserSettings(username: string) {
   let alamat = "";
 
   if (user.role === "mahasiswa") {
+    // Menggunakan instance supabase yang sama
     const { data: student } = await supabase
       .from("students")
       .select("alamat")
@@ -162,6 +171,9 @@ export async function updateUserSettings(
   payload: any,
   oldPasswordForVerification?: string 
 ) {
+  // Inisialisasi Supabase Client
+  const supabase = await createClient();
+
   const { nama, password, alamat, role, username: newUsername, avatar_url } = payload;
 
   const updates: any = {};

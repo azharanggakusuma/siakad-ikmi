@@ -1,12 +1,9 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin"; 
 
-// Inisialisasi Client Admin menggunakan Service Role Key dari ENV
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Inisialisasi admin client
+const supabaseAdmin = createAdminClient();
 
 export async function uploadAvatar(formData: FormData, oldUrl?: string | null) {
   const file = formData.get("file") as File;
@@ -61,11 +58,9 @@ export async function uploadAvatar(formData: FormData, oldUrl?: string | null) {
   }
 }
 
-// --- FUNGSI BARU UNTUK MENGHAPUS FILE ---
+// --- FUNGSI MENGHAPUS FILE ---
 export async function deleteAvatarFile(fileUrl: string) {
   try {
-    // URL biasanya: https://[project].supabase.co/storage/v1/object/public/avatars/[filename.jpg]
-    // Kita perlu mengambil bagian terakhir (filename)
     const fileName = fileUrl.split("/").pop();
 
     if (!fileName) return;
@@ -82,6 +77,6 @@ export async function deleteAvatarFile(fileUrl: string) {
     return { success: true };
   } catch (error) {
     console.error("Delete File Error:", error);
-    return { success: false }; // Tidak throw error agar proses DB tetap bisa lanjut jika perlu
+    return { success: false };
   }
 }

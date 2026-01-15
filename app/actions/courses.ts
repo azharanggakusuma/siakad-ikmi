@@ -1,16 +1,13 @@
 'use server'
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server"; 
 import { revalidatePath } from "next/cache";
 import { Course, CoursePayload } from "@/lib/types";
 
 // --- HELPER ERROR HANDLING ---
 const handleDbError = (error: any, context: string) => {
-  // 1. Log Error Asli di SERVER Console
   console.error(`[DB_ERROR] ${context}:`, error);
 
-  // 2. Cek Kode Error Postgres
-  // Code 23505: Unique Violation (Data Kembar)
   if (error.code === '23505') {
     if (error.message?.includes('kode')) {
         throw new Error("Kode Mata Kuliah tersebut sudah ada. Harap gunakan kode lain.");
@@ -18,17 +15,16 @@ const handleDbError = (error: any, context: string) => {
     throw new Error("Data duplikat terdeteksi dalam sistem.");
   }
 
-  // Code 23503: Foreign Key Violation (Data Terpakai)
   if (error.code === '23503') {
     throw new Error("Mata kuliah tidak dapat dihapus karena sudah diambil oleh mahasiswa atau memiliki data nilai.");
   }
 
-  // 3. Fallback Error Umum
   throw new Error("Gagal memproses data. Terjadi kendala di server.");
 };
 
 // Ambil semua mata kuliah
 export async function getCourses() {
+  const supabase = await createClient(); 
   const { data, error } = await supabase
     .from('courses')
     .select('*')
@@ -43,6 +39,7 @@ export async function getCourses() {
 
 // Tambah mata kuliah baru
 export async function createCourse(values: CoursePayload) {
+  const supabase = await createClient(); 
   const { error } = await supabase
     .from('courses')
     .insert([{
@@ -60,6 +57,7 @@ export async function createCourse(values: CoursePayload) {
 
 // Update mata kuliah
 export async function updateCourse(id: string, values: CoursePayload) {
+  const supabase = await createClient(); 
   const { error } = await supabase
     .from('courses')
     .update({
@@ -78,6 +76,7 @@ export async function updateCourse(id: string, values: CoursePayload) {
 
 // Hapus mata kuliah
 export async function deleteCourse(id: string) {
+  const supabase = await createClient(); 
   const { error } = await supabase
     .from('courses')
     .delete()

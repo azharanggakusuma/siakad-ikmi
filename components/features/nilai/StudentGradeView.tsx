@@ -96,14 +96,14 @@ export default function StudentGradeView({ user }: { user: any }) {
       )
     },
     {
-        header: "SKS",
-        className: "text-center w-[60px]",
-        render: (row) => <span className="text-slate-600 text-sm">{row.sks}</span>
-    },
-    {
         header: "SMT",
         className: "text-center w-[60px]",
         render: (row) => <span className="text-slate-600 text-sm">{row.semester}</span>
+    },
+    {
+        header: "SKS",
+        className: "text-center w-[60px]",
+        render: (row) => <span className="text-slate-600 text-sm">{row.sks}</span>
     },
     {
         header: "Nilai (HM)",

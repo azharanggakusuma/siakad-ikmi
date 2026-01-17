@@ -41,7 +41,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Printer, Check, ChevronsUpDown, Loader2, TrendingUp, Award, PieChart, GraduationCap, FileText, Trophy, BookOpen } from "lucide-react";
+import { Printer, Check, ChevronsUpDown, Loader2, TrendingUp, Award, PieChart, GraduationCap, FileText, Trophy, BookOpen, UserPen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AdminKHSView() {
@@ -233,6 +233,56 @@ export default function AdminKHSView() {
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Trophy size={120} />
                 </div>
+                
+                {/* BUTTON GANTI MAHASISWA - Absolute Top Right (COMBOBOX) */}
+                {!loading && (
+                    <div className="absolute top-4 right-4 z-20">
+                        <Popover open={isStudentSelectOpen} onOpenChange={setIsStudentSelectOpen}>
+                            <PopoverTrigger asChild>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    role="combobox"
+                                    aria-expanded={isStudentSelectOpen}
+                                    className="bg-white/10 hover:bg-white/20 text-white hover:text-white border border-white/20 backdrop-blur-md gap-2"
+                                >
+                                    <UserPen className="w-4 h4" />
+                                    <span className="text-xs font-medium">{currentStudent?.profile.nama}</span>
+                                    <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="end">
+                                <Command>
+                                    <CommandInput placeholder="Cari mahasiswa..." />
+                                    <CommandList>
+                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                        <CommandGroup>
+                                            {studentsData.map((student, index) => (
+                                                <CommandItem
+                                                    key={student.id}
+                                                    value={student.profile.nama}
+                                                    onSelect={() => {
+                                                        setSelectedIndex(index);
+                                                        setIsStudentSelectOpen(false);
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            selectedIndex === index ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {student.profile.nama}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                )}
+
                 <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                      {loading ? (
                          <div className="flex flex-col justify-between h-full gap-6">

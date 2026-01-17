@@ -137,42 +137,7 @@ export default function StudentKHSView() {
 
       <div className="space-y-6 print:hidden">
          {/* HEADER SECTION */}
-         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <div className="flex flex-col gap-1">
-               <h1 className="text-xl font-bold text-gray-800">Kartu Hasil Studi (KHS)</h1>
-               <p className="text-sm text-gray-500">Lihat dan cetak Kartu Hasil Studi Anda.</p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-               {/* Semester Selector */}
-               <div className="w-full sm:w-[180px]">
-                  <Select
-                      value={String(selectedSemester)}
-                      onValueChange={(val) => setSelectedSemester(Number(val))}
-                  >
-                      <SelectTrigger className="w-full h-10 bg-white text-sm">
-                      <SelectValue placeholder="Semester" />
-                      </SelectTrigger>
-                      <SelectContent>
-                      {availableSemesters.map((smt) => (
-                          <SelectItem key={smt} value={String(smt)} className="text-sm">
-                          Semester {smt}
-                          </SelectItem>
-                      ))}
-                      </SelectContent>
-                  </Select>
-               </div>
 
-               {/* Print Button */}
-               <Button 
-                  onClick={() => setIsPrintModalOpen(true)}
-                  disabled={loading || !currentStudent}
-                  className="bg-primary hover:bg-primary/90 text-white h-10"
-               >
-                  <Printer className="mr-2 h-4 w-4" /> Cetak PDF
-               </Button>
-            </div>
-         </div>
 
          {/* CONTENT SECTION (TABLE) */}
          <Card className="border-none shadow-sm ring-1 ring-slate-200">

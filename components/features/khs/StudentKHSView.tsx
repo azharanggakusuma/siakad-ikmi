@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getStudents, getActiveOfficial } from "@/app/actions/students";
 import { type StudentData, type TranscriptItem, type Official } from "@/lib/types";
 import { useSignature } from "@/hooks/useSignature";
 import { useLayout } from "@/app/context/LayoutContext";
+import { useToastMessage } from "@/hooks/use-toast-message";
 
 import PrintableKHS from "@/components/features/khs/PrintableKHS"; // Keep for Modal
 import KHSTable from "@/components/features/khs/KHSTable"; // New Table
@@ -36,11 +37,25 @@ export default function StudentKHSView() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState<number>(0);
   const [printSemester, setPrintSemester] = useState<number>(0); // Decoupled state for printing
-  const { signatureType, setSignatureType, secureImage } = useSignature("none");
+  const { signatureType, setSignatureType, secureImage, isLoading: isSigLoading } = useSignature("none");
   const { isCollapsed, user } = useLayout();
+  const { showLoading, dismiss } = useToastMessage();
   
   const [totalPages, setTotalPages] = useState(1);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
+  const toastIdRef = useRef<string | number | null>(null);
+
+  useEffect(() => {
+    if (isSigLoading) {
+        if (!toastIdRef.current) toastIdRef.current = showLoading("Menyiapkan dokumen...");
+    } else {
+        if (toastIdRef.current) {
+            dismiss(toastIdRef.current);
+            toastIdRef.current = null;
+        }
+    }
+  }, [isSigLoading, showLoading, dismiss]);
 
   // Auto-select latest semester for printing if "All Semesters" is active
 

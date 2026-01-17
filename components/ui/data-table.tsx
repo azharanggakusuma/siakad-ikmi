@@ -38,6 +38,7 @@ interface DataTableProps<T> {
   onResetFilter?: () => void;
   onAdd?: () => void;
   addLabel?: string;
+  addIcon?: React.ReactNode;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -59,6 +60,7 @@ export function DataTable<T>({
   onResetFilter,
   onAdd,
   addLabel = "Tambah Data",
+  addIcon,
   currentPage,
   totalPages,
   onPageChange,
@@ -116,7 +118,7 @@ export function DataTable<T>({
             disabled={isLoading}
             className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            {addIcon ? addIcon : <Plus className="mr-2 h-4 w-4" />}
             {addLabel}
           </Button>
         )}

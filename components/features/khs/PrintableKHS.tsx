@@ -51,10 +51,11 @@ export default function PrintableKHS({
   return (
     <div
       className={`
-        hidden xl:flex print:flex print:w-full print:justify-center
-        shrink-0 justify-start w-full transition-all duration-300
+        flex w-full justify-center
+        transition-all duration-300
         ${isCollapsed ? "xl:w-[210mm]" : "xl:w-[189mm]"}
-        overflow-visible mb-0 
+        print:w-full print:m-0 print:p-0
+        overflow-visible mb-0
     `}
     >
       <div

@@ -296,7 +296,7 @@ export default function StudentKHSView() {
                                     />
                                 </div>
                                 <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
-                                    {Math.round((totalSKS / 144) * 100)}% dari minimal 144 SKS untuk kelulusan Sarjana.
+                                    {Math.min(Math.round((totalSKS / 144) * 100), 100)}% dari minimal 144 SKS untuk kelulusan.
                                 </p>
                             </div>
                         </>

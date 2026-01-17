@@ -217,7 +217,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                       <div className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }} />
                    </div>
                    <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
-                      {progressPercent.toFixed(0)}% dari minimal {MIN_SKS_LULUS} SKS untuk kelulusan Sarjana.
+                      {progressPercent.toFixed(0)}% dari minimal {MIN_SKS_LULUS} SKS untuk kelulusan.
                    </p>
                 </div>
               </>

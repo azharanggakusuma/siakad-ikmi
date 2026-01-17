@@ -44,6 +44,7 @@ interface DataTableProps<T> {
   startIndex: number;
   endIndex: number;
   totalItems: number;
+  isSearchVisible?: boolean;
 }
 
 export function DataTable<T>({
@@ -64,6 +65,7 @@ export function DataTable<T>({
   startIndex,
   endIndex,
   totalItems,
+  isSearchVisible = true,
 }: DataTableProps<T>) {
   
   return (
@@ -71,16 +73,18 @@ export function DataTable<T>({
       {/* TOOLBAR */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              className="pl-9 bg-muted/30"
-              value={searchQuery}
-              onChange={onSearchChange}
-              disabled={isLoading}
-            />
-          </div>
+          {isSearchVisible && (
+            <div className="relative flex-1 sm:w-72">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                placeholder={searchPlaceholder}
+                className="pl-9 bg-muted/30"
+                value={searchQuery}
+                onChange={onSearchChange}
+                disabled={isLoading}
+                />
+            </div>
+          )}
 
           {filterContent && (
             <DropdownMenu>

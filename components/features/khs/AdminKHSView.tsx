@@ -235,20 +235,16 @@ export default function AdminKHSView() {
          {/* CONTENT SECTION (TABLE) */}
          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardContent className="p-6">
-               {loading ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                       <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                       <p className="text-gray-500 text-sm">Memuat data...</p>
-                  </div>
-               ) : (
-                      <div className="space-y-4">
-                        <KHSTable 
-                            data={semesterData} 
-                            loading={loading}
-                            onPrint={() => setIsPrintModalOpen(true)} 
-                        />
-                      </div>
-               )}
+                       <div className="space-y-4">
+                         <KHSTable 
+                             data={semesterData} 
+                             loading={loading}
+                             onPrint={() => setIsPrintModalOpen(true)}
+                             availableSemesters={availableSemesters}
+                             selectedSemester={selectedSemester}
+                             onSemesterChange={setSelectedSemester}
+                         />
+                       </div>
             </CardContent>
          </Card>
 

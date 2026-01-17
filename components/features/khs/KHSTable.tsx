@@ -5,14 +5,30 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { TranscriptItem } from "@/lib/types";
 import { Printer } from "lucide-react";
+import {
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 
 interface KHSTableProps {
   data: TranscriptItem[];
   loading?: boolean;
   onPrint?: () => void;
+  availableSemesters?: number[];
+  selectedSemester?: number;
+  onSemesterChange?: (semester: number) => void;
 }
 
-export default function KHSTable({ data, loading = false, onPrint }: KHSTableProps) {
+export default function KHSTable({ 
+  data, 
+  loading = false, 
+  onPrint,
+  availableSemesters = [],
+  selectedSemester,
+  onSemesterChange
+}: KHSTableProps) {
   // Helper Helper warna badge nilai (sama seperti di StudentGradeView)
   const getGradeBadge = (grade: string) => {
     switch (grade) {
@@ -94,6 +110,30 @@ export default function KHSTable({ data, loading = false, onPrint }: KHSTablePro
     setCurrentPage(1);
   }, [searchQuery]);
 
+  // Filter Content UI (Semester Selection)
+  const filterContent = (
+      <>
+        <DropdownMenuLabel>Pilih Semester</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {availableSemesters.length === 0 ? (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground italic">
+                Tidak ada data semester.
+            </div>
+        ) : (
+            <DropdownMenuRadioGroup 
+                value={String(selectedSemester)} 
+                onValueChange={(val) => onSemesterChange?.(Number(val))}
+            >
+                {availableSemesters.map((smt) => (
+                    <DropdownMenuRadioItem key={smt} value={String(smt)}>
+                        Semester {smt}
+                    </DropdownMenuRadioItem>
+                ))}
+            </DropdownMenuRadioGroup>
+        )}
+      </>
+  );
+
   return (
     <DataTable
       columns={columns}
@@ -112,6 +152,10 @@ export default function KHSTable({ data, loading = false, onPrint }: KHSTablePro
       onAdd={onPrint}
       addLabel="Cetak KHS"
       addIcon={<Printer className="mr-2 h-4 w-4" />}
+      // Filter Props
+      filterContent={filterContent}
+      isFilterActive={true} // Always active as we always show a semester
+      onResetFilter={() => {}} // No reset needed for radio behavior
     />
   );
 }

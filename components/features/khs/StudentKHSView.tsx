@@ -14,6 +14,7 @@ import { calculateIPS, calculateIPK, calculateTotalSKSLulus, calculateTotalMutu 
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -219,14 +220,15 @@ export default function StudentKHSView() {
                 </div>
                 <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                      {loading ? (
-                         <div className="space-y-6">
-                            <div className="space-y-3">
-                                <div className="h-4 w-32 bg-white/20 rounded animate-pulse" />
-                                <div className="h-10 w-24 bg-white/20 rounded animate-pulse" />
+                         <div className="flex flex-col justify-between h-full gap-6">
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-3">
+                                    <Skeleton className="h-4 w-32 opacity-25" />
+                                    <Skeleton className="h-8 w-48 opacity-25" />
+                                </div>
                             </div>
-                            <div className="flex gap-4">
-                                <div className="h-8 w-40 bg-white/20 rounded animate-pulse" />
-                                <div className="h-8 w-40 bg-white/20 rounded animate-pulse" />
+                            <div className="flex flex-wrap items-center gap-4">
+                                <Skeleton className="h-10 w-[240px] opacity-25" />
                             </div>
                          </div>
                     ) : (
@@ -261,9 +263,18 @@ export default function StudentKHSView() {
                 </div>
                 <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                     {loading ? (
-                         <div className="space-y-2">
-                             <Loader2 className="h-8 w-8 animate-spin text-white/50" />
-                             <div className="h-4 w-24 bg-white/20 rounded animate-pulse" />
+                         <div className="space-y-6">
+                           <div className="space-y-3">
+                               <Skeleton className="h-4 w-32 opacity-25" />
+                               <div className="flex items-baseline gap-2">
+                                  <Skeleton className="h-10 w-16 opacity-25" />
+                                  <Skeleton className="h-6 w-12 opacity-25" />
+                               </div>
+                           </div>
+                           <div className="space-y-2">
+                              <Skeleton className="h-3 w-full opacity-25 rounded-full" />
+                              <Skeleton className="h-3 w-3/4 opacity-25 rounded-full" />
+                           </div>
                          </div>
                     ) : (
                         <>

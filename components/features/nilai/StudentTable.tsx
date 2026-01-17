@@ -19,15 +19,24 @@ interface StudentTableProps {
   data: StudentData[];
   studyPrograms: StudyProgram[]; // Tambah props ini
   isLoading: boolean;
+
   onEdit: (student: StudentData) => void;
+  actionLabel?: string;
+  actionIcon?: React.ReactNode;
 }
 
 export function StudentTable({
   data,
   studyPrograms,
   isLoading,
+
   onEdit,
+  actionLabel = "Kelola Nilai",
+  actionIcon, 
 }: StudentTableProps) {
+  
+  // Default Icon if not provided
+  const Icon = actionIcon ? () => <>{actionIcon}</> : PencilLine;
   
   // === STATE INTERNAL ===
   const [searchQuery, setSearchQuery] = useState("");
@@ -137,8 +146,8 @@ export function StudentTable({
             className="h-8 w-full font-medium shadow-sm"
             onClick={() => onEdit(row)}
         >
-            <PencilLine className="w-3.5 h-3.5 mr-2" />
-            Kelola Nilai
+            <Icon className="w-3.5 h-3.5 mr-2" />
+            {actionLabel}
         </Button>
       )
     }

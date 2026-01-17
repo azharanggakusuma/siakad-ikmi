@@ -1,27 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { getStudents, getActiveOfficial } from "@/app/actions/students";
-import { type StudentData, type TranscriptItem, type Official } from "@/lib/types";
-import { useSignature } from "@/hooks/useSignature";
-import { useLayout } from "@/app/context/LayoutContext";
-import { useToastMessage } from "@/hooks/use-toast-message";
-
-import PrintableKHS from "@/components/features/khs/PrintableKHS"; // Keep for Modal
-import KHSTable from "@/components/features/khs/KHSTable"; // New Table
-import { calculateIPS, calculateIPK, calculateTotalSKSLulus, calculateTotalMutu } from "@/lib/grade-calculations";
-
-// UI Components
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -29,40 +10,70 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { Printer, Check, ChevronsUpDown, Loader2, TrendingUp, Award, PieChart, GraduationCap, FileText, Trophy, BookOpen, UserPen } from "lucide-react";
-import { cn } from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
+
+import { getStudents, getStudyPrograms, getActiveOfficial } from "@/app/actions/students";
+import { StudentData, StudyProgram, Official, TranscriptItem } from "@/lib/types";
+import { StudentTable } from "@/components/features/nilai/StudentTable";
+import { useLayout } from "@/app/context/LayoutContext";
+import { useSignature } from "@/hooks/useSignature";
+import { useToastMessage } from "@/hooks/use-toast-message";
+import PrintableKHS from "@/components/features/khs/PrintableKHS";
+import { calculateIPS, calculateIPK } from "@/lib/grade-calculations";
 
 export default function AdminKHSView() {
-  const [studentsData, setStudentsData] = useState<StudentData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isCollapsed } = useLayout();
+  // --- STATE ---
+  const [studentList, setStudentList] = useState<StudentData[]>([]);
+  const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]);
   const [official, setOfficial] = useState<Official | null>(null);
-
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedSemester, setSelectedSemester] = useState<number>(0);
-  const [printSemester, setPrintSemester] = useState<number>(0); // Decoupled state for printing
-  const { signatureType, setSignatureType, secureImage, isLoading: isSigLoading } = useSignature("none");
-  const { isCollapsed, user } = useLayout();
-  const { showLoading, dismiss } = useToastMessage();
   
-  const [totalPages, setTotalPages] = useState(1);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [isStudentSelectOpen, setIsStudentSelectOpen] = useState(false);
-  const [isModalStudentSelectOpen, setIsModalStudentSelectOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Modal Cetak State
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
+  
+  // Print Configuration State
+  const [printSemester, setPrintSemester] = useState<number>(0);
+  const { signatureType, setSignatureType, secureImage, isLoading: isSigLoading } = useSignature("none");
+  const { showLoading, dismiss } = useToastMessage();
+  const [totalPages, setTotalPages] = useState(1);
+  
   const toastIdRef = useRef<string | number | null>(null);
 
+  // === FETCH DATA ===
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [students, programs, activeOfficial] = await Promise.all([
+        getStudents(),
+        getStudyPrograms(),
+        getActiveOfficial()
+      ]);
+      
+      setStudentList(students);
+      setStudyPrograms(programs || []);
+      setOfficial(activeOfficial);
+    } catch (error) {
+      toast.error("Gagal Memuat Data", { description: "Terjadi kesalahan koneksi." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // === LOADING TOAST SIGNATURE ===
   useEffect(() => {
     if (isSigLoading) {
         if (!toastIdRef.current) toastIdRef.current = showLoading("Menyiapkan dokumen...");
@@ -74,416 +85,140 @@ export default function AdminKHSView() {
     }
   }, [isSigLoading, showLoading, dismiss]);
 
-  // Auto-select latest semester for printing if "All Semesters" is active
-
-
-  // === FETCH DATA ===
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [data, activeOfficial] = await Promise.all([
-           getStudents(),
-           getActiveOfficial()
-        ]);
-        setStudentsData(data);
-        setOfficial(activeOfficial);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const currentStudent = useMemo(() => studentsData[selectedIndex], [studentsData, selectedIndex]);
-
-  // === LOGIC SEMESTER ===
+  // === LOGIC SEMESTERS ===
   const availableSemesters = useMemo<number[]>(() => {
-    if (!currentStudent) return [];
-    const currentSem = currentStudent.profile?.semester || 1;
-    const transcriptSmts = currentStudent.transcript?.map((t: TranscriptItem) => Number(t.smt)) || [];
+    if (!selectedStudent) return [];
+    const currentSem = selectedStudent.profile?.semester || 1;
+    const transcriptSmts = selectedStudent.transcript?.map((t: TranscriptItem) => Number(t.smt)) || [];
     const maxDataSem = Math.max(0, ...transcriptSmts);
     const limit = Math.max(currentSem, maxDataSem);
     return Array.from({ length: limit }, (_, i) => i + 1);
-  }, [currentStudent]);
+  }, [selectedStudent]);
 
-  // Auto-select latest semester for printing if "All Semesters" is active
+  // Auto-select latest semester when modal opens
   useEffect(() => {
     if (isPrintModalOpen && availableSemesters.length > 0) {
-        // If table is showing a specific semester, use that for print
-        if (selectedSemester !== 0) {
-            setPrintSemester(selectedSemester);
-        } else {
-             // If table is showing "All", default print to latest
-            setPrintSemester(availableSemesters[availableSemesters.length - 1]);
-        }
+        setPrintSemester(availableSemesters[availableSemesters.length - 1]);
     }
-  }, [isPrintModalOpen, selectedSemester, availableSemesters]);
+  }, [isPrintModalOpen, availableSemesters]);
 
-  useEffect(() => {
-    if (availableSemesters.length > 0) {
-        if (selectedSemester !== 0 && !availableSemesters.includes(selectedSemester)) {
-            setSelectedSemester(0);
-        }
-    }
-  }, [availableSemesters, selectedSemester]);
-
-  // Data Semester Ini
-  const semesterData = useMemo(() => {
-    if (!currentStudent?.transcript) return [];
-    if (selectedSemester === 0) return currentStudent.transcript;
-    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === selectedSemester);
-  }, [currentStudent, selectedSemester]);
-
-  // Data Kumulatif (Sampai Semester Ini)
-  const cumulativeData = useMemo(() => {
-    if (!currentStudent?.transcript) return [];
-    if (selectedSemester === 0) {
-         return currentStudent.transcript.filter((t: TranscriptItem) => t.hm !== '-');
-    }
-    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= selectedSemester && t.hm !== '-');
-  }, [currentStudent, selectedSemester]);
-
-  const ips = useMemo(() => {
-    if (selectedSemester === 0) {
-        // Jika "Semua Semester", gunakan IPK sebagai representasi "Rata-rata"
-        return calculateIPK(cumulativeData).replace('.', ',');
-    }
-    return calculateIPS(currentStudent?.transcript || [], selectedSemester).replace('.', ',');
-  }, [currentStudent, selectedSemester, cumulativeData]);
-
-  const ipk = useMemo(() => {
-    return calculateIPK(cumulativeData).replace('.', ',');
-  }, [cumulativeData]);
-
-  const totalSKS = useMemo(() => {
-    return calculateTotalSKSLulus(cumulativeData);
-  }, [cumulativeData]);
-
-  const totalMutu = useMemo(() => {
-    return calculateTotalMutu(cumulativeData);
-  }, [cumulativeData]);
-
-  const totalCourses = useMemo(() => {
-    return cumulativeData.length;
-  }, [cumulativeData]);
-
-  // Handle Print with delay to ensure state updates
-  const handlePrintProcess = () => {
-    setIsPrintModalOpen(false);
-    // Give time for the modal to close and state to settle
-    setTimeout(() => {
-        window.print();
-    }, 300);
-  };
-
-  // Data for Printing (Based on printSemester)
+  // === CALCULATIONS FOR PRINT ===
   const printSemesterData = useMemo(() => {
-    if (!currentStudent?.transcript) return [];
-    // Print always needs a specific semester, so we filter by printSemester
-    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === printSemester);
-  }, [currentStudent, printSemester]);
+    if (!selectedStudent?.transcript) return [];
+    return selectedStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) === printSemester);
+  }, [selectedStudent, printSemester]);
 
-  // IPS for Printing
   const printIPS = useMemo(() => {
-    return calculateIPS(currentStudent?.transcript || [], printSemester).replace('.', ',');
-  }, [currentStudent, printSemester]);
+    return calculateIPS(selectedStudent?.transcript || [], printSemester).replace('.', ',');
+  }, [selectedStudent, printSemester]);
 
-  // IPK for Printing (Cumulative until printSemester)
   const printCumulativeData = useMemo(() => {
-    if (!currentStudent?.transcript) return [];
-    return currentStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= printSemester && t.hm !== '-');
-  }, [currentStudent, printSemester]);
+    if (!selectedStudent?.transcript) return [];
+    return selectedStudent.transcript.filter((t: TranscriptItem) => Number(t.smt) <= printSemester && t.hm !== '-');
+  }, [selectedStudent, printSemester]);
 
   const printIPK = useMemo(() => {
     return calculateIPK(printCumulativeData).replace('.', ',');
   }, [printCumulativeData]);
 
-  const selectedStudentName = currentStudent?.profile.nama || "Pilih Mahasiswa...";
+  // === HANDLERS ===
+  const handleOpenPrintModal = (student: StudentData) => {
+    setSelectedStudent(student);
+    setIsPrintModalOpen(true);
+  };
+
+  const handlePrintProcess = () => {
+    setIsPrintModalOpen(false);
+    setTimeout(() => {
+        window.print();
+    }, 300);
+  };
 
   return (
     <>
-      {/* --- HIDDEN PRINT COMPONENT --- */}
-      {/* This component is hidden on screen but visible when printing */}
-      <div className="hidden print:block print:absolute print:top-0 print:left-0 print:w-full print:z-[9999]">
-          <PrintableKHS 
-            loading={loading}
-            currentStudent={currentStudent}
-            selectedSemester={printSemester} // Use printSemester
-            semesterData={printSemesterData} // Use printSemesterData
-            ips={printIPS} // Use printIPS
-            ipk={printIPK} // Use printIPK
-            signatureType={signatureType}
-            signatureBase64={secureImage}
-            official={official}
-            isCollapsed={isCollapsed}
-            setTotalPages={setTotalPages}
+      {/* HIDDEN PRINT COMPONENT */}
+      {selectedStudent && (
+        <div className="hidden print:block print:absolute print:top-0 print:left-0 print:w-full print:z-[9999]">
+            <PrintableKHS 
+                loading={false}
+                currentStudent={selectedStudent}
+                selectedSemester={printSemester}
+                semesterData={printSemesterData}
+                ips={printIPS}
+                ipk={printIPK}
+                signatureType={signatureType}
+                signatureBase64={secureImage}
+                official={official}
+                isCollapsed={isCollapsed}
+                setTotalPages={setTotalPages}
+            />
+        </div>
+      )}
+
+      {/* MAIN TABLE VIEW */}
+      <Card className="border-none shadow-sm ring-1 ring-gray-200">
+        <CardContent className="p-6">
+          <StudentTable 
+            data={studentList}
+            studyPrograms={studyPrograms} 
+            isLoading={isLoading}
+            onEdit={handleOpenPrintModal}
+            actionLabel="Cetak KHS"
+            actionIcon={<Printer className="w-3.5 h-3.5 mr-2" />}
           />
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-6 print:hidden">
-         {/* HEADER SECTION */}
+      {/* MODAL OPSI CETAK */}
+      <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Opsi Cetak KHS</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                  <label className="text-sm font-medium">Semester</label>
+                  <Select
+                      value={String(printSemester)}
+                      onValueChange={(val) => setPrintSemester(Number(val))}
+                  >
+                      <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Pilih Semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {availableSemesters.map((smt) => (
+                              <SelectItem key={smt} value={String(smt)}>
+                                  Semester {smt}
+                              </SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+              </div>
 
+              <div className="space-y-2">
+                  <label className="text-sm font-medium">Pilih Jenis Tanda Tangan</label>
+                  <Select value={signatureType} onValueChange={(val) => setSignatureType(val as "basah" | "digital" | "none")}>
+                      <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Pilih Tanda Tangan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="none">Tanpa Tanda Tangan</SelectItem>
+                          <SelectItem value="basah">Tanda Tangan Basah</SelectItem>
+                          <SelectItem value="digital">Tanda Tangan Digital (QR)</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+          </div>
 
-         {/* HEADER SECTION - SUMMARY CARDS (IPK & Total SKS) */}
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             {/* CARD 1: IPK (Left) - Spans 2 columns */}
-             <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Trophy size={120} />
-                </div>
-                
-                {/* BUTTON GANTI MAHASISWA - Absolute Top Right (COMBOBOX) */}
-                {!loading && (
-                    <div className="absolute top-4 right-4 z-20">
-                        <Popover open={isStudentSelectOpen} onOpenChange={setIsStudentSelectOpen}>
-                            <PopoverTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    role="combobox"
-                                    aria-expanded={isStudentSelectOpen}
-                                    className="bg-white/10 hover:bg-white/20 text-white hover:text-white border border-white/20 backdrop-blur-md gap-2"
-                                >
-                                    <UserPen className="w-4 h4" />
-                                    <span className="text-xs font-medium">{currentStudent?.profile.nama}</span>
-                                    <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="end">
-                                <Command>
-                                    <CommandInput placeholder="Cari mahasiswa..." />
-                                    <CommandList>
-                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
-                                        <CommandGroup>
-                                            {studentsData.map((student, index) => (
-                                                <CommandItem
-                                                    key={student.id}
-                                                    value={student.profile.nama}
-                                                    onSelect={() => {
-                                                        setSelectedIndex(index);
-                                                        setIsStudentSelectOpen(false);
-                                                    }}
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            selectedIndex === index ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    {student.profile.nama}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                )}
-
-                <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
-                     {loading ? (
-                         <div className="flex flex-col justify-between h-full gap-6">
-                            <div className="flex justify-between items-start">
-                                <div className="space-y-3">
-                                    <Skeleton className="h-4 w-32 opacity-25" />
-                                    <Skeleton className="h-8 w-48 opacity-25" />
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-4">
-                                <Skeleton className="h-10 w-[240px] opacity-25" />
-                            </div>
-                         </div>
-                    ) : (
-                        <>
-                            <div>
-                                <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
-                                <div className="flex items-baseline gap-2">
-                                    <h2 className="text-4xl font-extrabold tracking-tight">{ipk}</h2>
-                                    <span className="text-lg text-blue-200 font-medium">/ 4.00</span>
-                                </div>
-                            </div>
-                            
-                            <div className="mt-6 flex flex-wrap items-center gap-4">
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
-                                    <GraduationCap className="w-4 h-4 text-blue-50" />
-                                    <span className="text-sm font-medium text-blue-50">Total Nilai Mutu: {totalMutu}</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
-                                    <FileText className="w-4 h-4 text-blue-50" />
-                                    <span className="text-sm font-medium text-blue-50">Total Mata Kuliah: {totalCourses}</span>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-             </Card>
-
-             {/* CARD 2: Total SKS (Right) - Spans 1 column */}
-             <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
-                <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
-                    <BookOpen size={140} />
-                </div>
-                <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
-                    {loading ? (
-                         <div className="space-y-6">
-                           <div className="space-y-3">
-                               <Skeleton className="h-4 w-32 opacity-25" />
-                               <div className="flex items-baseline gap-2">
-                                  <Skeleton className="h-10 w-16 opacity-25" />
-                                  <Skeleton className="h-6 w-12 opacity-25" />
-                               </div>
-                           </div>
-                           <div className="space-y-2">
-                              <Skeleton className="h-3 w-full opacity-25 rounded-full" />
-                              <Skeleton className="h-3 w-3/4 opacity-25 rounded-full" />
-                           </div>
-                         </div>
-                    ) : (
-                        <>
-                            <div>
-                                <div className="flex items-center gap-2 text-cyan-50 mb-1">
-                                    <span className="text-sm font-medium">Total SKS Lulus</span>
-                                </div>
-                                <div className="flex items-baseline gap-2">
-                                    <h2 className="text-4xl font-extrabold tracking-tight">{totalSKS}</h2>
-                                    <span className="text-lg text-cyan-100 font-medium">/ 144 SKS</span>
-                                </div>
-                            </div>
-                            
-                            <div className="mt-4">
-                                <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
-                                    <div 
-                                        className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" 
-                                        style={{ width: `${Math.min((totalSKS / 144) * 100, 100)}%` }} 
-                                    />
-                                </div>
-                                <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
-                                    {Math.round((totalSKS / 144) * 100)}% dari minimal 144 SKS untuk kelulusan Sarjana.
-                                </p>
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-             </Card>
-         </div>
-
-
-         {/* CONTENT SECTION (TABLE) */}
-         <Card className="border-none shadow-sm ring-1 ring-slate-200">
-            <CardContent className="p-6">
-                       <div className="space-y-4">
-                         <KHSTable 
-                             data={semesterData} 
-                             loading={loading}
-                             onPrint={() => setIsPrintModalOpen(true)}
-                             availableSemesters={availableSemesters}
-                             selectedSemester={selectedSemester}
-                             onSemesterChange={setSelectedSemester}
-                         />
-                       </div>
-            </CardContent>
-         </Card>
-
-         {/* PRINT MODAL (Simple, Replicating KRS Style) */}
-         <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
-              <DialogContent className="sm:max-w-[400px]">
-                  <DialogHeader>
-                      <DialogTitle>Opsi Cetak KHS</DialogTitle>
-                  </DialogHeader>
-
-                  <div className="py-4 space-y-4">
-                      {/* Select Student in Modal (Syncs with main view) */}
-                      <div className="space-y-2">
-                          <label className="text-sm font-medium">Mahasiswa</label>
-                          <Popover open={isModalStudentSelectOpen} onOpenChange={setIsModalStudentSelectOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-full justify-between"
-                              >
-                                {selectedStudentName}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[350px] p-0" align="start">
-                              <Command>
-                                <CommandInput placeholder="Cari mahasiswa..." />
-                                <CommandList>
-                                  <CommandEmpty>Tidak ditemukan.</CommandEmpty>
-                                  <CommandGroup>
-                                    {studentsData.map((student, index) => (
-                                      <CommandItem
-                                        key={student.id}
-                                        value={student.profile.nama}
-                                        onSelect={() => {
-                                          setSelectedIndex(index);
-                                          setIsModalStudentSelectOpen(false);
-                                        }}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selectedIndex === index ? "opacity-100" : "opacity-0"
-                                          )}
-                                        />
-                                        {student.profile.nama}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                      </div>
-
-                      {/* Select Semester in Modal (Syncs with main view) */}
-                      <div className="space-y-2">
-                          <label className="text-sm font-medium">Semester</label>
-                          <Select
-                              value={String(printSemester)}
-                              onValueChange={(val) => setPrintSemester(Number(val))}
-                          >
-                              <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Pilih Semester" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {availableSemesters.map((smt) => (
-                                      <SelectItem key={smt} value={String(smt)}>
-                                          Semester {smt}
-                                      </SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                          <label className="text-sm font-medium">Pilih Jenis Tanda Tangan</label>
-                          <Select value={signatureType} onValueChange={(val) => setSignatureType(val as "basah" | "digital" | "none")}>
-                              <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Pilih Tanda Tangan" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">Tanpa Tanda Tangan</SelectItem>
-                                  <SelectItem value="basah">Tanda Tangan Basah</SelectItem>
-                                  <SelectItem value="digital">Tanda Tangan Digital (QR)</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3">
-                      <Button variant="outline" onClick={() => setIsPrintModalOpen(false)}>Batal</Button>
-                      <Button onClick={handlePrintProcess} className="bg-primary text-white">
-                          <Printer className="mr-2 h-4 w-4" /> Cetak PDF
-                      </Button>
-                  </div>
-              </DialogContent>
-         </Dialog>
-      </div>
+          <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setIsPrintModalOpen(false)}>Batal</Button>
+              <Button onClick={handlePrintProcess} className="bg-primary text-white">
+                  <Printer className="mr-2 h-4 w-4" /> Cetak PDF
+              </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

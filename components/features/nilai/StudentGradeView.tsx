@@ -5,7 +5,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, BookOpen, Trophy, Star, ScrollText } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, ScrollText } from "lucide-react";
 import { getStudentGradeSummary } from "@/app/actions/grades";
 import { useToastMessage } from "@/hooks/use-toast-message";
 
@@ -163,9 +163,7 @@ export default function StudentGradeView({ user }: { user: any }) {
                         <span className="text-lg text-blue-200 font-medium">/ {MAX_IPK}</span>
                       </div>
                   </div>
-                  <div className="hidden sm:block p-3 bg-white/10 rounded-full backdrop-blur-sm shadow-inner border border-white/10">
-                      <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
-                  </div>
+
                 </div>
                 
                 <div className="mt-6 flex flex-wrap items-center gap-4">

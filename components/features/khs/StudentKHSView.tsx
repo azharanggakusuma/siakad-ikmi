@@ -214,8 +214,8 @@ export default function StudentKHSView() {
          {/* HEADER SECTION - SUMMARY CARDS (IPK & Total SKS) */}
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              {/* CARD 1: IPK (Left) - Spans 2 columns */}
-             <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative" style={{ background: '#1e40af' }}>
-                <div className="absolute top-1/2 -translate-y-1/2 right-8 opacity-20">
+             <Card className="col-span-1 md:col-span-2 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-blue-800 to-blue-900">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Trophy size={120} />
                 </div>
                 <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
@@ -237,18 +237,18 @@ export default function StudentKHSView() {
                                 <p className="text-blue-100 font-medium text-sm mb-1">Indeks Prestasi Kumulatif</p>
                                 <div className="flex items-baseline gap-2">
                                     <h2 className="text-4xl font-extrabold tracking-tight">{ipk}</h2>
-                                    <span className="text-blue-200 text-lg font-medium">/ 4.00</span>
+                                    <span className="text-lg text-blue-200 font-medium">/ 4.00</span>
                                 </div>
                             </div>
                             
-                            <div className="flex flex-wrap gap-3 mt-4">
-                                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-md backdrop-blur-sm border border-white/10">
-                                    <GraduationCap className="w-3.5 h-3.5 text-blue-100" />
-                                    <span className="text-xs font-medium text-blue-50">Total Nilai Mutu: {totalMutu}</span>
+                            <div className="mt-6 flex flex-wrap items-center gap-4">
+                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
+                                    <GraduationCap className="w-4 h-4 text-blue-50" />
+                                    <span className="text-sm font-medium text-blue-50">Total Nilai Mutu: {totalMutu}</span>
                                 </div>
-                                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-md backdrop-blur-sm border border-white/10">
-                                    <FileText className="w-3.5 h-3.5 text-blue-100" />
-                                    <span className="text-xs font-medium text-blue-50">Total Mata Kuliah: {totalCourses}</span>
+                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10 backdrop-blur-sm">
+                                    <FileText className="w-4 h-4 text-blue-50" />
+                                    <span className="text-sm font-medium text-blue-50">Total Mata Kuliah: {totalCourses}</span>
                                 </div>
                             </div>
                         </>
@@ -258,8 +258,8 @@ export default function StudentKHSView() {
 
              {/* CARD 2: Total SKS (Right) - Spans 1 column */}
              <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
-                <div className="absolute -bottom-2 -right-2 opacity-20 rotate-12">
-                    <BookOpen size={120} />
+                <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
+                    <BookOpen size={140} />
                 </div>
                 <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
                     {loading ? (
@@ -279,21 +279,23 @@ export default function StudentKHSView() {
                     ) : (
                         <>
                             <div>
-                                <p className="text-cyan-50 font-medium text-sm mb-1">Total SKS Lulus</p>
+                                <div className="flex items-center gap-2 text-cyan-50 mb-1">
+                                    <span className="text-sm font-medium">Total SKS Lulus</span>
+                                </div>
                                 <div className="flex items-baseline gap-2">
                                     <h2 className="text-4xl font-extrabold tracking-tight">{totalSKS}</h2>
-                                    <span className="text-cyan-100 text-lg font-medium">/ 144 SKS</span>
+                                    <span className="text-lg text-cyan-100 font-medium">/ 144 SKS</span>
                                 </div>
                             </div>
                             
                             <div className="mt-4">
-                                <div className="w-full bg-black/20 rounded-full h-2.5 mb-2 overflow-hidden backdrop-blur-sm">
+                                <div className="w-full bg-black/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
                                     <div 
                                         className="h-full rounded-full transition-all duration-1000 ease-out bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)]" 
                                         style={{ width: `${Math.min((totalSKS / 144) * 100, 100)}%` }} 
                                     />
                                 </div>
-                                <p className="text-[10px] text-cyan-50/90 leading-relaxed font-medium">
+                                <p className="text-xs text-cyan-50/90 leading-relaxed font-medium">
                                     {Math.round((totalSKS / 144) * 100)}% dari minimal 144 SKS untuk kelulusan Sarjana.
                                 </p>
                             </div>

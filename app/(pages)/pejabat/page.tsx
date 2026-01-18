@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useToastMessage } from "@/hooks/use-toast-message"; 
-import { Pencil, Trash2, CheckCircle2, XCircle, FileSignature, ShieldCheck } from "lucide-react"; 
+import { Pencil, Trash2, CheckCircle2, XCircle, FileSignature, ShieldCheck, Check, X } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -154,26 +154,43 @@ export default function OfficialsPage() {
       render: (row) => <span className="text-gray-700 font-medium">{row.jabatan}</span>
     },
     {
-        header: "Tanda Tangan",
-        className: "w-[200px]",
+        header: "Dokumen Tanda Tangan",
+        className: "w-[250px]",
         render: (row) => (
-            <div className="flex gap-4">
-                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Tanda Tangan Basah">
-                    <FileSignature className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2">
+                 {/* Basah */}
+                 <Badge 
+                    variant="outline" 
+                    className={
+                        row.ttd_basah_url 
+                        ? "border-green-200 text-green-700 bg-green-50" 
+                        : "border-red-200 text-red-700 bg-red-50"
+                    }
+                 >
                     {row.ttd_basah_url ? (
-                        <span className="text-green-600 font-bold text-[11px]">Ada</span>
+                        <CheckCircle2 className="w-3 h-3 mr-1.5" />
                     ) : (
-                        <span className="text-red-500 font-medium text-[11px]"> - </span>
+                        <XCircle className="w-3 h-3 mr-1.5" />
                     )}
-                 </div>
-                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Tanda Tangan Digital">
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Basah
+                 </Badge>
+                 
+                 {/* Digital */}
+                 <Badge 
+                    variant="outline" 
+                    className={
+                        row.ttd_digital_url 
+                        ? "border-green-200 text-green-700 bg-green-50" 
+                        : "border-red-200 text-red-700 bg-red-50"
+                    }
+                 >
                     {row.ttd_digital_url ? (
-                        <span className="text-green-600 font-bold text-[11px]">Ada</span>
+                         <CheckCircle2 className="w-3 h-3 mr-1.5" />
                     ) : (
-                        <span className="text-red-500 font-medium text-[11px]"> - </span>
+                         <XCircle className="w-3 h-3 mr-1.5" />
                     )}
-                 </div>
+                    Digital
+                 </Badge>
             </div>
         )
     },
@@ -183,7 +200,7 @@ export default function OfficialsPage() {
         render: (row) => (
           <Badge 
             variant={row.is_active ? "default" : "secondary"} 
-            className={`font-normal ${row.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
+            className={`font-normal ${row.is_active ? "bg-green-600" : ""}`}
           >
             {row.is_active ? (
               <CheckCircle2 className="mr-1 h-3 w-3" />

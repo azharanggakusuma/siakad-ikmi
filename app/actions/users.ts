@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
-import { UserData, UserPayload, StudentOption } from "@/lib/types";
+import { UserData, UserPayload, StudentOption, LecturerOption } from "@/lib/types";
 
 const supabaseAdmin = createAdminClient();
 
@@ -13,7 +13,7 @@ const handleDbError = (error: any, context: string) => {
 
   if (error.code === '23505') {
     if (error.message?.includes('username')) {
-        throw new Error("Username tersebut sudah digunakan. Silakan pilih username lain.");
+      throw new Error("Username tersebut sudah digunakan. Silakan pilih username lain.");
     }
     throw new Error("Data duplikat terdeteksi dalam sistem.");
   }
@@ -29,7 +29,7 @@ const handleDbError = (error: any, context: string) => {
 export async function getUsers() {
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("id, name, username, role, student_id, is_active, avatar_url") 
+    .select("id, name, username, role, student_id, lecturer_id, is_active, avatar_url")
     .order("name", { ascending: true });
 
   if (error) {
@@ -49,7 +49,7 @@ export async function getStudentsForSelection(excludeUserId?: string) {
   if (error || !students) return [];
 
   let query = supabaseAdmin.from("users").select("student_id").not("student_id", "is", null);
-  
+
   if (excludeUserId) {
     query = query.neq("id", excludeUserId);
   }
@@ -65,13 +65,40 @@ export async function getStudentsForSelection(excludeUserId?: string) {
   })) as StudentOption[];
 }
 
+// === HELPER: GET LECTURERS FOR SELECTION ===
+export async function getLecturersForSelection(excludeUserId?: string) {
+  const { data: lecturers, error } = await supabaseAdmin
+    .from("lecturers")
+    .select("id, nidn, nama")
+    .order("nama", { ascending: true });
+
+  if (error || !lecturers) return [];
+
+  let query = supabaseAdmin.from("users").select("lecturer_id").not("lecturer_id", "is", null);
+
+  if (excludeUserId) {
+    query = query.neq("id", excludeUserId);
+  }
+
+  const { data: usedUsers } = await query;
+  const usedLecturerIds = new Set(usedUsers?.map((u) => u.lecturer_id));
+
+  return lecturers.map((l) => ({
+    id: l.id,
+    nidn: l.nidn || "-",
+    nama: l.nama,
+    is_taken: usedLecturerIds.has(l.id),
+  })) as LecturerOption[];
+}
+
 // === CREATE USER ===
 export async function createUser(values: UserPayload) {
-  const { name, username, password, role, student_id, is_active } = values;
+  const { name, username, password, role, student_id, lecturer_id, is_active } = values;
 
   if (!password) throw new Error("Password wajib diisi untuk user baru.");
 
   const targetStudentId = (role === "mahasiswa" && student_id) ? student_id : null;
+  const targetLecturerId = (role === "dosen" && lecturer_id) ? lecturer_id : null;
 
   if (targetStudentId) {
     const { data: existingUser } = await supabaseAdmin
@@ -85,6 +112,18 @@ export async function createUser(values: UserPayload) {
     }
   }
 
+  if (targetLecturerId) {
+    const { data: existingUser } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("lecturer_id", targetLecturerId)
+      .single();
+
+    if (existingUser) {
+      throw new Error("Dosen ini sudah memiliki akun. Satu dosen hanya boleh punya satu akun.");
+    }
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const payload: Partial<UserPayload> = {
@@ -93,7 +132,8 @@ export async function createUser(values: UserPayload) {
     password: hashedPassword,
     role: role || "mahasiswa",
     student_id: targetStudentId,
-    is_active: is_active ?? true 
+    lecturer_id: targetLecturerId,
+    is_active: is_active ?? true
   };
 
   const { error } = await supabaseAdmin.from("users").insert([payload]);
@@ -105,9 +145,10 @@ export async function createUser(values: UserPayload) {
 
 // === UPDATE USER ===
 export async function updateUser(id: string, values: UserPayload) {
-  const { name, username, password, role, student_id, is_active } = values;
+  const { name, username, password, role, student_id, lecturer_id, is_active } = values;
 
   const targetStudentId = (role === "mahasiswa" && student_id) ? student_id : null;
+  const targetLecturerId = (role === "dosen" && lecturer_id) ? lecturer_id : null;
 
   if (targetStudentId) {
     const { data: existingUser } = await supabaseAdmin
@@ -122,11 +163,25 @@ export async function updateUser(id: string, values: UserPayload) {
     }
   }
 
+  if (targetLecturerId) {
+    const { data: existingUser } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("lecturer_id", targetLecturerId)
+      .neq("id", id)
+      .single();
+
+    if (existingUser) {
+      throw new Error("Dosen ini sudah memiliki akun lain. Silakan pilih dosen yang belum terdaftar.");
+    }
+  }
+
   const updates: Partial<UserPayload> = {
     name,
     username,
     role,
     student_id: targetStudentId,
+    lecturer_id: targetLecturerId,
     is_active: is_active
   };
 

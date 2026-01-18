@@ -158,6 +158,7 @@ export interface UserData {
   username: string;
   role: Role | string;
   student_id?: string | null;
+  lecturer_id?: string | null; // [!code ++]
   is_active: boolean;
   avatar_url?: string | null;
 }
@@ -168,6 +169,7 @@ export interface UserPayload {
   password?: string;
   role: string;
   student_id?: string | null;
+  lecturer_id?: string | null; // [!code ++]
   is_active?: boolean;
 }
 
@@ -178,12 +180,20 @@ export interface UserFormValues {
   password?: string;
   role: string;
   student_id?: string | null;
+  lecturer_id?: string | null; // [!code ++]
   is_active: boolean;
 }
 
 export interface StudentOption {
   id: string;
   nim: string;
+  nama: string;
+  is_taken: boolean;
+}
+
+export interface LecturerOption {
+  id: string;
+  nidn: string;
   nama: string;
   is_taken: boolean;
 }

@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, EyeOff, Search, Check, Loader2 } from "lucide-react";
-import { getStudentsForSelection } from "@/app/actions/users";
-import { UserFormValues, StudentOption } from "@/lib/types";
+import { Eye, EyeOff, Search, Check, Loader2, UserCheck } from "lucide-react";
+import { getStudentsForSelection, getLecturersForSelection } from "@/app/actions/users";
+import { UserFormValues, StudentOption, LecturerOption } from "@/lib/types";
 
 interface UserFormProps {
   initialData?: UserFormValues;
@@ -24,7 +24,7 @@ interface UserFormProps {
 }
 
 const defaultValues: UserFormValues = {
-  name: "", username: "", password: "", role: "", student_id: null, is_active: true
+  name: "", username: "", password: "", role: "", student_id: null, lecturer_id: null, is_active: true
 };
 
 export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFormProps) {
@@ -38,6 +38,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
         password: "", 
         role: initialData.role || "",
         student_id: initialData.student_id || null,
+        lecturer_id: initialData.lecturer_id || null, // [!code ++]
         is_active: initialData.is_active ?? true, 
       };
     }
@@ -47,21 +48,27 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof UserFormValues, boolean>>>({});
 
-  // --- STATE PENCARIAN MAHASISWA ---
+  // --- STATE PENCARIAN MAHASISWA & DOSEN ---
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
-  const [searchStudent, setSearchStudent] = useState("");
+  const [lecturerOptions, setLecturerOptions] = useState<LecturerOption[]>([]); // [!code ++]
+  
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (formData.role === "mahasiswa") {
-      setIsLoadingStudents(true);
-      // [UBAH] getStudentsForSelection sekarang menerima string ID (untuk exclude)
+      setIsLoadingOptions(true);
       getStudentsForSelection(isEditing ? formData.id : undefined)
         .then(setStudentOptions)
-        .finally(() => setIsLoadingStudents(false));
+        .finally(() => setIsLoadingOptions(false));
+    } else if (formData.role === "dosen") {
+       setIsLoadingOptions(true); // [!code ++]
+       getLecturersForSelection(isEditing ? formData.id : undefined) // [!code ++]
+        .then(setLecturerOptions) // [!code ++]
+        .finally(() => setIsLoadingOptions(false));
     }
   }, [formData.role, isEditing, formData.id]);
 
@@ -76,11 +83,17 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
   }, []);
 
   const filteredStudents = studentOptions.filter((s) =>
-    s.nim.toLowerCase().includes(searchStudent.toLowerCase()) ||
-    s.nama.toLowerCase().includes(searchStudent.toLowerCase())
+    s.nim.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.nama.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredLecturers = lecturerOptions.filter((l) =>
+    (l.nidn && l.nidn.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    l.nama.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedStudentObj = studentOptions.find(s => s.id === formData.student_id);
+  const selectedLecturerObj = lecturerOptions.find(l => l.id === formData.lecturer_id);
 
   // --- VALIDASI ---
   const validate = (): boolean => {
@@ -109,6 +122,10 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
       newErrors.student_id = true;
       errorMessages.push("Harap pilih data mahasiswa untuk ditautkan.");
     }
+    if (formData.role === "dosen" && !formData.lecturer_id) {
+      newErrors.lecturer_id = true;
+      errorMessages.push("Harap pilih data dosen untuk ditautkan.");
+    }
 
     if (errorMessages.length > 0) {
       setErrors(newErrors);
@@ -134,12 +151,27 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
     if (student.is_taken) return;
     setFormData((prev) => ({
       ...prev,
-      student_id: student.id, // [UBAH] student.id sudah string
+      student_id: student.id, 
       name: student.nama, 
       username: student.nim 
     }));
     setIsDropdownOpen(false);
-    setSearchStudent("");
+    setSearchQuery("");
+    
+    if (errors.name) setErrors(prev => ({...prev, name: undefined}));
+    if (errors.username) setErrors(prev => ({...prev, username: undefined}));
+  };
+
+  const handleSelectLecturer = (lecturer: LecturerOption) => {
+    if (lecturer.is_taken) return;
+    setFormData((prev) => ({
+      ...prev,
+      lecturer_id: lecturer.id,
+      name: lecturer.nama,
+      username: lecturer.nidn !== "-" ? lecturer.nidn : "" // Use NIDN as default username if available
+    }));
+    setIsDropdownOpen(false);
+    setSearchQuery("");
     
     if (errors.name) setErrors(prev => ({...prev, name: undefined}));
     if (errors.username) setErrors(prev => ({...prev, username: undefined}));
@@ -195,23 +227,31 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
            )}
       </div>
 
-      {/* --- DROPDOWN MAHASISWA (Custom Searchable) --- */}
-      {formData.role === "mahasiswa" && (
+      {/* --- DROPDOWN MAHASISWA / DOSEN --- */}
+      {(formData.role === "mahasiswa" || formData.role === "dosen") && (
         <div className="grid gap-2 relative" ref={dropdownRef}>
           <Label className="flex justify-between items-center">
-            <span>Tautkan Data Mahasiswa <span className="text-red-500">*</span></span>
-            {isLoadingStudents && <Loader2 className="animate-spin h-3 w-3 text-muted-foreground" />}
+            <span>
+                {formData.role === "mahasiswa" ? "Tautkan Data Mahasiswa" : "Tautkan Data Dosen"} <span className="text-red-500">*</span>
+            </span>
+            {isLoadingOptions && <Loader2 className="animate-spin h-3 w-3 text-muted-foreground" />}
           </Label>
           
           <div 
             className={`flex items-center justify-between w-full rounded-md border px-3 py-2 text-sm ring-offset-background cursor-pointer hover:bg-slate-50 transition-colors
-              ${!formData.student_id ? 'text-muted-foreground' : 'text-foreground font-medium'} 
-              ${errors.student_id ? "border-red-500" : "border-input"}`}
+              ${(!formData.student_id && !formData.lecturer_id) ? 'text-muted-foreground' : 'text-foreground font-medium'} 
+              ${(errors.student_id || errors.lecturer_id) ? "border-red-500" : "border-input"}`}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            {selectedStudentObj 
-              ? `${selectedStudentObj.nim} - ${selectedStudentObj.nama}` 
-              : "Pilih / Cari Mahasiswa..."}
+            {formData.role === "mahasiswa" ? (
+                 selectedStudentObj 
+                 ? `${selectedStudentObj.nim} - ${selectedStudentObj.nama}` 
+                 : "Pilih / Cari Mahasiswa..."
+            ) : (
+                 selectedLecturerObj
+                 ? `${selectedLecturerObj.nidn} - ${selectedLecturerObj.nama}`
+                 : "Pilih / Cari Dosen..."
+            )}
             <Search size={14} className="opacity-50" />
           </div>
 
@@ -219,40 +259,68 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             <div className="absolute top-full left-0 w-full mt-1 z-50 rounded-md border bg-white shadow-lg animate-in fade-in-0 zoom-in-95">
               <div className="p-2 border-b sticky top-0 bg-white z-10 rounded-t-md">
                 <Input 
-                  placeholder="Cari NIM atau Nama..." 
+                  placeholder={formData.role === "mahasiswa" ? "Cari NIM / Nama..." : "Cari NIDN / Nama..."}
                   className="h-8 text-xs focus-visible:ring-1"
                   autoFocus
-                  value={searchStudent}
-                  onChange={(e) => setSearchStudent(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <div className="max-h-[200px] overflow-y-auto p-1">
-                {filteredStudents.length === 0 ? (
-                  <p className="text-xs text-center p-3 text-muted-foreground">Data tidak ditemukan.</p>
-                ) : (
-                  filteredStudents.map((s) => (
-                    <div
-                      key={s.id}
-                      onClick={() => handleSelectStudent(s)}
-                      className={`
-                        flex items-center justify-between px-2 py-2 text-sm rounded-sm cursor-pointer
-                        ${s.id === formData.student_id ? "bg-slate-100 font-medium" : "hover:bg-slate-50"}
-                        ${s.is_taken ? "opacity-50 cursor-not-allowed bg-slate-50/50" : ""}
-                      `}
-                    >
-                      <div className="flex flex-col">
-                        <span>{s.nim} - {s.nama}</span>
-                        {s.is_taken && <span className="text-[10px] text-red-500 font-semibold">(Sudah punya akun)</span>}
-                      </div>
-                      {s.id === formData.student_id && <Check size={14} className="text-green-600" />}
-                    </div>
-                  ))
+                {/* LIST MAHASISWA */}
+                {formData.role === "mahasiswa" && (
+                    filteredStudents.length === 0 ? (
+                        <p className="text-xs text-center p-3 text-muted-foreground">Data mahasiswa tidak ditemukan.</p>
+                    ) : (
+                        filteredStudents.map((s) => (
+                            <div
+                            key={s.id}
+                            onClick={() => handleSelectStudent(s)}
+                            className={`
+                                flex items-center justify-between px-2 py-2 text-sm rounded-sm cursor-pointer
+                                ${s.id === formData.student_id ? "bg-slate-100 font-medium" : "hover:bg-slate-50"}
+                                ${s.is_taken ? "opacity-50 cursor-not-allowed bg-slate-50/50" : ""}
+                            `}
+                            >
+                            <div className="flex flex-col">
+                                <span>{s.nim} - {s.nama}</span>
+                                {s.is_taken && <span className="text-[10px] text-red-500 font-semibold">(Sudah punya akun)</span>}
+                            </div>
+                            {s.id === formData.student_id && <Check size={14} className="text-green-600" />}
+                            </div>
+                        ))
+                    )
+                )}
+
+                 {/* LIST DOSEN */}
+                {formData.role === "dosen" && (
+                    filteredLecturers.length === 0 ? (
+                        <p className="text-xs text-center p-3 text-muted-foreground">Data dosen tidak ditemukan.</p>
+                    ) : (
+                        filteredLecturers.map((l) => (
+                            <div
+                            key={l.id}
+                            onClick={() => handleSelectLecturer(l)}
+                            className={`
+                                flex items-center justify-between px-2 py-2 text-sm rounded-sm cursor-pointer
+                                ${l.id === formData.lecturer_id ? "bg-slate-100 font-medium" : "hover:bg-slate-50"}
+                                ${l.is_taken ? "opacity-50 cursor-not-allowed bg-slate-50/50" : ""}
+                            `}
+                            >
+                            <div className="flex flex-col">
+                                <span>{l.nidn} - {l.nama}</span>
+                                {l.is_taken && <span className="text-[10px] text-red-500 font-semibold">(Sudah punya akun)</span>}
+                            </div>
+                            {l.id === formData.lecturer_id && <Check size={14} className="text-green-600" />}
+                            </div>
+                        ))
+                    )
                 )}
               </div>
             </div>
           )}
            <p className="text-[10px] text-muted-foreground mt-1">
-             *Memilih mahasiswa akan otomatis mengisi Nama & Username.
+             *Memilih data akan otomatis mengisi Nama & Username.
            </p>
         </div>
       )}
@@ -269,7 +337,7 @@ export function UserForm({ initialData, isEditing, onSubmit, onCancel }: UserFor
             onChange={(e) => handleInputChange("name", e.target.value)}
             placeholder="Nama User"
             className={errorClass("name")}
-            readOnly={formData.role === 'mahasiswa' && !!formData.student_id} 
+            readOnly={(formData.role === 'mahasiswa' && !!formData.student_id) || (formData.role === 'dosen' && !!formData.lecturer_id)} 
           />
         </div>
 

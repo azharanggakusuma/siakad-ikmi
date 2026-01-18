@@ -122,6 +122,7 @@ export default function AdminSuratView() {
               signatureType={signatureType}
               onSignatureChange={setSignatureType}
               onPrint={() => window.print()}
+              official={official}
               
               nomorSurat={nomorSurat} setNomorSurat={setNomorSurat}
               tahunAkademik={tahunAkademik} setTahunAkademik={setTahunAkademik}

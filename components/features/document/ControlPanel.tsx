@@ -1,5 +1,5 @@
 import React from "react";
-import { StudentData } from "@/lib/types";
+import { StudentData, Official } from "@/lib/types";
 import { Printer, Check, ChevronsUpDown, Lock } from "lucide-react"; // Icon User dihapus
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,7 @@ interface ControlPanelProps {
   onSignatureChange: (type: "basah" | "digital" | "none") => void;
   onPrint: () => void;
   disablePrint?: boolean;
+  official?: Official | null;
   
   // Data User Login untuk Cek Role
   user?: any;
@@ -53,7 +54,7 @@ interface ControlPanelProps {
 }
 
 export default function ControlPanel(props: ControlPanelProps) {
-  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages, disablePrint, user } = props;
+  const { students, selectedIndex, onSelect, signatureType, onSignatureChange, onPrint, totalPages, disablePrint, user, official } = props;
   const [open, setOpen] = React.useState(false);
   
   const labelClass = "text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1 block";
@@ -232,8 +233,8 @@ export default function ControlPanel(props: ControlPanelProps) {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                     <SelectItem value="none" className="text-xs rounded-lg cursor-pointer">Tanpa tanda tangan</SelectItem>
-                    <SelectItem value="basah" className="text-xs rounded-lg cursor-pointer">Tanda tangan basah</SelectItem>
-                    <SelectItem value="digital" className="text-xs rounded-lg cursor-pointer">Tanda tangan digital (QR)</SelectItem>
+                    {official?.ttd_basah_url && <SelectItem value="basah" className="text-xs rounded-lg cursor-pointer">Tanda tangan basah</SelectItem>}
+                    {official?.ttd_digital_url && <SelectItem value="digital" className="text-xs rounded-lg cursor-pointer">Tanda tangan digital (QR)</SelectItem>}
                 </SelectContent>
                 </Select>
             </div>

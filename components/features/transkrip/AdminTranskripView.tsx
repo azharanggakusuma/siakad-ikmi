@@ -176,8 +176,8 @@ export default function AdminTranskripView() {
                       </SelectTrigger>
                       <SelectContent>
                           <SelectItem value="none">Tanpa Tanda Tangan</SelectItem>
-                          <SelectItem value="basah">Tanda Tangan Basah</SelectItem>
-                          <SelectItem value="digital">Tanda Tangan Digital (QR)</SelectItem>
+                          {official?.ttd_basah_url && <SelectItem value="basah">Tanda Tangan Basah</SelectItem>}
+                          {official?.ttd_digital_url && <SelectItem value="digital">Tanda Tangan Digital (QR)</SelectItem>}
                       </SelectContent>
                   </Select>
               </div>

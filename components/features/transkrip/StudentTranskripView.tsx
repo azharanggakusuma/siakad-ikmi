@@ -34,7 +34,7 @@ export default function StudentTranskripView() {
   const [loading, setLoading] = useState(true);
   const [official, setOfficial] = useState<Official | null>(null);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { signatureType, setSignatureType } = useSignature("none");
   

@@ -6,7 +6,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle, User, AtSign } from "lucide-react"; 
+import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle, User, AtSign, GraduationCap, User2 } from "lucide-react"; 
 import { UserData } from "@/lib/types"; 
 import {
   DropdownMenuLabel,
@@ -107,20 +107,24 @@ export default function UserTable({
       render: (row) => {
         let variant: "default" | "secondary" | "outline" | "destructive" = "outline";
         let icon = null;
+        let className = "";
 
         if (row.role === 'admin') {
             variant = "default";
-            icon = <ShieldCheck size={12} className="mr-1" />;
+            icon = <ShieldCheck size={13} className="mr-1.5" />;
+            // Default styling (Solid Primary/Black)
         } else if (row.role === 'dosen') {
-            variant = "secondary";
-            icon = <BookOpen size={12} className="mr-1" />;
+            variant = "default"; 
+            icon = <User2 size={13} className="mr-1.5" />;
+            className = "bg-blue-600 text-white border-transparent";
         } else if (row.role === 'mahasiswa') {
             variant = "outline";
             icon = null;
+            className = "bg-white text-slate-600 border-slate-300";
         }
         
         return (
-          <Badge variant={variant} className="capitalize font-normal">
+          <Badge variant={variant} className={`capitalize font-medium pl-2.5 pr-3 py-0.5 ${className}`}>
             {icon}
             {row.role}
           </Badge>

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-// import { updateSystemSetting } from '@/app/actions/system-settings';
 import PageHeader from '@/components/layout/PageHeader';
 import {
   Card,
@@ -21,7 +20,6 @@ import {
   FormLabel,
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 
 interface SystemSettingsClientProps {
   initialSettings: {
@@ -44,12 +42,8 @@ export default function SystemSettingsClient({ initialSettings }: SystemSettings
     
     try {
       form.setValue(key as any, value);
-      
-      // Simuasi loading & sukses (tanpa panggil backend)
+
       await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // const result = await updateSystemSetting(key, value);
-      // if (!result.success) throw new Error(result.error);
       
       toast.success(`Pengaturan disimpan (UI Only).`);
     } catch (error) {
@@ -67,7 +61,7 @@ export default function SystemSettingsClient({ initialSettings }: SystemSettings
       <div className="print:hidden">
          <PageHeader 
             title="Pengaturan Sistem" 
-            breadcrumb={["Beranda", "Pengaturan", "Sistem"]} 
+            breadcrumb={["Beranda", "Pengaturan Sistem"]} 
         />
       </div>
 
@@ -112,9 +106,6 @@ export default function SystemSettingsClient({ initialSettings }: SystemSettings
                     </FormItem>
                   )}
                 />
-
-
-
               </CardContent>
             </Card>
           </form>

@@ -44,8 +44,15 @@ export default function Sidebar({ open, setOpen, isCollapsed = false, menus }: S
     }));
   };
 
-  const isActive = (path: string) =>
-    path === "/" ? pathname === "/" : pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    // Pastikan path match persis atau match dengan slash sesudahnya
+    // Contoh: "/pengaturan" tidak boleh match "/pengaturan-sistem"
+    // Tapi "/mahasiswa" boleh match "/mahasiswa/krs"
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   const handleLogout = async () => {
     await logout();

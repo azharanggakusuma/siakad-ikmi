@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 export default async function SystemSettingsPage() {
   const initialSettings = {
     maintenance_mode: false,
-    turnstile_enabled: true,
   };
 
   return <SystemSettingsClient initialSettings={initialSettings} />;

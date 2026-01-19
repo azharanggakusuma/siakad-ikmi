@@ -113,7 +113,7 @@ export interface StudentProfile {
   study_program_id: string | null;
   study_program?: StudyProgram | null;
   is_active: boolean;
-  avatar_url?: string | null; // [!code ++] Property baru untuk foto
+  avatar_url?: string | null;
 }
 
 export interface StudentFormValues {
@@ -123,7 +123,7 @@ export interface StudentFormValues {
   alamat: string;
   study_program_id: string;
   is_active: boolean;
-  avatar_url?: string | null; // [!code ++] Property baru untuk foto
+  avatar_url?: string | null;
 }
 
 // =========================================
@@ -158,7 +158,7 @@ export interface UserData {
   username: string;
   role: Role | string;
   student_id?: string | null;
-  lecturer_id?: string | null; // [!code ++]
+  lecturer_id?: string | null;
   is_active: boolean;
   avatar_url?: string | null;
 }
@@ -169,7 +169,7 @@ export interface UserPayload {
   password?: string;
   role: string;
   student_id?: string | null;
-  lecturer_id?: string | null; // [!code ++]
+  lecturer_id?: string | null;
   is_active?: boolean;
 }
 
@@ -180,7 +180,7 @@ export interface UserFormValues {
   password?: string;
   role: string;
   student_id?: string | null;
-  lecturer_id?: string | null; // [!code ++]
+  lecturer_id?: string | null;
   is_active: boolean;
 }
 
@@ -350,11 +350,4 @@ export interface StudentMBKMFormValues {
   jenis_mbkm: string;
   mitra: string;
   keterangan: string;
-}
-
-export interface SystemSettings {
-  key: string;
-  value: any;
-  description?: string;
-  updated_at?: string;
 }

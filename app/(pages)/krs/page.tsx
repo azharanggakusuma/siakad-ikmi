@@ -1,22 +1,12 @@
 import React from "react";
-import { useLayout } from "@/app/context/LayoutContext";
-import PageHeader from "@/components/layout/PageHeader";
-import { Skeleton } from "@/components/ui/skeleton";
-import AdminKRSValidationView from "@/components/features/krs/AdminKRSValidationView";
-import StudentKRSView from "@/components/features/krs/StudentKRSView";
-
 import { getSession } from "@/app/actions/auth";
 import { getAcademicYears } from "@/app/actions/academic-years";
 import { getActiveOfficial } from "@/app/actions/students";
 import { getStudentCourseOfferings, getStudentsWithSubmittedKRS } from "@/app/actions/krs";
+import KRSClient from "./KRSClient";
 
 export default async function KRSPage() {
   const user = await getSession();
-
-  if (!user) {
-    // Should be handled by middleware
-    return null;
-  }
 
   // Common Data
   const academicYears = await getAcademicYears();
@@ -25,9 +15,9 @@ export default async function KRSPage() {
 
   let initialDataStudent = null;
   let initialOfficial = null;
-  let initialStudentsAdmin = [];
+  let initialStudentsAdmin: any[] = [];
   
-  if (user.role === 'mahasiswa' && user.student_id && selectedYearId) {
+  if (user && user.role === 'mahasiswa' && user.student_id && selectedYearId) {
     try {
         const [krsData, official] = await Promise.all([
             getStudentCourseOfferings(user.student_id, selectedYearId),
@@ -38,7 +28,7 @@ export default async function KRSPage() {
     } catch (e) {
         console.error("Failed to fetch student KRS data", e);
     }
-  } else if (selectedYearId) {
+  } else if (user && selectedYearId) {
     // Admin / Dosen
     try {
         initialStudentsAdmin = await getStudentsWithSubmittedKRS(selectedYearId);
@@ -48,24 +38,13 @@ export default async function KRSPage() {
   }
 
   return (
-    <div className="pb-10">
-      <PageHeader title="Kartu Rencana Studi" breadcrumb={["Beranda", "KRS"]} />
-      
-      {user.role === "mahasiswa" ? (
-        <StudentKRSView 
-            user={user} 
-            initialAcademicYears={academicYears}
-            initialOfficial={initialOfficial}
-            initialSelectedYear={selectedYearId}
-            initialData={initialDataStudent}
-        />
-      ) : (
-        <AdminKRSValidationView 
-            initialAcademicYears={academicYears}
-            initialSelectedYear={selectedYearId}
-            initialStudents={initialStudentsAdmin}
-        />
-      )}
-    </div>
+    <KRSClient 
+      user={user}
+      academicYears={academicYears}
+      selectedYearId={selectedYearId}
+      initialDataStudent={initialDataStudent}
+      initialOfficial={initialOfficial}
+      initialStudentsAdmin={initialStudentsAdmin}
+    />
   );
 }

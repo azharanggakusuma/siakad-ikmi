@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { getSystemSettings } from '@/app/actions/system-settings';
-import SystemSettingsClient from './client';
+import SystemSettingsClient from './SystemSettingsClient';
 
 export const metadata: Metadata = {
   title: 'Pengaturan Sistem',

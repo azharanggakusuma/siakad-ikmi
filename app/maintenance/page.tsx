@@ -34,10 +34,10 @@ export default function MaintenancePage() {
 
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">
-            Sedang Dalam Perbaikan
+            Pemeliharaan Sistem
           </h1>
           <p className="text-muted-foreground text-lg">
-            Kami sedang meningkatkan kualitas layanan sistem akademik. Mohon maaf atas ketidaknyamanan ini.
+            Kami sedang melakukan peningkatan kualitas layanan untuk pengalaman yang lebih baik. Silakan kembali lagi beberapa saat lagi.
           </p>
         </div>
 

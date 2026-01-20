@@ -44,11 +44,13 @@ export default function MaintenancePage() {
         <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
             variant="outline"
-            onClick={() => window.location.reload()}
+            asChild
             className="w-full sm:w-auto gap-2"
           >
-            <RefreshCcw className="w-4 h-4" />
-            Coba Lagi
+            <Link href="/">
+              <RefreshCcw className="w-4 h-4" />
+              Coba Lagi
+            </Link>
           </Button>
 
           <Button 

@@ -43,9 +43,17 @@ export default function SystemSettingsClient({ initialSettings }: SystemSettings
     if (key === 'maintenance_mode') setMaintenanceLoading(true);
     
     try {
-      // Simulate API call
+      const response = await fetch('/api/system-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maintenance_mode: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal menyimpan pengaturan');
+      }
+
       form.setValue(key as any, value);
-      await new Promise(resolve => setTimeout(resolve, 800));
       
       toast.success(value ? "Maintenance Mode diaktifkan" : "Maintenance Mode dinonaktifkan", {
         description: "Perubahan pengaturan berhasil disimpan.",
@@ -110,10 +118,10 @@ export default function SystemSettingsClient({ initialSettings }: SystemSettings
                            Aktifkan mode ini untuk membatasi akses sistem hanya kepada Administrator. 
                            Pengguna lain akan dialihkan ke halaman maintenance saat mencoba mengakses sistem.
                            {field.value && (
-                             <div className="flex items-start gap-2 mt-3 text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-3 rounded-md text-xs font-medium border border-amber-200/50 dark:border-amber-800/50">
+                             <span className="flex items-start gap-2 mt-3 text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-3 rounded-md text-xs font-medium border border-amber-200/50 dark:border-amber-800/50" style={{ display: 'flex' }}>
                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                                <span>Perhatian: Mode ini akan mencegah pengguna standar untuk login atau mengakses fitur apapun.</span>
-                             </div>
+                             </span>
                            )}
                         </FormDescription>
                       </div>

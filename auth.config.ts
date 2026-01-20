@@ -53,7 +53,6 @@ export const authConfig = {
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnLogin = nextUrl.pathname.startsWith("/login");
-      const isOnMaintenance = nextUrl.pathname.startsWith("/maintenance");
       const currentPath = nextUrl.pathname;
       const userRole = auth?.user?.role;
 

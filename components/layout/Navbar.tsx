@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image"; // [!code ++] Tambah import Image
+import Image from "next/image";
 import Tooltip from "@/components/shared/Tooltip";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { 
   Menu, 
   Search, 
@@ -43,6 +44,11 @@ export default function Navbar({
 }: NavbarProps) {
   // Variabel displayName dan displayRole tetap ada jika nanti dibutuhkan di dalam dropdown
   const displayName = user?.name || user?.username || "Pengguna";
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+  };
   
   const academicYear = academicYearData 
     ? `${academicYearData.nama} ${academicYearData.semester}` 
@@ -156,7 +162,10 @@ export default function Navbar({
               <DropdownMenuSeparator />
               
               <DropdownMenuItem 
-                onClick={() => logout()} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowLogoutConfirm(true);
+                }} 
                 className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
               >
                 <LogOut className="mr-2 h-4 w-4" />
@@ -167,6 +176,17 @@ export default function Navbar({
 
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={setShowLogoutConfirm}
+        onConfirm={handleLogout}
+        title="Konfirmasi Keluar"
+        description="Apakah Anda yakin ingin keluar dari sesi ini?"
+        confirmLabel="Keluar"
+        cancelLabel="Batal"
+        variant="destructive"
+      />
     </nav>
   );
 }

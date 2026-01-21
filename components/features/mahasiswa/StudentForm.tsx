@@ -125,6 +125,47 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
       errorMessages.push("Prodi wajib dipilih."); 
     }
 
+    // 5. Validasi Tambahan (Wajib Semua)
+    if (!formData.nik || formData.nik.length < 16) {
+        newErrors.nik = true;
+        errorMessages.push("NIK wajib diisi (16 digit).");
+    }
+    if (!formData.jenis_kelamin) {
+        newErrors.jenis_kelamin = true;
+        errorMessages.push("Jenis Kelamin wajib dipilih.");
+    }
+    if (!formData.tempat_lahir) {
+        newErrors.tempat_lahir = true;
+        errorMessages.push("Tempat Lahir wajib diisi.");
+    }
+    if (!formData.tanggal_lahir) {
+        newErrors.tanggal_lahir = true;
+        errorMessages.push("Tanggal Lahir wajib diisi.");
+    }
+    if (!formData.agama) {
+        newErrors.agama = true;
+        errorMessages.push("Agama wajib dipilih.");
+    }
+    if (!formData.status) {
+        newErrors.status = true;
+        errorMessages.push("Status Perkawinan wajib diisi.");
+    }
+    if (!formData.no_hp) {
+        newErrors.no_hp = true;
+        errorMessages.push("No. Handphone wajib diisi.");
+    }
+    if (!formData.email) {
+        newErrors.email = true;
+        errorMessages.push("Email wajib diisi.");
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = true;
+        errorMessages.push("Format Email tidak valid.");
+    }
+    if (!formData.alamat) {
+        newErrors.alamat = true;
+        errorMessages.push("Alamat Domisili wajib diisi.");
+    }
+
     if (errorMessages.length > 0) {
       setErrors(newErrors);
       isValid = false;
@@ -145,216 +186,257 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
     errors[field] ? "border-red-500 focus-visible:ring-red-500" : "";
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5 py-4">
-      {/* Baris 1: NIM, Status (Edit), & Angkatan */}
-      <div className="grid grid-cols-12 gap-4">
+    <form onSubmit={handleSubmit} className="grid gap-6 py-4">
+      
+      {/* --- BAGIAN 1: DATA AKADEMIK --- */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="font-semibold text-gray-700 border-b pb-2 mb-2">Informasi Akademik</h3>
         
-        {/* NIM */}
-        <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-9"}`}>
-          <Label htmlFor="nim">
-            <span>NIM <span className="text-red-500">*</span></span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="nim"
-              value={formData.nim}
-              onChange={(e) => handleNumericInput("nim", e.target.value, 8)}
-              placeholder="Contoh: 4121001"
-              className={`${errorClass("nim")} ${isEditing ? "bg-muted text-muted-foreground opacity-100 pr-8" : ""}`}
-              disabled={isEditing} 
-            />
+        <div className="grid grid-cols-12 gap-4">
+            {/* NIM */}
+            <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-12 md:col-span-8"}`}>
+            <Label htmlFor="nim">
+                <span>NIM <span className="text-red-500">*</span></span>
+            </Label>
+            <div className="relative">
+                <Input
+                id="nim"
+                value={formData.nim}
+                onChange={(e) => handleNumericInput("nim", e.target.value, 8)}
+                placeholder="Contoh: 4121001"
+                className={`${errorClass("nim")} ${isEditing ? "bg-muted text-muted-foreground opacity-100 pr-8" : ""}`}
+                disabled={isEditing} 
+                />
+                {isEditing && (
+                <Lock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                )}
+            </div>
+            </div>
+
+            {/* Status (Edit Only) */}
             {isEditing && (
-              <Lock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="grid gap-2 col-span-12 md:col-span-3">
+                <Label htmlFor="status_mhs">Status <span className="text-red-500">*</span></Label>
+                <Select 
+                    value={formData.is_active ? "active" : "inactive"}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
+                >
+                    <SelectTrigger className="w-full">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="active">Aktif</SelectItem>
+                        <SelectItem value="inactive">Non-Aktif</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
             )}
-          </div>
+
+            {/* Angkatan */}
+            <div className="grid gap-2 col-span-12 md:col-span-4">
+            <Label htmlFor="angkatan">
+                <span>Angkatan <span className="text-red-500">*</span></span>
+            </Label>
+            <Input
+                id="angkatan"
+                value={formData.angkatan}
+                onChange={(e) => handleNumericInput("angkatan", e.target.value, 4)}
+                placeholder="2023"
+                className={errorClass("angkatan")}
+            />
+            </div>
         </div>
 
-        {/* Status: Hanya muncul saat Edit */}
-        {isEditing && (
-          <div className="grid gap-2 col-span-3">
-            <Label htmlFor="status">Status</Label>
+        {/* Prodi */}
+        <div className="grid gap-2"> 
+            <Label htmlFor="study_program_id">
+                <span>Program Studi <span className="text-red-500">*</span></span>
+            </Label>
             <Select 
-                value={formData.is_active ? "active" : "inactive"}
-                onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
+                value={formData.study_program_id} 
+                onValueChange={(v) => handleInputChange("study_program_id", v)}
             >
-                <SelectTrigger className="w-full">
-                    <SelectValue />
+                <SelectTrigger className={`w-full ${errorClass("study_program_id")}`}>
+                <SelectValue placeholder="Pilih Program Studi" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="active">Aktif</SelectItem>
-                    <SelectItem value="inactive">Non-Aktif</SelectItem>
-                </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {/* Angkatan (Dulu Semester) */}
-        <div className="grid gap-2 col-span-3">
-          <Label htmlFor="angkatan">
-            <span>Angkatan <span className="text-red-500">*</span></span>
-          </Label>
-          <Input
-            id="angkatan"
-            value={formData.angkatan}
-            onChange={(e) => handleNumericInput("angkatan", e.target.value, 4)}
-            placeholder="2023"
-            className={errorClass("angkatan")}
-          />
-        </div>
-      </div>
-
-      {/* Baris 2: Nama Lengkap */}
-      <div className="grid gap-2">
-        <Label htmlFor="nama">
-          <span>Nama Lengkap <span className="text-red-500">*</span></span>
-        </Label>
-        <Input
-        id="nama"
-        value={formData.nama}
-        onChange={(e) => handleInputChange("nama", e.target.value)}
-        placeholder="Contoh: Budi Santoso"
-        className={errorClass("nama")}
-        />
-      </div>
-
-      {/* Baris Baru: NIK & Jenis Kelamin */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="nik">NIK</Label>
-          <Input
-            id="nik"
-            value={formData.nik}
-            onChange={(e) => handleNumericInput("nik", e.target.value, 16)}
-            placeholder="Nomor Induk Kependudukan"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
-          <Select 
-            value={formData.jenis_kelamin} 
-            onValueChange={(v) => handleInputChange("jenis_kelamin", v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih Jenis Kelamin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-              <SelectItem value="Perempuan">Perempuan</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-       {/* Baris Baru: TTL */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="grid gap-2 md:col-span-2">
-          <Label htmlFor="tempat_lahir">Tempat Lahir</Label>
-          <Input
-            id="tempat_lahir"
-            value={formData.tempat_lahir}
-            onChange={(e) => handleInputChange("tempat_lahir", e.target.value)}
-            placeholder="Kota Lahir"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="tanggal_lahir">Tanggal Lahir</Label>
-          <Input
-            id="tanggal_lahir"
-            type="date"
-            value={formData.tanggal_lahir}
-            onChange={(e) => handleInputChange("tanggal_lahir", e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Baris Baru: Agama & Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-            <Label htmlFor="agama">Agama</Label>
-            <Select 
-                value={formData.agama} 
-                onValueChange={(v) => handleInputChange("agama", v)}
-            >
-                <SelectTrigger>
-                    <SelectValue placeholder="Pilih Agama" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Islam">Islam</SelectItem>
-                    <SelectItem value="Kristen">Kristen</SelectItem>
-                    <SelectItem value="Katolik">Katolik</SelectItem>
-                    <SelectItem value="Hindu">Hindu</SelectItem>
-                    <SelectItem value="Buddha">Buddha</SelectItem>
-                    <SelectItem value="Konghucu">Konghucu</SelectItem>
+                {studyPrograms.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                    {p.nama} ({p.jenjang})
+                    </SelectItem>
+                ))}
                 </SelectContent>
             </Select>
         </div>
+      </div>
+
+
+      {/* --- BAGIAN 2: DATA PRIBADI --- */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="font-semibold text-gray-700 border-b pb-2 mb-2">Informasi Pribadi</h3>
+        
+        {/* NIK */}
         <div className="grid gap-2">
-            <Label htmlFor="status">Status Perkawinan</Label>
+            <Label htmlFor="nik">
+                <span>Nomor Induk Kependudukan (NIK) <span className="text-red-500">*</span></span>
+            </Label>
+            <Input
+                id="nik"
+                value={formData.nik}
+                onChange={(e) => handleNumericInput("nik", e.target.value, 16)}
+                placeholder="16 digit NIK"
+                className={errorClass("nik")}
+            />
+        </div>
+
+        {/* Nama */}
+        <div className="grid gap-2">
+            <Label htmlFor="nama">
+            <span>Nama Lengkap <span className="text-red-500">*</span></span>
+            </Label>
+            <Input
+            id="nama"
+            value={formData.nama}
+            onChange={(e) => handleInputChange("nama", e.target.value)}
+            placeholder="Sesuai KTP"
+            className={errorClass("nama")}
+            />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* JK */}
+            <div className="grid gap-2">
+                <Label htmlFor="jenis_kelamin">
+                    <span>Jenis Kelamin <span className="text-red-500">*</span></span>
+                </Label>
+                <Select 
+                    value={formData.jenis_kelamin} 
+                    onValueChange={(v) => handleInputChange("jenis_kelamin", v)}
+                >
+                    <SelectTrigger className={`w-full ${errorClass("jenis_kelamin")}`}>
+                    <SelectValue placeholder="Pilih Jenis Kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* Agama */}
+            <div className="grid gap-2">
+                <Label htmlFor="agama">
+                    <span>Agama <span className="text-red-500">*</span></span>
+                </Label>
+                <Select 
+                    value={formData.agama} 
+                    onValueChange={(v) => handleInputChange("agama", v)}
+                >
+                    <SelectTrigger className={`w-full ${errorClass("agama")}`}>
+                        <SelectValue placeholder="Pilih Agama" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Islam">Islam</SelectItem>
+                        <SelectItem value="Kristen">Kristen</SelectItem>
+                        <SelectItem value="Katolik">Katolik</SelectItem>
+                        <SelectItem value="Hindu">Hindu</SelectItem>
+                        <SelectItem value="Buddha">Buddha</SelectItem>
+                        <SelectItem value="Konghucu">Konghucu</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {/* Tempat Lahir */}
+             <div className="grid gap-2">
+                <Label htmlFor="tempat_lahir">
+                    <span>Tempat Lahir <span className="text-red-500">*</span></span>
+                </Label>
+                <Input
+                    id="tempat_lahir"
+                    value={formData.tempat_lahir}
+                    onChange={(e) => handleInputChange("tempat_lahir", e.target.value)}
+                    placeholder="Kota Lahir"
+                    className={errorClass("tempat_lahir")}
+                />
+            </div>
+            {/* Tgl Lahir */}
+            <div className="grid gap-2">
+                <Label htmlFor="tanggal_lahir">
+                    <span>Tanggal Lahir <span className="text-red-500">*</span></span>
+                </Label>
+                <Input
+                    id="tanggal_lahir"
+                    type="date"
+                    value={formData.tanggal_lahir}
+                    onChange={(e) => handleInputChange("tanggal_lahir", e.target.value)}
+                    className={errorClass("tanggal_lahir")}
+                />
+            </div>
+        </div>
+
+        {/* Status Perkawinan */}
+        <div className="grid gap-2">
+            <Label htmlFor="status">
+                <span>Status Perkawinan <span className="text-red-500">*</span></span>
+            </Label>
             <Input
                 id="status"
                 value={formData.status}
                 onChange={(e) => handleInputChange("status", e.target.value)}
                 placeholder="Contoh: Belum Menikah"
+                className={errorClass("status")}
             />
         </div>
       </div>
 
-      {/* Baris Baru: Kontak */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* --- BAGIAN 3: KONTAK & ALAMAT --- */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="font-semibold text-gray-700 border-b pb-2 mb-2">Kontak & Alamat</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="no_hp">
+                    <span>No. Handphone <span className="text-red-500">*</span></span>
+                </Label>
+                <Input
+                    id="no_hp"
+                    value={formData.no_hp}
+                    onChange={(e) => handleNumericInput("no_hp", e.target.value, 15)}
+                    placeholder="08xxxxxxxxxx"
+                    className={errorClass("no_hp")}
+                />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="email">
+                    <span>Email <span className="text-red-500">*</span></span>
+                </Label>
+                <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="email@example.com"
+                    className={errorClass("email")}
+                />
+            </div>
+        </div>
+
         <div className="grid gap-2">
-            <Label htmlFor="no_hp">No. Handphone</Label>
-            <Input
-                id="no_hp"
-                value={formData.no_hp}
-                onChange={(e) => handleNumericInput("no_hp", e.target.value, 15)}
-                placeholder="08xxxxxxxxxx"
-            />
-        </div>
-        <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="email@example.com"
+            <Label htmlFor="alamat">
+                <span>Alamat Domisili <span className="text-red-500">*</span></span>
+            </Label>
+            <Textarea
+            id="alamat"
+            value={formData.alamat}
+            onChange={(e) => handleInputChange("alamat", e.target.value)}
+            placeholder="Alamat lengkap sesuai domisili saat ini"
+            className={`min-h-[80px] ${errorClass("alamat")}`}
             />
         </div>
       </div>
 
-      {/* Baris 3: Prodi */}
-      <div className="grid gap-2"> 
-          <Label htmlFor="study_program_id">
-            <span>Program Studi <span className="text-red-500">*</span></span>
-          </Label>
-          <Select 
-            value={formData.study_program_id} 
-            onValueChange={(v) => handleInputChange("study_program_id", v)}
-          >
-            <SelectTrigger className={`w-full ${errorClass("study_program_id")}`}>
-              <SelectValue placeholder="Pilih Program Studi" />
-            </SelectTrigger>
-            <SelectContent>
-              {studyPrograms.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.nama} ({p.jenjang})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-      </div>
-
-      {/* Baris 4: Alamat */}
-      <div className="grid gap-2">
-        <Label htmlFor="alamat">Alamat Domisili</Label>
-        <Textarea
-          id="alamat"
-          value={formData.alamat}
-          onChange={(e) => handleInputChange("alamat", e.target.value)}
-          placeholder="Jl. Perjuangan No. 1, Cirebon"
-          className={`min-h-[80px] ${errorClass("alamat")}`}
-        />
-      </div>
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>Batal</Button>

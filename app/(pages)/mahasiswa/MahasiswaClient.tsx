@@ -166,11 +166,11 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
       render: (_, index) => <span className="text-muted-foreground font-medium">{startIndex + index + 1}</span>
     },
     {
-      header: "Nama Mahasiswa",
+      header: "Mahasiswa",
       render: (row) => (
         <div className="flex items-center gap-3">
             {/* Avatar */}
-            <div className="relative h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
+            <div className="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
                 {row.profile.avatar_url ? (
                     <Image 
                         src={row.profile.avatar_url} 
@@ -179,18 +179,15 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
                         className="object-cover"
                     />
                 ) : (
-                    <User className="h-4 w-4 text-slate-400" />
+                    <User className="h-5 w-5 text-slate-400" />
                 )}
             </div>
-            {/* Nama Saja */}
-            <span className="font-semibold text-gray-800 text-sm">{row.profile.nama}</span>
+            <div className="flex flex-col">
+                <span className="font-semibold text-gray-800 text-sm">{row.profile.nama}</span>
+                <span className="text-xs text-muted-foreground font-mono">{row.profile.nim}</span>
+            </div>
         </div>
       ),
-    },
-    {
-      header: "NIM",
-      className: "w-[120px]",
-      render: (row) => <span className="font-mono font-medium text-gray-700">{row.profile.nim}</span>
     },
     {
       header: "L/P",
@@ -198,33 +195,29 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
       render: (row) => <span className="text-gray-600">{row.profile.jenis_kelamin === 'Laki-laki' ? 'L' : (row.profile.jenis_kelamin === 'Perempuan' ? 'P' : '-')}</span>
     },
     {
-      header: "No HP",
-      className: "w-[120px]",
-      render: (row) => <span className="text-gray-600 text-xs">{row.profile.no_hp || "-"}</span>
+      header: "Kontak",
+      className: "w-[180px]",
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-sm text-gray-700">{row.profile.no_hp || "-"}</span>
+            <span className="text-xs text-muted-foreground">{row.profile.email || "-"}</span>
+        </div>
+      )
     },
     { 
       header: "Program Studi", 
-      className: "w-[100px]",
+      className: "w-[200px]",
       render: (row) => (
-        <span className="text-gray-600">
-          {row.profile.study_program ? row.profile.study_program.nama : "-"}
-        </span>
-      )
-    },
-    {
-      header: "Jenjang",
-      className: "text-center w-[100px]",
-      render: (row) => (
-        <span className="text-gray-600">
-          {row.profile.study_program ? row.profile.study_program.jenjang : "-"}
+        <span className="text-sm font-medium text-gray-700">
+            {row.profile.study_program ? `${row.profile.study_program.nama} (${row.profile.study_program.jenjang})` : "-"}
         </span>
       )
     },
     {
       header: "Angkatan",
-      className: "text-center w-[100px]",
+      className: "text-center w-[80px]",
       render: (row) => (
-        <span className="text-gray-700">
+        <span className="text-gray-700 font-medium">
           {row.profile.angkatan}
         </span>
       )

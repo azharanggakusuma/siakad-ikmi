@@ -30,13 +30,17 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
 
             <div className="flex gap-8 items-start">
                  {/* FOTO - 3x4 Proporsi */}
-                <div className="mt-2 w-[3cm] h-[4cm] border border-black bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                {/* FOTO - 3x4 Proporsi */}
+                <div 
+                    className="mt-2 border border-black bg-gray-100 flex items-center justify-center overflow-hidden shrink-0" 
+                    style={{ width: '3cm', height: '4cm' }}
+                >
                     {student.profile.avatar_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img 
                             src={student.profile.avatar_url} 
                             alt={student.profile.nama} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover object-top" 
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center font-['Cambria'] text-gray-800">
@@ -88,7 +92,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                             <tr>
                                 <td>NIK</td>
                                 <td className="text-center">:</td>
-                                <td className="font-mono tracking-wide">{student.profile.nik || "-"}</td>
+                                <td className="font-bold">{student.profile.nik || "-"}</td>
                             </tr>
                             <tr>
                                 <td>Tempat, Tanggal Lahir</td>

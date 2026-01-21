@@ -192,7 +192,7 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
     {
       header: "NIK",
       className: "w-[130px]",
-      render: (row) => <span className="text-xs font-mono text-gray-600">{row.profile.nik || "-"}</span>
+      render: (row) => <span className="text-xs text-gray-600">{row.profile.nik || "-"}</span>
     },
     {
       header: "L/P",

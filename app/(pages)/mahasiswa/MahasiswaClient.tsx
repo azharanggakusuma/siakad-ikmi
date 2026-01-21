@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/layout/PageHeader";
 import { useToastMessage } from "@/hooks/use-toast-message"; 
 import Image from "next/image"; 
-import { Pencil, Trash2, CheckCircle2, XCircle, User } from "lucide-react"; 
+import { Pencil, Trash2, CheckCircle2, XCircle, User, Printer } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { StudentForm } from "@/components/features/mahasiswa/StudentForm";
+import PrintableBiodata from "@/components/features/mahasiswa/PrintableBiodata";
 import { type StudentData, type StudentFormValues, type StudyProgram } from "@/lib/types";
 import { createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 
@@ -50,6 +51,7 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string>(""); 
   const [formData, setFormData] = useState<StudentFormValues | undefined>(undefined);
+  const [printingStudent, setPrintingStudent] = useState<StudentData | null>(null);
 
   // Sync props if needed (optional)
   React.useEffect(() => {
@@ -138,6 +140,14 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
       }
     }
     setIsDeleteOpen(false);
+  };
+
+  const handlePrint = (student: StudentData) => {
+    setPrintingStudent(student);
+    // Give time for state update and DOM render
+    setTimeout(() => {
+        window.print();
+    }, 500);
   };
 
   // --- COLUMNS ---
@@ -243,6 +253,15 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
           >
             <Trash2 className="h-4 w-4" />
           </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-blue-600 hover:bg-blue-50 h-8 w-8" 
+            onClick={() => handlePrint(row)}
+            title="Print Biodata"
+          >
+            <Printer className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -267,7 +286,22 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
   );
 
   return (
-    <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
+    <>
+      <style jsx global>{`
+        @media print {
+          @page { margin: 10mm; size: A4 portrait; }
+          body * { visibility: hidden; }
+          #print-area, #print-area * { visibility: visible; }
+          #print-area {
+            position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background-color: white; z-index: 9999;
+          }
+        }
+      `}</style>
+      
+      {/* PRINT COMPONENT */}
+      <PrintableBiodata student={printingStudent} />
+
+      <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500 print:hidden">
       <PageHeader title="Data Mahasiswa" breadcrumb={["Beranda", "Mahasiswa"]} />
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
@@ -321,5 +355,6 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
         variant="destructive"
       />
     </div>
+    </>
   );
 }

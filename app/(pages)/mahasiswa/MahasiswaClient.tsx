@@ -351,7 +351,7 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
         onClose={setIsFormOpen}
         title={isEditing ? "Edit Data Mahasiswa" : "Tambah Data Mahasiswa"}
         description={isEditing ? `Perbarui data mahasiswa atas nama ${formData?.nama}.` : "Lengkapi form di bawah untuk menambah data mahasiswa."}
-        maxWidth="sm:max-w-[600px]"
+        maxWidth="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto"
       >
         <StudentForm 
             key={isEditing && selectedId ? `edit-${selectedId}` : "add-new"}

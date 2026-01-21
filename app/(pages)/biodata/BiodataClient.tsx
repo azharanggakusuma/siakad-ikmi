@@ -53,8 +53,8 @@ export default function BiodataClient({ student }: BiodataClientProps) {
             <div className="flex flex-col md:flex-row gap-8 items-start">
               
               {/* DESKTOP SIDEBAR (Avatar + Button) - Hidden on Mobile */}
-              <div className="hidden md:flex w-[200px] flex-col items-center gap-4 shrink-0">
-                <div className="w-[180px] h-[240px] bg-slate-100 rounded-lg border border-slate-200 relative overflow-hidden shadow-sm">
+              <div className="hidden md:flex w-[170px] flex-col items-center gap-4 shrink-0">
+                <div className="w-[150px] h-[200px] bg-slate-100 rounded-lg border border-slate-200 relative overflow-hidden shadow-sm">
                   {student.profile.avatar_url ? (
                     <Image
                       src={student.profile.avatar_url}

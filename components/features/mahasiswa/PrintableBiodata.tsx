@@ -30,7 +30,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
 
             <div className="flex gap-8 items-start">
                  {/* FOTO - 3x4 Proporsi */}
-                <div className="mt-1 w-[3cm] h-[4cm] border border-black bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="mt-2 w-[3cm] h-[4cm] border border-black bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
                     {student.profile.avatar_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img 

@@ -1,7 +1,6 @@
 import React from "react";
 import DocumentHeader from "@/components/features/document/DocumentHeader";
 import { StudentData } from "@/lib/types";
-import { User } from "lucide-react";
 
 interface PrintableBiodataProps {
   student: StudentData | null;
@@ -29,7 +28,6 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
             </div>
 
             <div className="flex gap-8 items-start">
-                 {/* FOTO - 3x4 Proporsi */}
                 {/* FOTO - 3x4 Proporsi */}
                 <div 
                     className="mt-2 border border-black bg-gray-100 flex items-center justify-center overflow-hidden shrink-0" 
@@ -92,7 +90,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                             <tr>
                                 <td>NIK</td>
                                 <td className="text-center">:</td>
-                                <td className="font-bold">{student.profile.nik || "-"}</td>
+                                <td>{student.profile.nik || "-"}</td>
                             </tr>
                             <tr>
                                 <td>Tempat, Tanggal Lahir</td>
@@ -143,9 +141,6 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                     <p className="text-xs">NIM. {student.profile.nim}</p>
                 </div>
             </div>
-
-
-
         </div>
       </div>
     </div>

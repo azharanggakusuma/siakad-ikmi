@@ -25,7 +25,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
             <DocumentHeader title="" />
             
             <div className="text-center mt-1 mb-6">
-                <h1 className="font-bold text-xl uppercase tracking-wider font-['Cambria'] underline">BIODATA MAHASISWA</h1>
+                <h1 className="font-bold text-lg uppercase tracking-wider font-['Cambria'] underline">BIODATA MAHASISWA</h1>
             </div>
 
             <div className="flex gap-8 items-start">
@@ -39,15 +39,16 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                             className="w-full h-full object-cover" 
                         />
                     ) : (
-                        <div className="flex flex-col items-center justify-center text-gray-400">
-                             <span className="text-[10px] uppercase font-semibold">PAS FOTO 3X4</span>
+                        <div className="flex flex-col items-center justify-center font-['Cambria'] text-gray-800">
+                             <span className="text-xs font-bold">PAS FOTO</span>
+                             <span className="text-xs font-bold">3x4</span>
                         </div>
                     )}
                 </div>
 
                 {/* TABEL DATA */}
                 <div className="flex-1">
-                    <table className="w-full text-base font-['Cambria']">
+                    <table className="w-full text-sm font-['Cambria']">
                         <tbody className="align-top leading-[2]">
                             <tr>
                                 <td className="w-[200px]">Nama Lengkap</td>
@@ -70,7 +71,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                                 <td>{student.profile.study_program?.jenjang || "-"}</td>
                             </tr>
                             <tr>
-                                <td>Semester</td>
+                                <td>Semester Saat Ini</td>
                                 <td className="text-center">:</td>
                                 <td>{student.profile.semester}</td>
                             </tr>
@@ -85,7 +86,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                                 <td>{student.profile.is_active ? "AKTIF" : "TIDAK AKTIF"}</td>
                             </tr>
                             <tr>
-                                <td>Alamat</td>
+                                <td>Alamat Lengkap</td>
                                 <td className="text-center">:</td>
                                 <td className="leading-normal pt-2">{student.profile.alamat || "-"}</td>
                             </tr>
@@ -95,12 +96,12 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
             </div>
 
             {/* TANDA TANGAN */}
-            <div className="flex justify-end mt-12 mb-6">
+            <div className="flex justify-end mt-12 mb-6 text-sm">
                 <div className="flex flex-col items-center min-w-[200px] font-['Cambria']">
                     <p className="mb-1">Cirebon, {currentDate}</p>
                     <p className="mb-24">Mahasiswa Yang Bersangkutan,</p>
                     <p className="font-bold underline uppercase">{student.profile.nama}</p>
-                    <p className="text-sm">NIM. {student.profile.nim}</p>
+                    <p className="text-xs">NIM. {student.profile.nim}</p>
                 </div>
             </div>
 

@@ -18,15 +18,15 @@ import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
 import { CourseForm } from "@/components/features/matakuliah/CourseForm";
-import { type Course as CourseData, type CourseFormValues, type CourseCategory } from "@/lib/types";
+import { type Course as CourseData, type CourseFormValues, type CourseCategory, type StudyProgram } from "@/lib/types";
 import { createCourse, updateCourse, deleteCourse } from "@/app/actions/courses";
-// import { useRouter } from "next/navigation"; // Opsional jika butuh refresh manual
 
 interface MataKuliahClientProps {
   initialData: CourseData[];
+  studyPrograms: StudyProgram[];
 }
 
-export default function MataKuliahClient({ initialData }: MataKuliahClientProps) {
+export default function MataKuliahClient({ initialData, studyPrograms }: MataKuliahClientProps) {
   const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
   // const router = useRouter(); // Gunakan jika revalidatePath tidak cukup responsif
 
@@ -297,7 +297,8 @@ export default function MataKuliahClient({ initialData }: MataKuliahClientProps)
             key={isEditing && selectedId ? `edit-${selectedId}` : "create-new"} 
             initialData={formData}
             isEditing={isEditing}
-            isLoading={isSaving} 
+            isLoading={isSaving}
+            studyPrograms={studyPrograms}
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
         />

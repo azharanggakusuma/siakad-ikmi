@@ -10,15 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2, GraduationCap } from "lucide-react";
 import { CourseFormValues, StudyProgram } from "@/lib/types";
 import { useToastMessage } from "@/hooks/use-toast-message";
-import { getStudyPrograms } from "@/app/actions/prodi";
 
 interface CourseFormProps {
   initialData?: CourseFormValues;
   isEditing: boolean;
   isLoading?: boolean;
+  studyPrograms: StudyProgram[];
   onSubmit: (data: CourseFormValues) => void;
   onCancel: () => void;
 }
@@ -27,12 +27,9 @@ const defaultValues: CourseFormValues = {
   kode: "", matkul: "", sks: "", smt_default: "", kategori: "", study_program_ids: []
 };
 
-export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit, onCancel }: CourseFormProps) {
+export function CourseForm({ initialData, isEditing, isLoading = false, studyPrograms, onSubmit, onCancel }: CourseFormProps) {
   const { showError } = useToastMessage();
-  const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]);
-  const [isFetchingProdi, setIsFetchingProdi] = useState(false);
 
-  // Helper untuk parsing data awal
   const parseInitialData = (data?: CourseFormValues): CourseFormValues => {
     if (!data) return defaultValues;
     return {
@@ -48,28 +45,10 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
   const [formData, setFormData] = useState<CourseFormValues>(() => parseInitialData(initialData));
   const [errors, setErrors] = useState<Partial<Record<keyof CourseFormValues, boolean>>>({});
 
-  // Fetch daftar program studi saat form dibuka
-  useEffect(() => {
-    const fetchProdi = async () => {
-      setIsFetchingProdi(true);
-      try {
-        const data = await getStudyPrograms();
-        setStudyPrograms(data || []);
-      } catch (error) {
-        console.error("Gagal memuat program studi:", error);
-      } finally {
-        setIsFetchingProdi(false);
-      }
-    };
-    fetchProdi();
-  }, []);
-
-  // Sinkronisasi jika initialData berubah
   useEffect(() => {
     setFormData(parseInitialData(initialData));
   }, [initialData]);
 
-  // Reset study_program_ids jika kategori berubah ke MBKM
   useEffect(() => {
     if (formData.kategori === "MBKM") {
       setFormData(prev => ({ ...prev, study_program_ids: [] }));
@@ -98,12 +77,26 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
         return { ...prev, study_program_ids: currentIds.filter(id => id !== prodiId) };
       }
     });
+    if (errors.study_program_ids) {
+      setErrors((prev) => ({ ...prev, study_program_ids: undefined }));
+    }
+  };
+
+  const handleSelectAll = () => {
+    const allIds = studyPrograms.map(sp => sp.id);
+    setFormData(prev => ({ ...prev, study_program_ids: allIds }));
+    if (errors.study_program_ids) {
+      setErrors((prev) => ({ ...prev, study_program_ids: undefined }));
+    }
+  };
+
+  const handleDeselectAll = () => {
+    setFormData(prev => ({ ...prev, study_program_ids: [] }));
   };
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CourseFormValues, boolean>> = {};
     const errorMessages: string[] = [];
-    let isValid = true;
 
     if (!formData.kode) {
       newErrors.kode = true;
@@ -132,19 +125,18 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
       errorMessages.push("Kategori wajib dipilih.");
     }
 
-    // Validasi: kategori Reguler harus memilih minimal 1 prodi
     if (formData.kategori === "Reguler" && (!formData.study_program_ids || formData.study_program_ids.length === 0)) {
       newErrors.study_program_ids = true;
-      errorMessages.push("Pilih minimal 1 program studi untuk kategori Reguler.");
+      errorMessages.push("Pilih minimal 1 program studi.");
     }
 
     if (errorMessages.length > 0) {
       setErrors(newErrors);
-      isValid = false;
       showError("Validasi Gagal", errorMessages.join(", "));
+      return false;
     }
 
-    return isValid;
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,12 +148,12 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
     errors[field] ? "border-red-500 focus-visible:ring-red-500" : "";
 
   const isMBKM = formData.kategori === "MBKM";
+  const selectedCount = formData.study_program_ids?.length || 0;
+  const allSelected = selectedCount === studyPrograms.length && studyPrograms.length > 0;
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5 py-4">
       <div className="grid grid-cols-4 gap-4">
-        
-        {/* Kolom Kode MK */}
         <div className="grid gap-2 col-span-2">
           <Label htmlFor="kode">Kode MK</Label>
           <div className="relative">
@@ -179,7 +171,6 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
           </div>
         </div>
 
-        {/* Kolom SKS */}
         <div className="grid gap-2 col-span-1">
           <Label htmlFor="sks">SKS</Label>
           <Input 
@@ -191,7 +182,6 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
           />
         </div>
 
-        {/* Kolom Semester */}
         <div className="grid gap-2 col-span-1">
           <Label htmlFor="smt">Semester</Label>
           <Input 
@@ -231,49 +221,70 @@ export function CourseForm({ initialData, isEditing, isLoading = false, onSubmit
         </Select>
       </div>
 
-      {/* Multi-select Program Studi */}
+      {/* Section Program Studi */}
       {!isMBKM && (
-        <div className="grid gap-2">
-          <Label className={errors.study_program_ids ? "text-red-500" : ""}>
-            Program Studi
-          </Label>
-          <p className="text-xs text-muted-foreground -mt-1">
-            Pilih program studi yang dapat mengambil mata kuliah ini
-          </p>
-          {isFetchingProdi ? (
-            <div className="flex items-center gap-2 py-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Memuat...</span>
-            </div>
-          ) : (
-            <div className={`grid grid-cols-2 gap-3 p-3 border rounded-md max-h-[150px] overflow-y-auto ${errors.study_program_ids ? "border-red-500" : ""}`}>
-              {studyPrograms.map((prodi) => (
-                <div key={prodi.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`prodi-${prodi.id}`}
-                    checked={formData.study_program_ids?.includes(prodi.id) || false}
-                    onCheckedChange={(checked) => handleProdiToggle(prodi.id, checked as boolean)}
-                  />
-                  <label
-                    htmlFor={`prodi-${prodi.id}`}
-                    className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {prodi.nama} ({prodi.jenjang})
-                  </label>
-                </div>
-              ))}
-              {studyPrograms.length === 0 && (
-                <p className="text-sm text-muted-foreground col-span-2">Tidak ada program studi tersedia</p>
+        <div className="grid gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label className={errors.study_program_ids ? "text-red-500" : ""}>
+                Program Studi
+              </Label>
+              {selectedCount > 0 && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                  {selectedCount} dipilih
+                </span>
               )}
             </div>
-          )}
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs"
+                onClick={allSelected ? handleDeselectAll : handleSelectAll}
+              >
+                {allSelected ? "Hapus Semua" : "Pilih Semua"}
+              </Button>
+            </div>
+          </div>
+          
+          <div className={`rounded-lg border bg-muted/30 ${errors.study_program_ids ? "border-red-500" : "border-border"}`}>
+            <div className="grid grid-cols-2 gap-1 p-3 max-h-[140px] overflow-y-auto">
+              {studyPrograms.map((prodi) => {
+                const isChecked = formData.study_program_ids?.includes(prodi.id) || false;
+                return (
+                  <label
+                    key={prodi.id}
+                    className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                      isChecked 
+                        ? "bg-primary/10 border border-primary/20" 
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <Checkbox
+                      id={`prodi-${prodi.id}`}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => handleProdiToggle(prodi.id, checked as boolean)}
+                    />
+                    <span className={`text-sm leading-tight ${isChecked ? "font-medium text-primary" : "text-foreground"}`}>
+                      {prodi.nama}
+                      <span className="text-muted-foreground ml-1">({prodi.jenjang})</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
       {isMBKM && (
-        <div className="p-3 bg-muted rounded-md">
-          <p className="text-sm text-muted-foreground">
-            📌 Mata kuliah MBKM tersedia untuk <strong>semua program studi</strong>
+        <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Mata kuliah <strong>MBKM</strong> otomatis tersedia untuk semua program studi
           </p>
         </div>
       )}

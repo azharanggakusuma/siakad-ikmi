@@ -196,9 +196,6 @@ export default function MataKuliahClient({ initialData, studyPrograms }: MataKul
       header: "Program Studi",
       className: "max-w-[200px]",
       render: (row) => {
-        if (row.kategori === "MBKM") {
-          return <span className="text-xs text-muted-foreground italic">Semua Prodi</span>;
-        }
         const programs = row.study_programs || [];
         if (programs.length === 0) {
           return <span className="text-xs text-muted-foreground">-</span>;

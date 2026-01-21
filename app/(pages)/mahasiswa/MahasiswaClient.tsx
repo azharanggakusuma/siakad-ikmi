@@ -152,9 +152,17 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
 
   const handlePrint = (student: StudentData) => {
     setPrintingStudent(student);
+    const originalTitle = document.title;
+    
     // Give time for state update and DOM render
     setTimeout(() => {
+        document.title = `Biodata - ${student.profile.nama}`;
         window.print();
+        
+        // Restore title after print dialog closes (approximate)
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 1000);
     }, 500);
   };
 

@@ -24,7 +24,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
             
             <DocumentHeader title="" />
             
-            <div className="text-center mt-6 mb-8">
+            <div className="text-center mt-1 mb-6">
                 <h1 className="font-bold text-xl uppercase tracking-wider font-['Cambria']">BIODATA MAHASISWA</h1>
             </div>
 
@@ -48,7 +48,7 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                 {/* TABEL DATA */}
                 <div className="flex-1">
                     <table className="w-full text-base font-['Cambria']">
-                        <tbody className="align-top leading-[2.5]">
+                        <tbody className="align-top leading-[2]">
                             <tr>
                                 <td className="w-[200px]">Nama Lengkap</td>
                                 <td className="w-[20px] text-center">:</td>
@@ -89,11 +89,8 @@ export default function PrintableBiodata({ student }: PrintableBiodataProps) {
                 </div>
             </div>
 
-            {/* SPACER FILLER */}
-            <div className="flex-1"></div>
-
             {/* TANDA TANGAN */}
-            <div className="flex justify-end mt-16 mb-12">
+            <div className="flex justify-end mt-12 mb-6">
                 <div className="text-center w-[250px] font-['Cambria']">
                     <p className="mb-1">Cirebon, {currentDate}</p>
                     <p className="mb-24">Mahasiswa Yang Bersangkutan,</p>

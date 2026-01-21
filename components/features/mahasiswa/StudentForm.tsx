@@ -194,7 +194,7 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
         
         <div className="grid grid-cols-12 gap-4">
             {/* NIM */}
-            <div className={`grid gap-2 ${isEditing ? "col-span-6" : "col-span-12 md:col-span-8"}`}>
+            <div className={`grid gap-2 ${isEditing ? "col-span-12 md:col-span-6" : "col-span-12 md:col-span-8"}`}>
             <Label htmlFor="nim">
                 <span>NIM <span className="text-red-500">*</span></span>
             </Label>
@@ -233,7 +233,7 @@ export function StudentForm({ initialData, studyPrograms, isEditing, onSubmit, o
             )}
 
             {/* Angkatan */}
-            <div className="grid gap-2 col-span-12 md:col-span-4">
+            <div className={`grid gap-2 col-span-12 ${isEditing ? "md:col-span-3" : "md:col-span-4"}`}>
             <Label htmlFor="angkatan">
                 <span>Angkatan <span className="text-red-500">*</span></span>
             </Label>

@@ -141,7 +141,6 @@ export function KtmCard({ student }: KtmCardProps) {
                backgroundSize: "cover",
                backgroundPosition: "center",
                backgroundRepeat: "no-repeat",
-               // No filters, reusing original SVG colors
             }}
          />
 

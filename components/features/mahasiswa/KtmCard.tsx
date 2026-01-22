@@ -101,7 +101,7 @@ export function KtmCard({ student }: KtmCardProps) {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={profile.nim || "-"}
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${student.id}`}
                   viewBox={`0 0 256 256`}
                 />
             </div>

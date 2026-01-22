@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, User, Download, ShieldCheck } from "lucide-react";
+import { Printer, User, Eye, ShieldCheck } from "lucide-react";
 import { StudentData } from "@/lib/types";
 import { KtmCard } from "@/components/features/mahasiswa/KtmCard";
 import Image from "next/image";
@@ -146,15 +146,15 @@ export default function KtmClient({ student }: KtmClientProps) {
                         </div>
                         {/* Download Prompt (Visual only) */}
                         <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                            <Download className="w-3 h-3" />
-                            Siap dicetak
+                            <Eye className="w-3 h-3" />
+                            Mode Pratinjau
                         </div>
                     </div>
 
                     {/* Canvas Area */}
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-50 opacity-100">
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-50 opacity-100 overflow-hidden">
                          {/* Card Container - Screen Only */}
-                         <div className="relative shadow-md rounded-xl overflow-hidden bg-white mobile-card-wrapper">
+                         <div className="relative shadow-md rounded-xl overflow-hidden bg-white mobile-card-wrapper transform scale-105 md:scale-125 origin-center">
                              <KtmCard student={student} />
                          </div>
                     </div>

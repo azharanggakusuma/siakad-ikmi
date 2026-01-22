@@ -36,7 +36,7 @@ export function KtmCard({ student }: KtmCardProps) {
       {/* --- TOP SECTION (WHITE) --- */}
       <div className="absolute top-0 left-0 right-0 h-[62%] bg-white px-5 pt-4">
         {/* Header - Recreating DocumentHeader Look */}
-        <div className="flex items-center gap-2 mb-2 relative z-10 pl-1">
+        <div className="flex items-center gap-[5px] mb-2 relative z-10 pl-1">
           {/* Logo */}
           <div className="relative w-[34px] h-[34px] shrink-0">
              <Image 
@@ -48,34 +48,44 @@ export function KtmCard({ student }: KtmCardProps) {
           </div>
           
           {/* Text Block */}
-          <div className="flex flex-col justify-center mt-[-1px]">
-            <h2 className="text-[5.5px] font-bold text-gray-800 tracking-wide leading-tight mb-[0.5px] uppercase font-sans">
+          <div className="flex flex-col justify-center mt-[-1.7px]">
+            <h2 className="text-[4.7px] font-bold text-gray-800 tracking-wide leading-tight mb-0 uppercase font-sans whitespace-nowrap">
               SEKOLAH TINGGI MANAJEMEN INFORMATIKA DAN KOMPUTER
             </h2>
 
-            <div className="flex items-end leading-none mt-[-1.5px]">
+            <div className="flex items-end leading-none mt-[-0.8px]">
               <span
-                className="text-[22px] text-[#EE3A43] tracking-tighter"
-                style={{ ...embossedTextStyle, lineHeight: "0.8" }}
+                className="text-[27.2px] text-[#EE3A43] tracking-tighter"
+                style={{ 
+                  fontFamily: "Arial Black, Arial, sans-serif",
+                  textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
+                  lineHeight: "0.8" 
+                }}
               >
                 STMIK
               </span>
 
-              <div className="flex flex-col ml-[3px] mb-[0px]">
+              <div className="flex flex-col ml-[3.4px] mb-[-0.4px]">
                 <span
-                  className="text-[12px] text-[#1B3F95]"
+                  className="text-[15.6px] text-[#1B3F95]"
                   style={{ 
-                    ...embossedTextStyle, 
+                    fontFamily: "Arial Black, Arial, sans-serif",
+                    textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
                     lineHeight: "0.8",
-                    letterSpacing: "0.42em",
-                    marginRight: "-0.42em"
+                    letterSpacing: "0.35em",
+                    marginRight: "-0.35em"
                   }}
                 >
                   IKMI
                 </span>
                 <span
-                  className="text-[8px] text-[#00A651] tracking-[0.16em] mt-[1.5px] ml-[0.5px]"
-                  style={{ ...cirebonStyle, lineHeight: "0.8" }}
+                  className="text-[9.2px] text-[#00A651] tracking-[0.18em] mt-[1.3px]"
+                  style={{ 
+                    fontFamily: "Arial, sans-serif",
+                    fontWeight: 800,
+                    textShadow: "-0.2px -0.2px 0.2px rgba(255,255,255,0.8), 0.4px 0.4px 0.4px rgba(0,0,0,0.3)",
+                    lineHeight: "0.8" 
+                  }}
                 >
                   CIREBON
                 </span>

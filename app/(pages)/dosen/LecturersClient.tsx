@@ -170,8 +170,8 @@ export default function LecturersClient({ initialData }: LecturersClientProps) {
         className: "text-center w-[120px]",
         render: (row) => (
           <Badge 
-            variant={row.is_active ? "default" : "secondary"} 
-            className={`font-normal ${row.is_active ? "bg-green-600 hover:bg-green-700" : ""}`}
+            variant={row.is_active ? "default" : "destructive"} 
+            className={`font-normal ${row.is_active ? "bg-green-600" : ""}`}
           >
             {row.is_active ? (
               <CheckCircle2 className="mr-1 h-3 w-3" />

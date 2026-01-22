@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LecturerFormValues } from "@/lib/types";
 import { Loader2, Upload, User } from "lucide-react";
 import Image from "next/image";
@@ -162,16 +169,24 @@ export default function LecturerForm({
                 </div>
              </div>
 
-            <div className="flex items-center justify-between space-x-2 border p-3 rounded-md mt-2">
-                <Label htmlFor="is_active" className="cursor-pointer">
-                    Status Aktif?
-                </Label>
-                <Switch
-                    id="is_active"
-                    checked={watch("is_active")}
-                    onCheckedChange={(checked) => setValue("is_active", checked)}
-                />
-            </div>
+             {/* STATUS (Hanya muncul saat Edit) */}
+             {isEditing && (
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="is_active">Status Aktif</Label>
+                   <Select
+                      value={watch("is_active") ? "active" : "inactive"}
+                      onValueChange={(val) => setValue("is_active", val === "active")}
+                   >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Aktif</SelectItem>
+                        <SelectItem value="inactive">Non-Aktif</SelectItem>
+                      </SelectContent>
+                   </Select>
+                </div>
+             )}
           </div>
       </div>
 

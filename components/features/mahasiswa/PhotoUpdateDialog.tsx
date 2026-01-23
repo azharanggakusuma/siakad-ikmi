@@ -129,7 +129,7 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
                         ) : (
                             <div className="flex flex-col items-center text-slate-400 gap-2">
                                 <ImagePlus className="w-8 h-8 sm:w-10 sm:h-10" />
-                                <span className="text-[10px] sm:text-xs font-medium text-center px-1">Upload Foto</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-center px-1">Unggah Foto</span>
                             </div>
                         )}
                         

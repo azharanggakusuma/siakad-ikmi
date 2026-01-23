@@ -45,9 +45,9 @@ export default async function DashboardPage() {
         
         const myIPK = calculateIPK(student.transcript);
         const totalSKS = calculateTotalSKSLulus(student.transcript);
-        trendData = calculateSemesterTrend(student.transcript);
         
         const currentSmt = student.profile.semester; 
+        trendData = calculateSemesterTrend(student.transcript, currentSmt); 
         const totalMK = student.transcript.length;
         
         const jenjang = student.profile.study_program?.jenjang || "S1";

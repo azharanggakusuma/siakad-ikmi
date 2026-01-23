@@ -149,13 +149,13 @@ export function calculateIPS(transcript: TranscriptItem[], semester: number): st
 /**
  * Menghitung Tren IPS per Semester untuk Chart
  */
-export function calculateSemesterTrend(transcript: TranscriptItem[]) {
+export function calculateSemesterTrend(transcript: TranscriptItem[], currentSemester?: number) {
   if (!transcript) return [];
 
-  // Cari semester maksimal
-  const maxSemester = transcript.length > 0
+  // Gunakan semester saat ini dari profile, atau fallback ke semester tertinggi di transcript
+  const maxSemester = currentSemester || (transcript.length > 0
     ? Math.max(...transcript.map((t) => Number(t.smt) || 0))
-    : 8;
+    : 8);
 
   const trend = [];
 
@@ -163,17 +163,13 @@ export function calculateSemesterTrend(transcript: TranscriptItem[]) {
     const ipsString = calculateIPS(transcript, i);
     const ipsVal = parseFloat(ipsString);
 
-    // Tampilkan jika ada nilai (>0) atau semester tersebut ada datanya
-    const hasData = transcript.some(t => Number(t.smt) === i);
-
-    if (hasData) {
-      trend.push({
-        label: `Smt ${i}`,
-        val: ipsVal,
-        // Tinggi bar grafik (Skala max 4.00)
-        height: `${Math.min((ipsVal / 4) * 100, 100)}%`
-      });
-    }
+    // Tampilkan semua semester, termasuk yang belum ada nilainya (akan tampil 0)
+    trend.push({
+      label: `Smt ${i}`,
+      val: ipsVal,
+      // Tinggi bar grafik (Skala max 4.00)
+      height: `${Math.min((ipsVal / 4) * 100, 100)}%`
+    });
   }
   return trend;
 }

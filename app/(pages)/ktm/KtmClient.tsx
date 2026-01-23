@@ -96,8 +96,8 @@ export default function KtmClient({ student }: KtmClientProps) {
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                                <User className="h-10 w-10 mb-2 opacity-50" />
-                                <span className="text-xs">No Photo</span>
+                                <User className="h-16 w-16 mb-2" />
+                                <span className="text-sm">Tanpa Foto</span>
                             </div>
                         )}
                     </div>

@@ -276,7 +276,7 @@ export default function ProfileForm({
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-100/10 backdrop-blur-sm">
                             <User size={100} className="text-slate-400 opacity-50" />
-                            <p className="text-sm text-slate-400 mt-4 font-medium">Tidak ada foto</p>
+                            <p className="text-sm text-slate-400 mt-4 font-medium">Tanpa Foto</p>
                         </div>
                     )}
 

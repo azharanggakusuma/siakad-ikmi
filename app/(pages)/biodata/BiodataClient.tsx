@@ -65,7 +65,7 @@ export default function BiodataClient({ student }: BiodataClientProps) {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400">
                       <User className="h-16 w-16 mb-2" />
-                      <span className="text-sm">Tidak ada foto</span>
+                      <span className="text-sm">Tanpa Foto</span>
                     </div>
                   )}
                 </div>
@@ -93,7 +93,7 @@ export default function BiodataClient({ student }: BiodataClientProps) {
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400">
                         <User className="h-8 w-8 mb-1" />
-                        <span className="text-[10px]">No Photo</span>
+                        <span className="text-[10px]">Tanpa Foto</span>
                         </div>
                     )}
                  </div>

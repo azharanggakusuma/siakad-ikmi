@@ -146,21 +146,21 @@ export function KtmCard({ student }: KtmCardProps) {
          {/* Info Content */}
          <div className="relative z-10 flex justify-between items-center h-full w-full">
             <div className="flex flex-col gap-[2px] max-w-[65%] leading-tight text-left justify-center">
-              <h1 className="text-[12px] font-bold uppercase truncate tracking-wide text-white font-sans" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+              <h1 className="text-[11px] font-bold uppercase truncate tracking-wide text-white font-sans" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
                 {profile.nama}
               </h1>
-              <p className="text-[11px] font-bold tracking-wider font-sans opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+              <p className="text-[10px] font-bold tracking-wider font-sans opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                 {profile.nim}
               </p>
-              <p className="text-[10px] font-bold opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+              <p className="text-[9px] font-bold opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                 {profile.study_program?.nama || "Mahasiswa"}
                 {profile.study_program?.jenjang ? ` (${profile.study_program.jenjang})` : ""}
               </p>
             </div>
             
-            <div className="flex flex-col items-end text-[7px] text-right opacity-100 leading-tight text-white font-semibold" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.5)' }}>
+            <div className="flex flex-col items-end text-[6px] text-right opacity-100 leading-tight text-white" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.5)' }}>
                <span>Berlaku sampai dengan :</span>
-               <span className="font-bold text-[8px] mt-[1px]">{validUntil}</span>
+               <span className="text-[7px] mt-[1px]">{validUntil}</span>
             </div>
          </div>
       </div>

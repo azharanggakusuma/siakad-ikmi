@@ -6,9 +6,9 @@ import Navbar from "@/components/layout/Navbar";
 import SiteFooter from "@/components/layout/SiteFooter"; 
 import { LayoutProvider, useLayout } from "@/app/context/LayoutContext";
 import { UserSession } from "@/app/actions/auth"; 
-import { AcademicYear, Menu } from "@/lib/types"; // [UPDATE] Import tipe Menu
+import { AcademicYear, Menu } from "@/lib/types";
+import { PhotoUpdateDialog } from "@/components/features/mahasiswa/PhotoUpdateDialog";
 
-// [UPDATE] Tambahkan prop menus
 function LayoutContent({ 
   children, 
   user,
@@ -22,10 +22,11 @@ function LayoutContent({
 }) {
   const { sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed } = useLayout();
 
+
   return (
     <div className="flex min-h-screen bg-slate-100 font-sans text-gray-800 print:bg-white print:block">
+      <PhotoUpdateDialog user={user} />
       <div className="print:hidden">
-        {/* [UPDATE] Pass menus ke Sidebar */}
         <Sidebar 
           open={sidebarOpen} 
           setOpen={setSidebarOpen} 
@@ -57,7 +58,6 @@ function LayoutContent({
   );
 }
 
-// [UPDATE] Tambahkan prop menus di Main Component juga
 export default function ClientLayout({ 
   children, 
   user,

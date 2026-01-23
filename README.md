@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIAKAD IKMI
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![TypeScript](https://img.shields.io/badge/TypeScript-Active-blue?style=for-the-badge&logo=typescript)
 
-First, run the development server:
+**Sistem Informasi Akademik (SIAKAD) IKMI** adalah platform manajemen akademik modern yang dirancang untuk memfasilitasi interaksi antara mahasiswa, dosen, dan administrasi kampus. Dibangun dengan teknologi web terbaru untuk performa tinggi, keamanan terjamin, dan pengalaman pengguna yang intuitif.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Fitur Utama
+
+Aplikasi ini mencakup berbagai modul untuk mendukung operasional akademik:
+
+*   **Autentikasi & Otorisasi**: Sistem login aman menggunakan **NextAuth v5** dengan role-based access control (Mahasiswa, Dosen, Admin).
+*   **Dashboard Interaktif**: Ringkasan data akademik yang personal untuk setiap role.
+*   **Kartu Rencana Studi (KRS)**: Modul pengisian dan validasi rencana studi mahasiswa.
+*   **Kartu Hasil Studi (KHS)**: Laporan nilai dan performa akademik per semester.
+*   **Kartu Tanda Mahasiswa (KTM)**: Cetak dan validasi kartu tanda mahasiswa digital.
+*   **Transkrip Nilai**: Rekapitulasi seluruh nilai akademik mahasiswa.
+*   **Manajemen Mahasiswa**: Pengelolaan biodata, status, dan riwayat akademik.
+*   **Manajemen Dosen**: Profil dosen, jadwal mengajar, dan input nilai.
+*   **Administrasi Akademik**: Pengelolaan Program Studi, Tahun Akademik, dan Pejabat Kampus.
+
+## Teknologi (Tech Stack)
+
+Proyek ini menggunakan stack teknologi **Modern Web** yang powerful:
+
+*   **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Server Actions)
+*   **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+*   **Auth**: [NextAuth.js v5](https://authjs.dev/) (Beta)
+*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+*   **Validation**: Zod & React Hook Form
+*   **Language**: TypeScript
+
+## Memulai (Getting Started)
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek di komputer lokal Anda.
+
+### Prasyarat
+
+Pastikan Anda telah menginstal:
+*   [Node.js](https://nodejs.org/) (Versi LTS direkomendasikan)
+*   Package manager: `npm`, `yarn`, `pnpm`, atau `bun`
+
+### Instalasi
+
+1.  **Clone repository**
+    ```bash
+    git clone https://github.com/azharanggakusuma/siakad-ikmi.git
+    cd siakad-ikmi
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    # atau
+    bun install
+    ```
+
+3.  **Konfigurasi Environment Variables**
+    Buat file `.env` di root project dan salin konfigurasi berikut. Isi dengan kredensial Supabase & Auth Anda.
+
+    ```env
+    # Supabase Configuration
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+    # NextAuth Configuration
+    AUTH_SECRET=your_generated_secret_key # Generate dengan `npx auth secret`
+    ```
+
+4.  **Jalankan Development Server**
+    ```bash
+    npm run dev
+    ```
+
+    Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
+
+## Struktur Proyek
+
+Berikut adalah gambaran umum struktur folder proyek:
+
+```
+siakad-ikmi/
+├── app/                  # App Router
+│   ├── (pages)/          # Route Groups (Dashboard, Mahasiswa, dll)
+│   ├── actions/          # Server Actions
+│   ├── api/              # API Routes
+│   ├── context/          # React Context Providers
+│   ├── login/            # Authentication Pages
+│   ├── maintenance/      # Maintenance Pages
+│   └── verify/           # Verification Pages
+├── components/           # Reusable UI Components
+├── hooks/                # Custom React Hooks
+├── lib/                  # Utilities & Libraries
+├── public/               # Static Assets
+├── scripts/              # Build & Setup Scripts
+├── auth.ts               # NextAuth Configuration
+└── proxy.ts              # Proxy Configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Kontribusi
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Kontribusi selalu diterima! Silakan buat *Pull Request* baru untuk fitur atau perbaikan bug.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Dikembangkan oleh Tim IT STMIK IKMI Cirebon.

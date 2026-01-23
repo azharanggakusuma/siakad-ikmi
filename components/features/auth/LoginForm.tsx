@@ -19,7 +19,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   
-  // [PERBAIKAN] Ref untuk mengakses kontrol widget Turnstile
+  // Ref untuk mengakses kontrol widget Turnstile
   const turnstileRef = useRef<TurnstileInstance>(null);
 
   const handleForgotPassword = (e: React.MouseEvent) => {
@@ -57,7 +57,7 @@ export function LoginForm() {
         router.push("/");
         router.refresh();
       } else {
-        // [PERBAIKAN] Reset token dan widget jika login gagal agar bisa mencoba lagi tanpa refresh
+        // Reset token dan widget jika login gagal agar bisa mencoba lagi tanpa refresh
         setTurnstileToken("");
         turnstileRef.current?.reset(); 
 
@@ -249,7 +249,7 @@ export function LoginForm() {
             </Button>
 
             <p className="text-center text-xs text-slate-400 dark:text-slate-500">
-              &copy; {new Date().getFullYear()} STMIK IKMI Cirebon.
+              &copy; {new Date().getFullYear()} STMIK IKMI Cirebon. All rights reserved.
             </p>
           </CardFooter>
         </form>

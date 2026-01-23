@@ -34,7 +34,7 @@ export function LoginBranding() {
         </h1>
         <p className="text-lg text-blue-100/80 leading-relaxed font-light">
           Sistem Informasi Akademik untuk pengelolaan data perkuliahan, nilai, dan
-          administrasi akademik Civitas STMIK IKMI Cirebon.
+          administrasi akademik Civitas STMIK IKMI Cirebon dengan pengalaman pengguna yang lebih baik. 
         </p>
       </div>
 

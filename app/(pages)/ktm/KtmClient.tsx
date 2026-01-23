@@ -84,7 +84,7 @@ export default function KtmClient({ student }: KtmClientProps) {
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 items-start">
              
              {/* SIDEBAR - Profil Ringkas */}
-             <Card className="border-slate-200 shadow-sm overflow-hidden h-fit md:sticky md:top-4">
+             <Card className="border-slate-200 shadow-sm overflow-hidden min-h-[500px] md:sticky md:top-4">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                     <div className="w-32 h-40 bg-slate-100 rounded-lg border border-slate-200 relative overflow-hidden shadow-inner">
                         {student.profile.avatar_url ? (

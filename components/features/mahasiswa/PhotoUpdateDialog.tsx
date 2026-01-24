@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Camera, Loader2, User, Upload, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/cropImage";
+import imageCompression from "browser-image-compression";
 
 interface PhotoUpdateDialogProps {
   user: UserSession | null;
@@ -25,6 +28,14 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  
+  // Crop States
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -35,19 +46,97 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
     }
   }, [user]);
 
+  // --- LOGIC HELPER ---
+  const handleSystemError = (error: any, defaultMsg: string) => {
+    console.error("System Error:", error);
+    let userMessage = defaultMsg;
+    const msg = error?.message?.toLowerCase() || "";
+    if (msg.includes("limit") || msg.includes("size"))
+      userMessage = "Ukuran berkas melebihi batas.";
+    else if (msg.includes("network"))
+      userMessage = "Gagal terhubung ke server.";
+    return userMessage;
+  };
+
+  const processImage = async (file: File): Promise<File> => {
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
+      fileType: "image/jpeg",
+      initialQuality: 0.9,
+    };
+    try {
+      const processedFile = await imageCompression(file, options);
+      return new File([processedFile], file.name, { type: processedFile.type });
+    } catch {
+      return file;
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validasi ukuran client-side
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Ukuran file maksimal 2MB");
+      // Validasi ukuran awal (max 20MB agar browser kuat baca)
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error("Ukuran file terlalu besar");
         return;
       }
 
-      // Preview sementara
-      const objectUrl = URL.createObjectURL(file);
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageSrc(reader.result?.toString() || null);
+        setIsCropModalOpen(true);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
+      });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleCropSave = async () => {
+    try {
+      if (!imageSrc || !croppedAreaPixels) return;
+      setIsUploading(true); // Pakai state loading yang sama
+      
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      if (!croppedBlob) throw new Error("Crop failed");
+      
+      const file = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
+      const finalFile = await processImage(file);
+      
+      // Lanjut simulasi upload langsung atau simpan ke state preview dulu?
+      // Sesuai flow sebelumnya: User klik "Gunakan Foto" di crop -> Masuk preview di modal utama -> Klik Simpan untuk Upload
+      // ATAU: Langsung upload setelah crop? 
+      // Flow modal 'PhotoUpdateDialog' sebelumnya adalah: Pilih File -> Preview -> Klik Simpan. 
+      // Jadi kita kembalikan ke Preview dulu.
+      
+      const objectUrl = URL.createObjectURL(finalFile);
       setPreview(objectUrl);
+      
+      // Kita perlu simpan file ini untuk diupload nanti saat klik "Simpan Foto"
+      // Tapi karena input file ref sudah direset/diganti strukturnya, kita butuh state untuk menyimpan file siap upload
+      // Hack: Attach file ke fileInputRef atau buat state baru. 
+      // State baru lebih aman.
+      // (Kita akan buat state baru di langkah berikutnya, untuk sementara saya gunakan hack DataTransfer agar kompatibel dengan logic handleUpload lama)
+      
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(finalFile);
+      if (fileInputRef.current) {
+          fileInputRef.current.files = dataTransfer.files;
+      }
+
+      setIsCropModalOpen(false);
+      setImageSrc(null);
+    } catch (e) {
+      toast.error("Gagal memproses gambar");
+    } finally {
+        setIsUploading(false);
     }
   };
 
@@ -99,6 +188,67 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
   const fullName = user?.name || "Mahasiswa";
 
   return (
+    <>
+    {/* --- MODAL CROP --- */}
+    <Dialog
+        open={isCropModalOpen}
+        onOpenChange={(open) => !isUploading && setIsCropModalOpen(open)}
+      >
+        <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden gap-0">
+          <DialogHeader className="p-4 bg-slate-50 border-b">
+            <DialogTitle>Sesuaikan Foto</DialogTitle>
+            <DialogDescription>
+              Geser dan zoom untuk hasil terbaik.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-[300px] bg-black">
+            {imageSrc && (
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            )}
+             {isUploading && (
+              <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center text-white">
+                <Loader2 className="animate-spin" size={32} />
+              </div>
+            )}
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-slate-500">Zoom</span>
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full h-1 bg-slate-200 rounded-lg cursor-pointer accent-slate-900"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsCropModalOpen(false)} disabled={isUploading}>
+                Batal
+              </Button>
+              <Button
+                onClick={handleCropSave}
+                disabled={isUploading}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Gunakan Foto
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
     <Dialog open={isOpen} onOpenChange={(open) => !isUploading && setIsOpen(open)}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-left">
@@ -206,5 +356,6 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

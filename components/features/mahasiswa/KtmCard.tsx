@@ -1,16 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { StudentData } from "@/lib/types";
 import QRCode from "react-qr-code";
 
+import { cn } from "@/lib/utils";
+
 interface KtmCardProps {
   student: StudentData;
+  className?: string;
 }
 
-export function KtmCard({ student }: KtmCardProps) {
+export function KtmCard({ student, className }: KtmCardProps) {
   const { profile } = student;
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
   
   // Hitung tahun berlaku (Angkatan + 4 tahun)
   const validUntilYear = (profile.angkatan || new Date().getFullYear()) + 4;
@@ -18,7 +26,8 @@ export function KtmCard({ student }: KtmCardProps) {
 
   // Styles from DocumentHeader
   const embossedTextStyle = {
-    fontFamily: "Arial Black, Arial, sans-serif",
+    fontFamily: "Arial, sans-serif",
+    fontWeight: 900,
     textShadow:
       "-0.5px -0.5px 0.5px rgba(255,255,255,0.9), 0.5px 0.5px 0.5px rgba(0,0,0,0.4), 1px 1px 1.5px rgba(0,0,0,0.2)",
   };
@@ -31,7 +40,7 @@ export function KtmCard({ student }: KtmCardProps) {
   };
 
   return (
-    <div className="w-[85.6mm] h-[53.98mm] relative overflow-hidden bg-white shadow-xl rounded-xl border border-slate-200 print:shadow-none print:border-0 print:rounded-none select-none font-sans">
+    <div className={cn("w-[85.6mm] h-[53.98mm] relative overflow-hidden bg-white shadow-xl rounded-xl border border-slate-200 print:shadow-none print:border-0 print:rounded-none select-none font-sans", className)}>
       
       {/* --- TOP SECTION (WHITE) --- */}
       <div className="absolute top-0 left-0 right-0 h-[62%] bg-white px-5 pt-4">
@@ -39,12 +48,10 @@ export function KtmCard({ student }: KtmCardProps) {
         <div className="flex items-center gap-[5px] mb-2 relative z-10 pl-1">
           {/* Logo */}
           <div className="relative w-[34px] h-[34px] shrink-0">
-             <Image 
+             <img 
                src="/img/logo-ikmi.png" 
                alt="Logo" 
-               fill 
-               className="object-contain"
-               priority
+               className="object-contain w-full h-full"
              />
           </div>
           
@@ -58,7 +65,8 @@ export function KtmCard({ student }: KtmCardProps) {
               <span
                 className="text-[27.2px] text-[#EE3A43] tracking-tighter"
                 style={{ 
-                  fontFamily: "Arial Black, Arial, sans-serif",
+                  fontFamily: "Arial, sans-serif",
+                  fontWeight: 900,
                   textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
                   lineHeight: "0.8" 
                 }}
@@ -70,7 +78,8 @@ export function KtmCard({ student }: KtmCardProps) {
                 <span
                   className="text-[15.6px] text-[#1B3F95]"
                   style={{ 
-                    fontFamily: "Arial Black, Arial, sans-serif",
+                    fontFamily: "Arial, sans-serif",
+                    fontWeight: 900,
                     textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
                     lineHeight: "0.8",
                     letterSpacing: "0.35em",
@@ -102,7 +111,7 @@ export function KtmCard({ student }: KtmCardProps) {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${student.id}`}
+                  value={`${origin}/verify/${student.id}`}
                   viewBox={`0 0 256 256`}
                 />
             </div>

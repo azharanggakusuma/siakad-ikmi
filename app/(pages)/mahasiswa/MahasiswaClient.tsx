@@ -25,6 +25,7 @@ import { KtmCard } from "@/components/features/mahasiswa/KtmCard";
 import { type StudentData, type StudentFormValues, type StudyProgram } from "@/lib/types";
 import { createStudent, updateStudent, deleteStudent } from "@/app/actions/students";
 import { formatDate } from "@/lib/utils";
+import { usePdfPrint } from "@/hooks/use-pdf-print";
 
 interface MahasiswaClientProps {
   initialStudents: StudentData[];
@@ -34,6 +35,9 @@ interface MahasiswaClientProps {
 export default function MahasiswaClient({ initialStudents, initialPrograms }: MahasiswaClientProps) {
   const { successAction, confirmDeleteMessage, showError, showLoading } = useToastMessage();
   const router = useRouter();
+  const printRef = React.useRef<HTMLDivElement>(null);
+  const ktmRef = React.useRef<HTMLDivElement>(null);
+  const { printPdf } = usePdfPrint();
 
   const [dataList, setDataList] = useState<StudentData[]>(initialStudents);
   const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>(initialPrograms); 
@@ -154,35 +158,39 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
     setIsDeleteOpen(false);
   };
 
-  const handlePrint = (student: StudentData) => {
+  const handlePrint = async (student: StudentData) => {
     setPrintingStudent(student);
-    setPrintingKtmStudent(null); // Reset KTM student
-    const originalTitle = document.title;
+    setPrintingKtmStudent(null); 
     
-    setTimeout(() => {
-        document.title = `Biodata - ${student.profile.nama}`;
-        window.print();
-        
-        setTimeout(() => {
-            document.title = originalTitle;
-        }, 1000);
-    }, 500);
+
+    // Tunggu render React selesai
+    setTimeout(async () => {
+        await printPdf({
+          elementRef: printRef,
+          fileName: `Biodata_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
+          pdfFormat: "a4",
+          pdfOrientation: "portrait",
+          pixelRatio: 5, // 5x JPEG for A4
+          imageType: "image/jpeg"
+        });
+    }, 100);
   };
 
-  const handlePrintKtm = (student: StudentData) => {
+  const handlePrintKtm = async (student: StudentData) => {
     setPrintingKtmStudent(student);
-    setPrintingStudent(null); // Reset biodata student
-    const originalTitle = document.title;
+    setPrintingStudent(null); 
     
-    setTimeout(() => {
-        document.title = `KTM - ${student.profile.nama}`;
-        window.print();
-        
-        setTimeout(() => {
-            document.title = originalTitle;
-            setPrintingKtmStudent(null);
-        }, 1000);
-    }, 1000);
+    setTimeout(async () => {
+        await printPdf({
+          elementRef: ktmRef,
+          fileName: `KTM_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
+          pdfFormat: [85.6, 53.98], // ID-1 Card Size: 85.60 × 53.98 mm
+          pdfOrientation: "landscape",
+          pixelRatio: 8,
+          imageType: "image/jpeg",
+          imageQuality: 1.0
+        });
+    }, 100);
   };
 
   // --- COLUMNS ---
@@ -370,8 +378,8 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
 
   return (
     <>
-      {/* Conditional Print Styles */}
-      {printingKtmStudent ? (
+      {/* Conditional Print Styles for KTM Only */}
+      {printingKtmStudent && (
         <style jsx global>{`
           @media print {
             @page { 
@@ -396,42 +404,27 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
             }
           }
         `}</style>
-      ) : (
-        <style jsx global>{`
-          @media print {
-            @page { 
-              margin: 10mm; 
-              size: A4 portrait; 
-            }
-            body * { visibility: hidden; }
-            #print-area, #print-area * { 
-              visibility: visible; 
-            }
-            #print-area {
-              position: absolute; 
-              left: 0; 
-              top: 0; 
-              width: 100%; 
-              margin: 0; 
-              padding: 0; 
-              background-color: white; 
-              z-index: 9999;
-            }
-          }
-        `}</style>
       )}
       
-      {/* PRINT COMPONENT */}
-      {!printingKtmStudent && <PrintableBiodata student={printingStudent} />}
+      {/* Hidden Print Area for Biodata Capture */}
+      <div className="absolute top-0 left-[-9999px] w-[210mm]">
+        <PrintableBiodata 
+            ref={printRef} 
+            student={printingStudent} 
+            className="block" 
+        />
+      </div>
       
-      {/* PRINT KTM COMPONENT */}
-      {printingKtmStudent && (
-        <div id="print-ktm-area" className="hidden print:block">
-          <KtmCard student={printingKtmStudent} />
-        </div>
-      )}
+      {/* Hidden Print Area for KTM Capture */}
+      <div className="absolute top-0 left-[-9999px] w-[85.6mm] h-[53.98mm]">
+        {printingKtmStudent && (
+          <div ref={ktmRef} className="block w-[85.6mm] h-[53.98mm]">
+             <KtmCard student={printingKtmStudent} className="rounded-none shadow-none border-none" />
+          </div>
+        )}
+      </div>
 
-      <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500 print:hidden">
+      <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
       <PageHeader title="Data Mahasiswa" breadcrumb={["Beranda", "Mahasiswa"]} />
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">

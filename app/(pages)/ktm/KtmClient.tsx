@@ -9,19 +9,28 @@ import { StudentData } from "@/lib/types";
 import { KtmCard } from "@/components/features/mahasiswa/KtmCard";
 import Image from "next/image";
 
+import { usePdfPrint } from "@/hooks/use-pdf-print";
+
 interface KtmClientProps {
   student: StudentData | null;
 }
 
 export default function KtmClient({ student }: KtmClientProps) {
-  const [isPrinting, setIsPrinting] = useState(false);
+  const ktmRef = useRef<HTMLDivElement>(null);
+  const { isPrinting, printPdf } = usePdfPrint();
 
-  const handlePrint = () => {
-    setIsPrinting(true);
-    setTimeout(() => {
-        window.print();
-        setIsPrinting(false);
-    }, 500);
+  const handleDownloadPDF = async () => {
+    if (!student) return;
+
+    await printPdf({
+      elementRef: ktmRef,
+      fileName: `KTM_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
+      pdfFormat: [85.6, 53.98], // ID-1 Card Size
+      pdfOrientation: "landscape",
+      pixelRatio: 8, // 8x Res gives extreme sharpness
+      imageType: "image/jpeg", // JPEG compresses better than PNG for photos
+      imageQuality: 1.0 // Lossless JPEG
+    });
   };
 
   if (!student) {
@@ -34,45 +43,12 @@ export default function KtmClient({ student }: KtmClientProps) {
 
   return (
     <>
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: 85.6mm 53.98mm;
-            margin: 0;
-          }
-          
-          /* Hide everything by default */
-          body {
-            visibility: hidden;
-            background-color: white;
-          }
-
-          /* Hide screen-only content specifically to remove it from flow */
-          .screen-content {
-            display: none !important;
-          }
-          
-          /* Show print section */
-          #print-only-section {
-            visibility: visible !important;
-            display: block !important;
-            position: fixed;
-            top: 0;
-            left: 0;
-            margin: 0;
-            padding: 0;
-            width: 85.6mm;
-            height: 53.98mm;
-            z-index: 9999;
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-          
-          #print-only-section * {
-             visibility: visible !important;
-          }
-        }
-      `}</style>
+      {/* Hidden Print Area for KTM Capture - Force Sharp Corners */}
+      <div className="absolute top-0 left-[-9999px] w-[85.6mm] h-[53.98mm]">
+          <div ref={ktmRef} className="block w-[85.6mm] h-[53.98mm]">
+             <KtmCard student={student} className="rounded-none shadow-none border-none" />
+          </div>
+      </div>
       
       {/* SCREEN CONTENT */}
       <div className="screen-content flex flex-col gap-6 pb-10 animate-in fade-in duration-500">
@@ -137,12 +113,12 @@ export default function KtmClient({ student }: KtmClientProps) {
                     </div>
 
                     <Button 
-                        onClick={handlePrint} 
+                        onClick={handleDownloadPDF} 
                         className="w-full mt-2" 
                         disabled={isPrinting}
                     >
                         <Printer className="mr-2 h-4 w-4" />
-                        Cetak KTM
+                        {isPrinting ? "Memproses..." : "Cetak KTM"}
                     </Button>
                 </CardContent>
              </Card>
@@ -184,11 +160,6 @@ export default function KtmClient({ student }: KtmClientProps) {
              </Card>
 
         </div>
-      </div>
-
-      {/* PRINT ONLY CONTENT - Dedicated Isolated Element */}
-      <div id="print-only-section" className="hidden">
-           <KtmCard student={student} />
       </div>
     </>
   );

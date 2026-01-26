@@ -1,49 +1,46 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, User, CheckCircle2, XCircle } from "lucide-react";
+import { Printer, User, CheckCircle2, XCircle, Loader2 } from "lucide-react"; 
 import PrintableBiodata from "@/components/features/mahasiswa/PrintableBiodata";
 import { StudentData } from "@/lib/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { usePdfPrint } from "@/hooks/use-pdf-print";
 
 interface BiodataClientProps {
   student: StudentData;
 }
 
 export default function BiodataClient({ student }: BiodataClientProps) {
-  const [isPrinting, setIsPrinting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+  const { isPrinting, printPdf } = usePdfPrint();
 
-  const handlePrint = () => {
-    setIsPrinting(true);
-    // Give time for state update and DOM render
-    setTimeout(() => {
-        window.print();
-        setIsPrinting(false);
-    }, 500);
+  const handleDownloadPDF = async () => {
+    await printPdf({
+      elementRef: printRef,
+      fileName: `Biodata_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
+      pdfFormat: "a4",
+      pdfOrientation: "portrait",
+    });
   };
 
   return (
     <>
-      <style jsx global>{`
-        @media print {
-          @page { margin: 10mm; size: A4 portrait; }
-          body * { visibility: hidden; }
-          #print-area, #print-area * { visibility: visible; }
-          #print-area {
-            position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background-color: white; z-index: 9999;
-          }
-        }
-      `}</style>
+      {/* Hidden Print Area but Rendered for Capture */}
+      <div className="absolute top-0 left-[-9999px] w-[210mm]">
+        <PrintableBiodata 
+            ref={printRef} 
+            student={student} 
+            className="block" // Force display:block to override hidden, but position is off-screen
+        />
+      </div>
 
-      {/* PRINT COMPONENT */}
-      <PrintableBiodata student={student} />
-
-      <div className="flex flex-col gap-6 pb-10 animate-in fade-in duration-500 print:hidden">
+      <div className="flex flex-col gap-6 pb-10 animate-in fade-in duration-500">
         <PageHeader 
           title="Biodata Mahasiswa" 
           breadcrumb={["Beranda", "Biodata"]} 
@@ -71,13 +68,17 @@ export default function BiodataClient({ student }: BiodataClientProps) {
                   )}
                 </div>
                 <Button 
-                   onClick={handlePrint} 
+                   onClick={handleDownloadPDF} 
                    className="w-full" 
                    variant="default"
                    disabled={isPrinting}
                 >
-                  <Printer className="mr-2 h-4 w-4" />
-                  Cetak Biodata
+                  {isPrinting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Printer className="mr-2 h-4 w-4" />
+                  )}
+                  {isPrinting ? "Memproses..." : "Cetak PDF"}
                 </Button>
               </div>
 
@@ -211,13 +212,17 @@ export default function BiodataClient({ student }: BiodataClientProps) {
                 {/* MOBILE BUTTON (Bottom) */}
                 <div className="mt-6 md:hidden">
                     <Button 
-                    onClick={handlePrint} 
+                    onClick={handleDownloadPDF} 
                     className="w-full" 
                     variant="default"
                     disabled={isPrinting}
                     >
-                    <Printer className="mr-2 h-4 w-4" />
-                    Cetak Biodata
+                    {isPrinting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Printer className="mr-2 h-4 w-4" />
+                    )}
+                    {isPrinting ? "Memproses..." : "Cetak PDF"}
                     </Button>
                 </div>
               </div>

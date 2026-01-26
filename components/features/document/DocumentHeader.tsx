@@ -6,7 +6,8 @@ interface DocumentHeaderProps {
 
 export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHeaderProps) {
   const embossedTextStyle = {
-    fontFamily: "Arial Black, Arial, sans-serif",
+    fontFamily: "Arial, sans-serif",
+    fontWeight: 900,
     textShadow:
       "-1px -1px 1px rgba(255,255,255,0.9), 1px 1px 1px rgba(0,0,0,0.4), 2px 2px 3px rgba(0,0,0,0.2)",
   };

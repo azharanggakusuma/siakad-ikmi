@@ -17,13 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Loader2 } from "lucide-react";
 
 import { getStudents, getStudyPrograms, getOfficialForDocument } from "@/app/actions/students";
 import { StudentData, StudyProgram, Official, TranscriptItem } from "@/lib/types";
 import { StudentTable } from "@/components/features/nilai/StudentTable";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useSignature } from "@/hooks/useSignature";
+import { usePdfPrint } from "@/hooks/use-pdf-print";
 import { useToastMessage } from "@/hooks/use-toast-message";
 import PrintableTranskrip from "@/components/features/transkrip/PrintableTranskrip";
 import { calculateIPK, calculateTotalSKSLulus, calculateTotalMutu } from "@/lib/grade-calculations";
@@ -47,7 +48,9 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   
   // Print Configuration State
-  const { signatureType, setSignatureType } = useSignature("none");
+  const { signatureType, setSignatureType, isLoading: isSigLoading } = useSignature("none");
+  const { isPrinting, printPdf } = usePdfPrint();
+  const printRef = useRef<HTMLDivElement>(null);
   const { showLoading, dismiss } = useToastMessage();
   const [totalPages, setTotalPages] = useState(1);
   
@@ -64,8 +67,16 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
   // === LOADING TOAST SIGNATURE ===
   // === LOADING TOAST ===
   useEffect(() => {
-    // Optional: Add loading state if needed for image loading
-  }, []);
+    // Optional loading state
+    if (isSigLoading) {
+        if (!toastIdRef.current) toastIdRef.current = showLoading("Menyiapkan dokumen...");
+    } else {
+        if (toastIdRef.current) {
+            dismiss(toastIdRef.current);
+            toastIdRef.current = null;
+        }
+    }
+  }, [isSigLoading]);
 
   // === DATA TRANSKRIP (Clean Data) ===
   const transcriptData = useMemo(() => {
@@ -99,19 +110,23 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
     }
   };
 
-  const handlePrintProcess = () => {
+  const handlePrintProcess = async () => {
+    await printPdf({
+      elementRef: printRef,
+      fileName: `Transkrip_${selectedStudent?.profile?.nama || 'Mahasiswa'}_${selectedStudent?.profile?.nim || ''}.pdf`,
+      pdfFormat: "a4",
+      pdfOrientation: "portrait",
+    });
     setIsPrintModalOpen(false);
-    setTimeout(() => {
-        window.print();
-    }, 300);
   };
 
   return (
     <>
       {/* HIDDEN PRINT COMPONENT */}
       {selectedStudent && (
-        <div className="hidden print:block print:absolute print:top-0 print:left-0 print:w-full print:z-[9999]">
+        <div className="absolute top-0 left-[-9999px] w-[210mm]">
              <PrintableTranskrip
+                ref={printRef}
                 loading={false}
                 currentStudent={selectedStudent}
                 transcriptData={transcriptData}
@@ -121,7 +136,7 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
                 signatureType={signatureType}
                 signatureBase64={secureImage}
                 official={official}
-                isCollapsed={isCollapsed}
+                isCollapsed={true} // Force full width
                 setTotalPages={setTotalPages}
              />
         </div>
@@ -164,10 +179,14 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
               </div>
           </div>
 
-          <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsPrintModalOpen(false)}>Batal</Button>
-              <Button onClick={handlePrintProcess} className="bg-primary text-white">
-                  <Printer className="mr-2 h-4 w-4" /> Cetak PDF
+           <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setIsPrintModalOpen(false)} disabled={isPrinting}>Batal</Button>
+              <Button onClick={handlePrintProcess} className="bg-primary text-white" disabled={isPrinting || isSigLoading}>
+                  {isPrinting || isSigLoading ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {isPrinting ? "Memproses..." : "Memuat..."}</>
+                  ) : (
+                      <><Printer className="w-4 h-4 mr-2" /> Cetak PDF</>
+                  )}
               </Button>
           </div>
         </DialogContent>

@@ -162,13 +162,18 @@ export default function StatusPage() {
                     <p className="font-mono text-sm">Production</p>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-xs text-slate-400">Region</p>
-                    <p className="font-mono text-sm">ap-southeast-1 (Singapore)</p>
+                    <p className="text-xs text-slate-400">Cloud Provider</p>
+                    <p className="font-mono text-sm">Amazon Web Services (AWS)</p>
                 </div>
-                <div className="pt-4 border-t border-slate-800">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Client Check Interval</span>
-                        <span className="font-medium text-indigo-300">30s</span>
+                <div className="space-y-1">
+                    <p className="text-xs text-slate-400">Region Server</p>
+                    <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" className="w-5 h-auto rounded-sm shadow-sm border border-slate-100">
+                            <rect width="900" height="600" fill="#fff"/>
+                            <rect width="900" height="300" fill="#ed2939"/>
+                            <path fill="#fff" d="M251 158l9 28-26-19h32l-26 19 9-28zM186 98c0 38 27 70 63 78-43-1-78-36-78-78s35-77 78-78c-36 8-63 40-63 78zm90-34l9 28-26-19h32l-26 19 9-28zM240 76l9 28-26-19h32l-26 19 9-28zM212 96l9 28-26-19h32l-26 19 9-28zM268 96l9 28-26-19h32l-26 19 9-28z"/>
+                        </svg>
+                        <p className="font-mono text-sm">ap-southeast-1 (Singapore)</p>
                     </div>
                 </div>
              </CardContent>
@@ -208,9 +213,9 @@ function ResourceUsageCard({ loading, lastTrigger }: { loading: boolean, lastTri
     return (
         <Card className="md:col-span-3 lg:col-span-3 overflow-hidden border-slate-200 shadow-sm">
             <CardHeader className="mt-4">
-               <CardTitle className="text-lg">Penggunaan Sumber Daya</CardTitle>
+                <CardTitle className="text-lg">Penggunaan Sumber Daya</CardTitle>
             </CardHeader>
-            <CardContent className="mb-4">
+            <CardContent className="mb-5">
                 <div className="grid gap-6 md:grid-cols-2">
                     {/* Database Usage */}
                     <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">

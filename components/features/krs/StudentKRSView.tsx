@@ -387,7 +387,7 @@ export default function StudentKRSView({
                                 <Skeleton className="h-4 w-32 opacity-25" />
                                 <Skeleton className="h-8 w-48 opacity-25" />
                             </div>
-                            <Skeleton className="h-9 w-24 opacity-25" />
+
                         </div>
                         <div className="flex flex-wrap items-center gap-4">
                             <Skeleton className="h-10 w-[240px] opacity-25" />
@@ -411,12 +411,6 @@ export default function StudentKRSView({
                                 <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:opacity-25 hover:text-white"
                                     onClick={() => setIsResetOpen(true)}>
                                     <RotateCcw className="w-4 h-4 mr-2" /> Isi Ulang
-                                </Button>
-                            )}
-                            {(krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') && (
-                                <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
-                                    onClick={() => setIsPrintModalOpen(true)}>
-                                    <Printer className="w-4 h-4 mr-2" /> Cetak KRS
                                 </Button>
                             )}
                             {krsGlobalStatus === 'DRAFT' && (
@@ -557,6 +551,13 @@ export default function StudentKRSView({
                 startIndex={startIndex}
                 endIndex={endIndex}
                 totalItems={filteredData.length}
+                onAdd={
+                    (krsGlobalStatus === 'SUBMITTED' || krsGlobalStatus === 'APPROVED') 
+                    ? () => setIsPrintModalOpen(true) 
+                    : undefined
+                }
+                addLabel="Cetak KRS"
+                addIcon={<Printer className="w-4 h-4 mr-2" />}
             />
         </CardContent>
       </Card>

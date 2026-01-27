@@ -1,7 +1,7 @@
 import React from "react";
 import { getSession } from "@/app/actions/auth";
 import { getAcademicYears } from "@/app/actions/academic-years";
-import { getActiveOfficial } from "@/app/actions/students";
+import { getOfficialForDocument } from "@/app/actions/students";
 import { getStudentCourseOfferings, getStudentsWithSubmittedKRS } from "@/app/actions/krs";
 import KRSClient from "./KRSClient";
 
@@ -19,12 +19,14 @@ export default async function KRSPage() {
   
   if (user && user.role === 'mahasiswa' && user.student_id && selectedYearId) {
     try {
-        const [krsData, official] = await Promise.all([
-            getStudentCourseOfferings(user.student_id, selectedYearId),
-            getActiveOfficial()
-        ]);
+        // 1. Ambil Data KRS & Mahasiswa dulu untuk dapat ProdiID
+        const krsData = await getStudentCourseOfferings(user.student_id, selectedYearId);
         initialDataStudent = krsData;
-        initialOfficial = official;
+
+        // 2. Ambil Official sesuai Prodi Mahasiswa
+        // Pastikan krsData.student_profile ada sebelum akses
+        const prodiId = krsData.student_profile?.study_program_id;
+        initialOfficial = await getOfficialForDocument(prodiId);
     } catch (e) {
         console.error("Failed to fetch student KRS data", e);
     }

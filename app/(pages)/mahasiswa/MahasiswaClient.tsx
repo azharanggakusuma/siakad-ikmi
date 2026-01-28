@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/layout/PageHeader";
 import { useToastMessage } from "@/hooks/use-toast-message"; 
 import Image from "next/image"; 
-import { Pencil, Trash2, CheckCircle2, XCircle, User, Printer, IdCard } from "lucide-react"; 
+import { Pencil, Trash2, CheckCircle2, XCircle, User, Printer, IdCard, Upload } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import { FormModal } from "@/components/shared/FormModal";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import Tooltip from "@/components/shared/Tooltip";
 import { StudentForm } from "@/components/features/mahasiswa/StudentForm";
+import { ImportMahasiswaDialog } from "@/components/features/mahasiswa/ImportMahasiswaDialog";
 import PrintableBiodata from "@/components/features/mahasiswa/PrintableBiodata";
 import { KtmCard } from "@/components/features/mahasiswa/KtmCard";
 import { type StudentData, type StudentFormValues, type StudyProgram } from "@/lib/types";
@@ -52,6 +53,7 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
 
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
@@ -438,6 +440,12 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
             searchPlaceholder="Cari Nama atau NIM..."
             onAdd={handleOpenAdd}
             addLabel="Tambah Data"
+            customActions={
+                <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import Excel
+                </Button>
+            }
             filterContent={filterContent}
             isFilterActive={prodiFilter !== "ALL" || semesterFilter !== "ALL"}
             onResetFilter={() => { setProdiFilter("ALL"); setSemesterFilter("ALL"); setSearchQuery(""); }}
@@ -467,6 +475,15 @@ export default function MahasiswaClient({ initialStudents, initialPrograms }: Ma
             onCancel={() => setIsFormOpen(false)}
         />
       </FormModal>
+
+      <ImportMahasiswaDialog 
+        isOpen={isImportOpen}
+        onClose={setIsImportOpen}
+        studyPrograms={studyPrograms}
+        onSuccess={() => {
+            router.refresh();
+        }}
+      />
 
       <ConfirmModal
         isOpen={isDeleteOpen}

@@ -428,6 +428,33 @@ export async function createStudent(values: StudentFormValues) {
   revalidatePath('/mahasiswa');
 }
 
+export async function createBulkStudents(students: any[]) {
+  if (students.length === 0) return;
+
+  const validStudents = students.map(s => ({
+    nim: s.nim,
+    nama: s.nama,
+    angkatan: Number(s.angkatan),
+    alamat: s.alamat,
+    study_program_id: s.study_program_id || null,
+    is_active: s.is_active,
+    jenis_kelamin: s.jenis_kelamin,
+    tempat_lahir: s.tempat_lahir,
+    tanggal_lahir: s.tanggal_lahir,
+    agama: s.agama,
+    nik: s.nik,
+    status: s.status,
+    no_hp: s.no_hp,
+    email: s.email,
+  }));
+
+  const { error } = await supabaseAdmin.from('students').insert(validStudents);
+
+  if (error) handleDbError(error, "createBulkStudents");
+
+  revalidatePath('/mahasiswa');
+}
+
 export async function updateStudent(id: string, values: StudentFormValues) {
   const { error } = await supabaseAdmin.from('students').update({
     nim: values.nim,
@@ -577,4 +604,20 @@ export async function getStudentByNim(nim: string): Promise<StudentData | null> 
     transcript: fullTranscript,
     total_sks: totalSksApproved
   };
+}
+
+export async function checkExistingNims(nims: string[]): Promise<string[]> {
+  if (nims.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from('students')
+    .select('nim')
+    .in('nim', nims);
+
+  if (error) {
+    console.error("Error checking NIMS:", error);
+    return [];
+  }
+
+  return data.map((s) => s.nim);
 }

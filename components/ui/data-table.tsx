@@ -46,6 +46,7 @@ interface DataTableProps<T> {
   endIndex: number;
   totalItems: number;
   isSearchVisible?: boolean;
+  customActions?: React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -68,6 +69,7 @@ export function DataTable<T>({
   endIndex,
   totalItems,
   isSearchVisible = true,
+  customActions,
 }: DataTableProps<T>) {
   
   return (
@@ -109,6 +111,11 @@ export function DataTable<T>({
                 {filterContent}
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+          {customActions && (
+             <div className="flex items-center">
+                {customActions}
+             </div>
           )}
         </div>
 

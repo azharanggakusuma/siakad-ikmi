@@ -205,3 +205,107 @@ export async function deleteUser(id: string) {
   if (error) handleDbError(error, "deleteUser");
   revalidatePath("/users");
 }
+
+// === GENERATE MISSING ACCOUNTS (STUDENTS & LECTURERS) ===
+export async function generateMissingAccounts() {
+  try {
+    const results = {
+      students: 0,
+      lecturers: 0,
+      message: ""
+    };
+
+    // --- 1. PROCESS STUDENTS ---
+    const { data: students, error: studentError } = await supabaseAdmin
+      .from("students")
+      .select("id, nim, nama")
+      .eq("is_active", true);
+
+    if (studentError) throw new Error("Gagal mengambil data mahasiswa: " + studentError.message);
+
+    if (students && students.length > 0) {
+      const { data: existingStudentUsers } = await supabaseAdmin
+        .from("users")
+        .select("student_id")
+        .not("student_id", "is", null);
+
+      const existingStudentIds = new Set(existingStudentUsers?.map(u => u.student_id));
+      const studentsToCreate = students.filter(s => !existingStudentIds.has(s.id));
+
+      if (studentsToCreate.length > 0) {
+        const studentUsers = await Promise.all(
+          studentsToCreate.map(async (s) => {
+            const hashedPassword = await bcrypt.hash(s.nim, 10);
+            return {
+              name: s.nama,
+              username: s.nim,
+              password: hashedPassword,
+              role: "mahasiswa",
+              student_id: s.id,
+              is_active: true,
+            };
+          })
+        );
+
+        const { error: insertError } = await supabaseAdmin.from("users").insert(studentUsers);
+        if (insertError) throw insertError;
+        results.students = studentUsers.length;
+      }
+    }
+
+    // --- 2. PROCESS LECTURERS ---
+    const { data: lecturers, error: lecturerError } = await supabaseAdmin
+      .from("lecturers")
+      .select("id, nidn, nama")
+      .eq("is_active", true)
+      .not("nidn", "is", null); // Must have NIDN
+
+    if (lecturerError) throw new Error("Gagal mengambil data dosen: " + lecturerError.message);
+
+    if (lecturers && lecturers.length > 0) {
+      const { data: existingLecturerUsers } = await supabaseAdmin
+        .from("users")
+        .select("lecturer_id")
+        .not("lecturer_id", "is", null);
+
+      const existingLecturerIds = new Set(existingLecturerUsers?.map(u => u.lecturer_id));
+      // Ensure NIDN is present (already filtered by query but good to be safe for TS)
+      const lecturersToCreate = lecturers.filter(l => !existingLecturerIds.has(l.id) && l.nidn);
+
+      if (lecturersToCreate.length > 0) {
+        const lecturerUsers = await Promise.all(
+          lecturersToCreate.map(async (l) => {
+            const hashedPassword = await bcrypt.hash(l.nidn!, 10);
+            return {
+              name: l.nama,
+              username: l.nidn!,
+              password: hashedPassword,
+              role: "dosen",
+              lecturer_id: l.id,
+              is_active: true,
+            };
+          })
+        );
+
+        const { error: insertError } = await supabaseAdmin.from("users").insert(lecturerUsers);
+        if (insertError) throw insertError;
+        results.lecturers = lecturerUsers.length;
+      }
+    }
+
+    revalidatePath("/users");
+
+    if (results.students === 0 && results.lecturers === 0) {
+      return { count: 0, message: "Semua mahasiswa dan dosen aktif sudah memiliki akun." };
+    }
+
+    return {
+      count: results.students + results.lecturers,
+      message: `Berhasil membuat ${results.students} akun Mahasiswa dan ${results.lecturers} akun Dosen.`
+    };
+
+  } catch (error: any) {
+    console.error("Generate accounts error:", error);
+    throw new Error(error.message || "Terjadi kesalahan saat generate akun.");
+  }
+}

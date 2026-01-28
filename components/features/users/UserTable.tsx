@@ -6,7 +6,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle, User, AtSign, GraduationCap, User2 } from "lucide-react"; 
+import { Pencil, Trash2, ShieldCheck, BookOpen, KeyRound, CheckCircle2, XCircle, User, AtSign, GraduationCap, User2, UserPlus } from "lucide-react"; 
 import { UserData } from "@/lib/types"; 
 import {
   DropdownMenuLabel,
@@ -22,6 +22,7 @@ interface UserTableProps {
   onDelete: (user: UserData) => void;
   onResetPassword: (user: UserData) => void;
   onAdd: () => void;
+  onGenerate: () => void;
 }
 
 export default function UserTable({ 
@@ -30,7 +31,8 @@ export default function UserTable({
   onEdit, 
   onDelete, 
   onResetPassword, 
-  onAdd 
+  onAdd,
+  onGenerate
 }: UserTableProps) {
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -209,6 +211,19 @@ export default function UserTable({
     </>
   );
 
+  // === GENERATE BUTTON ===
+  const generateButton = (
+    <Button
+      variant="outline"
+      onClick={onGenerate}
+      className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm"
+      title="Generate Akun Mahasiswa & Dosen"
+    >
+      <UserPlus className="h-4 w-4 sm:mr-2" />
+      <span className="hidden sm:inline">Generate Akun</span>
+    </Button>
+  );
+
   return (
     <Card className="border-none shadow-sm ring-1 ring-gray-200">
       <CardContent className="p-6">
@@ -239,6 +254,7 @@ export default function UserTable({
           startIndex={startIndex}
           endIndex={endIndex}
           totalItems={filteredData.length}
+          customActions={generateButton}
         />
       </CardContent>
     </Card>

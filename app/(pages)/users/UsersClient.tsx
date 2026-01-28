@@ -10,7 +10,7 @@ import { UserForm } from "@/components/features/users/UserForm";
 import UserTable from "@/components/features/users/UserTable";
 import { ResetPasswordModal } from "@/components/features/users/ResetPasswordModal"; 
 import { type UserData, type UserFormValues } from "@/lib/types";
-import { createUser, updateUser, deleteUser } from "@/app/actions/users";
+import { createUser, updateUser, deleteUser, generateMissingAccounts } from "@/app/actions/users";
 
 interface UsersClientProps {
   initialData: UserData[];
@@ -28,6 +28,7 @@ export default function UsersClient({ initialData }: UsersClientProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
   React.useEffect(() => {
@@ -91,9 +92,30 @@ export default function UsersClient({ initialData }: UsersClientProps) {
     setIsDeleteOpen(false);
   };
 
+  const handleGenerate = async () => {
+    const toastId = showLoading("Sedang mencari dan membuat akun...");
+    try {
+      const result = await generateMissingAccounts();
+      if (result.count > 0) {
+        successAction("Akun Baru", "create", toastId);
+        // We can rely on the toast to show generic success, but ideally we'd show the specific message returned
+        // For now, let's just let it show the success toast.
+      } else {
+        showError("Info", result.message, toastId); 
+      }
+      router.refresh();
+    } catch (error: any) {
+      showError("Gagal Generate", error.message, toastId);
+    }
+    setIsGenerateOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-4 pb-10 animate-in fade-in duration-500">
-      <PageHeader title="Data Pengguna" breadcrumb={["Beranda", "Users"]} />
+      <PageHeader 
+        title="Data Pengguna" 
+        breadcrumb={["Beranda", "Users"]}
+      />
 
       <UserTable 
         data={dataList}
@@ -102,6 +124,7 @@ export default function UsersClient({ initialData }: UsersClientProps) {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onResetPassword={handleOpenReset}
+        onGenerate={() => setIsGenerateOpen(true)}
       />
 
       {/* MODAL ADD/EDIT */}
@@ -149,6 +172,17 @@ export default function UsersClient({ initialData }: UsersClientProps) {
         isOpen={isResetOpen}
         onClose={setIsResetOpen}
         user={selectedUser}
+      />
+
+      {/* MODAL GENERATE ACCOUNTS */}
+      <ConfirmModal
+        isOpen={isGenerateOpen}
+        onClose={setIsGenerateOpen}
+        onConfirm={handleGenerate}
+        title="Konfirmasi Pembuatan Akun"
+        description="Sistem akan mendeteksi dan membuat akun pengguna secara otomatis bagi Mahasiswa (User/Pass: NIM) dan Dosen (User/Pass: NIDN) yang berstatus aktif namun belum mempunyai akun. Apakah Anda yakin ingin melanjutkan proses ini?"
+        confirmLabel="Ya, Proses Sekarang"
+        variant="default"
       />
     </div>
   );

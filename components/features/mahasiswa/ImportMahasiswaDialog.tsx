@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, Search, RefreshCw } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, Search, RefreshCw, Filter, ListFilter } from "lucide-react";
 import { toast } from "sonner";
 import { StudyProgram } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { createBulkStudents, checkExistingNims } from "@/app/actions/students"; 
 
@@ -61,7 +71,20 @@ export function ImportMahasiswaDialog({
   const [isUploading, setIsUploading] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "valid" | "invalid">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset state when dialog closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setData([]);
+      setSearchQuery("");
+      setFilterStatus("all");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [isOpen]);
 
   const handleDownloadTemplate = () => {
     const headers = [
@@ -86,6 +109,7 @@ export function ImportMahasiswaDialog({
   };
 
   const processExcel = async (file: File) => {
+    const toastId = toast.loading("Memvalidasi data file Excel...");
     setIsChecking(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -181,7 +205,18 @@ export function ImportMahasiswaDialog({
         // 3. Check for Duplicates IN DATABASE
         const nimsToCheck = parsedData.filter(d => d.nim).map(d => d.nim);
         if (nimsToCheck.length > 0) {
-            const existingNims = await checkExistingNims(nimsToCheck);
+            // Batch checking to avoid hitting query limits or timeouts
+            const batchSize = 100;
+            const chunks = [];
+            for (let i = 0; i < nimsToCheck.length; i += batchSize) {
+                chunks.push(nimsToCheck.slice(i, i + batchSize));
+            }
+
+            const results = await Promise.all(
+                chunks.map(chunk => checkExistingNims(chunk))
+            );
+            
+            const existingNims = results.flat();
             const existingSet = new Set(existingNims);
 
             parsedData = parsedData.map(d => {
@@ -195,32 +230,43 @@ export function ImportMahasiswaDialog({
         setData(parsedData);
       } catch (error) {
         console.error("Error reading excel:", error);
-        toast.error("Gagal membaca file Excel.");
+        toast.error("Gagal membaca file Excel.", { id: toastId });
       } finally {
         setIsChecking(false);
+        toast.dismiss(toastId);
       }
     };
     reader.readAsBinaryString(file);
   };
 
   // Filter data
-  const filteredData = data.filter(item => 
-    item.nim.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.prodi_nama.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredData = data.filter(item => {
+    const matchesSearch = 
+      item.nim.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.prodi_nama.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    if (filterStatus === "valid") return item.isValid;
+    if (filterStatus === "invalid") return !item.isValid;
+    
+    return true;
+  });
 
   const handleUpload = async () => {
+    // ... handleUpload unchanged logic...
     const validData = data.filter(d => d.isValid);
     if (validData.length === 0) {
       toast.error("Tidak ada data valid untuk diimport.");
       return;
     }
-
+    
     setIsUploading(true);
+    const toastId = toast.loading("Mengimport data mahasiswa...");
     try {
-      // Prepare payload
       const payload = validData.map(d => {
+        // ... map logic
         const prodi = studyPrograms.find(p => p.nama.toLowerCase() === d.prodi_nama.toLowerCase());
         return {
           nim: d.nim,
@@ -243,13 +289,14 @@ export function ImportMahasiswaDialog({
       });
 
       await createBulkStudents(payload);
-      toast.success(`Berhasil mengimport ${validData.length} data mahasiswa.`);
+      toast.success(`Berhasil mengimport ${validData.length} data mahasiswa.`, { id: toastId });
       onSuccess();
       onClose(false);
       setData([]); // Reset
       setSearchQuery("");
+      setFilterStatus("all");
     } catch (error: any) {
-      toast.error("Gagal melakukan import: " + error.message);
+      toast.error("Gagal melakukan import: " + error.message, { id: toastId });
     } finally {
       setIsUploading(false);
     }
@@ -258,6 +305,7 @@ export function ImportMahasiswaDialog({
   const handleReset = () => {
     setData([]);
     setSearchQuery("");
+    setFilterStatus("all");
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -266,17 +314,17 @@ export function ImportMahasiswaDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="!max-w-[85vw] w-full h-[85vh] flex flex-col p-0 gap-0">
-        <div className="p-6 pb-2">
+        <div className="p-4 sm:p-6 pb-2">
             <DialogHeader>
-            <DialogTitle>Import Data Mahasiswa</DialogTitle>
+            <DialogTitle className="text-xl">Import Data Mahasiswa</DialogTitle>
             <DialogDescription>
                 Unduh template, isi data, lalu upload file Excel (.xlsx).
             </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between py-4 gap-4">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Button variant="outline" onClick={handleDownloadTemplate}>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                    <Button variant="outline" onClick={handleDownloadTemplate} className="justify-center">
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
                         Download Template
                     </Button>
@@ -290,7 +338,11 @@ export function ImportMahasiswaDialog({
                                 if (e.target.files?.[0]) processExcel(e.target.files[0]);
                             }}
                         />
-                        <Button onClick={() => fileInputRef.current?.click()}>
+                        <Button 
+                            onClick={() => fileInputRef.current?.click()} 
+                            disabled={isChecking || data.length > 0}
+                            className="w-full sm:w-auto justify-center"
+                        >
                             <Upload className="mr-2 h-4 w-4" />
                             Pilih File Excel
                         </Button>
@@ -298,35 +350,77 @@ export function ImportMahasiswaDialog({
                 </div>
 
                 {data.length > 0 && (
-                    <div className="relative w-full sm:w-72">
-                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                         <Input
-                            placeholder="Cari NIM atau Nama..."
-                            className="pl-9"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                         />
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={handleReset}
+                            title="Reset Data"
+                            className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                            <RefreshCw className="h-4 w-4" />
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    className={filterStatus !== "all" ? "bg-blue-50 text-blue-600 border-blue-200" : ""}
+                                >
+                                    {filterStatus !== "all" ? <ListFilter className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuLabel>Filter Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuCheckboxItem 
+                                    checked={filterStatus === "all"}
+                                    onCheckedChange={() => setFilterStatus("all")}
+                                >
+                                    Semua Status
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem 
+                                    checked={filterStatus === "valid"}
+                                    onCheckedChange={() => setFilterStatus("valid")}
+                                >
+                                    Valid
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem 
+                                    checked={filterStatus === "invalid"}
+                                    onCheckedChange={() => setFilterStatus("invalid")}
+                                >
+                                    Error
+                                </DropdownMenuCheckboxItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <div className="relative flex-1 sm:w-64">
+                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                             <Input
+                                placeholder="Cari NIM atau Nama..."
+                                className="pl-9"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                             />
+                        </div>
                     </div>
                 )}
             </div>
         </div>
 
-        {isChecking ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2 min-h-[200px]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p>Memvalidasi data...</p>
-            </div>
-        ) : data.length > 0 ? (
-            <div className="flex-1 overflow-hidden px-6">
+        {isChecking || data.length > 0 ? (
+            <div className="flex-1 overflow-hidden px-4 sm:px-6">
                 <ScrollArea className="h-full border rounded-md">
                     <Table className="min-w-full w-max">
                         <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                             <TableRow>
                                 <TableHead className="w-[50px] whitespace-nowrap">Status</TableHead>
-                                <TableHead className="whitespace-nowrap">Error</TableHead>
+                                <TableHead className="whitespace-nowrap">Keterangan</TableHead>
                                 <TableHead className="whitespace-nowrap">NIM</TableHead>
                                 <TableHead className="min-w-[200px] whitespace-nowrap">Nama</TableHead>
+                                <TableHead className="whitespace-nowrap">NIK</TableHead>
+                                <TableHead className="whitespace-nowrap">L/P</TableHead>
                                 <TableHead className="whitespace-nowrap">Prodi</TableHead>
+                                <TableHead className="whitespace-nowrap">Angkatan</TableHead>
                                 <TableHead className="whitespace-nowrap">Tempat Lahir</TableHead>
                                 <TableHead className="whitespace-nowrap">Tanggal Lahir</TableHead>
                                 <TableHead className="whitespace-nowrap">Agama</TableHead>
@@ -337,34 +431,63 @@ export function ImportMahasiswaDialog({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredData.length > 0 ? (
+                            {isChecking ? (
+                                Array.from({ length: 10 }).map((_, i) => (
+                                    <TableRow key={i}>
+                                        {Array.from({ length: 15 }).map((_, j) => (
+                                            <TableCell key={j}>
+                                                <Skeleton className="h-6 w-full rounded" />
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : filteredData.length > 0 ? (
                                 filteredData.map((row, idx) => (
                                     <TableRow key={idx} className={!row.isValid ? "bg-red-50" : ""}>
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             {row.isValid ? (
-                                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                                <div className="flex justify-center">
+                                                     <CheckCircle className="h-4 w-4 text-green-600" />
+                                                </div>
                                             ) : (
-                                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                                <div className="flex justify-center">
+                                                    <AlertCircle className="h-4 w-4 text-red-600" />
+                                                </div>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-red-500 text-xs min-w-[200px]">
-                                            {row.errors.join(", ")}
+                                        <TableCell className="min-w-[200px]">
+                                            {row.isValid ? (
+                                                <span className="text-xs font-medium text-emerald-600">
+                                                    Sudah benar
+                                                </span>
+                                            ) : (
+                                                <div className="flex flex-col gap-0.5">
+                                                    {row.errors.map((err, i) => (
+                                                        <span key={i} className="text-xs text-red-600 font-medium">
+                                                            {err}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap">{row.nim}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.nama}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{row.nik}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{row.jenis_kelamin}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.prodi_nama}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{row.angkatan}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.tempat_lahir}</TableCell>
-                                        <TableCell className="whitespace-nowrap">{row.tanggal_lahir}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{row.tanggal_lahir || "-"}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.agama}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.status}</TableCell>
                                         <TableCell className="whitespace-nowrap">{row.no_hp}</TableCell>
-                                        <TableCell className="whitespace-nowrap">{row.email}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{row.email || "-"}</TableCell>
                                         <TableCell className="min-w-[300px]">{row.alamat}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={12} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={15} className="text-center h-24 text-muted-foreground">
                                         Data tidak ditemukan sesuai kata kunci "{searchQuery}"
                                     </TableCell>
                                 </TableRow>
@@ -374,14 +497,14 @@ export function ImportMahasiswaDialog({
                 </ScrollArea>
             </div>
         ) : (
-             <div className="flex-1 flex flex-col items-center justify-center border-dashed border-2 rounded-md mx-6 mb-2 text-muted-foreground min-h-[200px]">
+             <div className="flex-1 flex flex-col items-center justify-center border-dashed border-2 rounded-md mx-4 sm:mx-6 mb-2 text-muted-foreground min-h-[200px]">
                 <p>Belum ada data yang diupload.</p>
             </div>
         )}
 
-        <div className="p-6 pt-4 mt-auto border-t bg-background">
-            <DialogFooter>
-                <div className="flex-1 text-sm text-muted-foreground self-center">
+        <div className="p-4 sm:p-6 pt-4 mt-auto border-t bg-background sm:rounded-b-lg">
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+                <div className="flex-1 text-sm text-muted-foreground text-center sm:text-left mb-2 sm:mb-0">
                     {data.length > 0 && (
                         <span>
                             Total: {data.length} | Valid: {data.filter(d => d.isValid).length} | Invalid: {data.filter(d => !d.isValid).length}
@@ -389,20 +512,16 @@ export function ImportMahasiswaDialog({
                         </span>
                     )}
                 </div>
-                {data.length > 0 && (
-                    <Button variant="destructive" onClick={handleReset} disabled={isUploading}>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Reset
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Button variant="outline" onClick={() => onClose(false)} disabled={isUploading} className="w-full sm:w-auto">Batal</Button>
+                    <Button 
+                        onClick={handleUpload} 
+                        disabled={isUploading || data.filter(d => d.isValid).length === 0}
+                        className="w-full sm:w-auto"
+                    >
+                        Import Data Valid
                     </Button>
-                )}
-                <Button variant="outline" onClick={() => onClose(false)} disabled={isUploading}>Batal</Button>
-                <Button 
-                    onClick={handleUpload} 
-                    disabled={isUploading || data.filter(d => d.isValid).length === 0}
-                >
-                    {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Import Data Valid
-                </Button>
+                </div>
             </DialogFooter>
         </div>
       </DialogContent>

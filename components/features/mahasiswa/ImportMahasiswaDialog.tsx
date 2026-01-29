@@ -458,7 +458,7 @@ export function ImportMahasiswaDialog({
                                         <TableCell className="min-w-[200px]">
                                             {row.isValid ? (
                                                 <span className="text-xs font-medium text-emerald-600">
-                                                    Sudah benar
+                                                    Siap import
                                                 </span>
                                             ) : (
                                                 <div className="flex flex-col gap-0.5">
@@ -497,8 +497,28 @@ export function ImportMahasiswaDialog({
                 </ScrollArea>
             </div>
         ) : (
-             <div className="flex-1 flex flex-col items-center justify-center border-dashed border-2 rounded-md mx-4 sm:mx-6 mb-2 text-muted-foreground min-h-[200px]">
-                <p>Belum ada data yang diupload.</p>
+             <div 
+                className="flex-1 flex flex-col items-center justify-center border-dashed border-2 rounded-md mx-4 sm:mx-6 mb-2 text-muted-foreground min-h-[200px] hover:bg-muted/5 transition-colors cursor-pointer"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files?.[0]) processExcel(e.dataTransfer.files[0]);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+            >
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <div className="p-4 bg-slate-50 text-slate-500 rounded-full">
+                         <Upload className="h-8 w-8" />
+                    </div>
+                    <div className="space-y-1 text-center">
+                        <p className="text-base font-semibold text-slate-900">
+                            Drag & Drop file Excel di sini
+                        </p>
+                        <p className="text-sm text-slate-500">
+                            atau klik untuk memilih file dari komputer
+                        </p>
+                    </div>
+                </div>
             </div>
         )}
 

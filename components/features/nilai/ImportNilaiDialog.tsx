@@ -476,7 +476,7 @@ export function ImportNilaiDialog({
                                         <TableCell className="min-w-[200px]">
                                             {row.isValid ? (
                                                 <span className="text-xs font-medium text-emerald-600">
-                                                    Siap Import
+                                                    Siap import
                                                 </span>
                                             ) : (
                                                 <div className="flex flex-col gap-0.5">

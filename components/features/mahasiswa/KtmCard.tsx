@@ -24,20 +24,7 @@ export function KtmCard({ student, className }: KtmCardProps) {
   const validUntilYear = (profile.angkatan || new Date().getFullYear()) + 4;
   const validUntil = `September ${validUntilYear}`;
 
-  // Styles from DocumentHeader
-  const embossedTextStyle = {
-    fontFamily: "Arial, sans-serif",
-    fontWeight: 900,
-    textShadow:
-      "-0.5px -0.5px 0.5px rgba(255,255,255,0.9), 0.5px 0.5px 0.5px rgba(0,0,0,0.4), 1px 1px 1.5px rgba(0,0,0,0.2)",
-  };
 
-  const cirebonStyle = {
-    fontFamily: "Arial, sans-serif",
-    fontWeight: 800,
-    textShadow:
-      "-0.25px -0.25px 0.25px rgba(255,255,255,0.8), 0.5px 0.5px 0.5px rgba(0,0,0,0.3)",
-  };
 
   return (
     <div className={cn("w-[85.6mm] h-[53.98mm] relative overflow-hidden bg-white shadow-xl rounded-xl border border-slate-200 print:shadow-none print:border-0 print:rounded-none select-none font-sans", className)}>
@@ -63,12 +50,10 @@ export function KtmCard({ student, className }: KtmCardProps) {
 
             <div className="flex items-end leading-none mt-[-0.8px]">
               <span
-                className="text-[27.2px] text-[#EE3A43] tracking-tighter"
+                className="text-[27.2px] text-[#EE3A43] font-black"
                 style={{ 
-                  fontFamily: "Arial, sans-serif",
-                  fontWeight: 900,
                   textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
-                  lineHeight: "0.8" 
+                  lineHeight: "0.8"
                 }}
               >
                 STMIK
@@ -76,25 +61,23 @@ export function KtmCard({ student, className }: KtmCardProps) {
 
               <div className="flex flex-col ml-[3.4px] mb-[-0.4px]">
                 <span
-                  className="text-[15.6px] text-[#1B3F95]"
+                  className="text-[15.6px] text-[#1B3F95] font-black"
                   style={{ 
-                    fontFamily: "Arial, sans-serif",
-                    fontWeight: 900,
                     textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
                     lineHeight: "0.8",
-                    letterSpacing: "0.35em",
-                    marginRight: "-0.35em"
+                    letterSpacing: "0.43em",
+                    marginRight: "-0.43em"
                   }}
                 >
                   IKMI
                 </span>
                 <span
-                  className="text-[9.2px] text-[#00A651] tracking-[0.18em] mt-[1.3px]"
+                  className="text-[9.2px] text-[#00A651] mt-[1.3px] font-extrabold"
                   style={{ 
-                    fontFamily: "Arial, sans-serif",
-                    fontWeight: 800,
                     textShadow: "-0.2px -0.2px 0.2px rgba(255,255,255,0.8), 0.4px 0.4px 0.4px rgba(0,0,0,0.3)",
-                    lineHeight: "0.8" 
+                    lineHeight: "0.8",
+                    letterSpacing: "0.25em",
+                    marginRight: "-0.25em"
                   }}
                 >
                   CIREBON
@@ -117,7 +100,7 @@ export function KtmCard({ student, className }: KtmCardProps) {
             </div>
             
             {/* Title */}
-            <h2 className="text-[11px] font-bold text-slate-900 uppercase leading-3 w-32 tracking-tight" style={{ fontFamily: "Arial, sans-serif" }}>
+            <h2 className="text-[11px] font-bold text-slate-900 uppercase leading-3 w-32 tracking-tight">
               KARTU IDENTITAS<br/>MAHASISWA
             </h2>
         </div>
@@ -156,10 +139,10 @@ export function KtmCard({ student, className }: KtmCardProps) {
          {/* Info Content */}
          <div className="relative z-10 flex justify-between items-center h-full w-full">
             <div className="flex flex-col gap-[2px] max-w-[65%] leading-tight text-left justify-center">
-              <h1 className="text-[11px] font-bold uppercase truncate tracking-wide text-white font-sans" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+              <h1 className="text-[11px] font-bold uppercase truncate tracking-wide text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
                 {profile.nama}
               </h1>
-              <p className="text-[10px] font-bold tracking-wider font-sans opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+              <p className="text-[10px] font-bold tracking-wider opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                 {profile.nim}
               </p>
               <p className="text-[9px] font-bold opacity-100 text-slate-100" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>

@@ -29,7 +29,7 @@ export default function DocumentFooter({
   const jabatanPejabat = official?.jabatan || "Ketua Program Studi";
 
   return (
-    <div className="flex justify-between items-start mt-6 text-[10px] w-full font-['Cambria']">
+    <div className="flex justify-between items-start mt-6 text-[10px] w-full font-caladea">
       
       {/* Keterangan Kiri */}
       {mode === "surat" ? (

@@ -55,7 +55,7 @@ const PrintableKRS = forwardRef<HTMLDivElement, PrintableKRSProps>(({
       </div>
 
       <div className="w-full mb-6 px-1">
-        <table className="w-full text-[9px] font-['Cambria'] border-collapse border border-black mb-2">
+        <table className="w-full text-[9px] font-caladea border-collapse border border-black mb-2">
           <thead>
             <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
               <th className="border border-black w-6">No</th>

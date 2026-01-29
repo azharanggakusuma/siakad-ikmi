@@ -117,7 +117,7 @@ export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHe
 
         {/* JUDUL DOKUMEN */}
         <div className="col-span-2 text-center mt-4 mb-4">
-          <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-['Cambria'] text-black">
+          <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-caladea text-black">
             {title}
           </h2>
         </div>

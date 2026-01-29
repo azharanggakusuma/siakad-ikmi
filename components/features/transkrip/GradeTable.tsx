@@ -35,7 +35,7 @@ export default function GradeTable({
     : (calculatedTotalSKS > 0 ? (calculatedTotalNM / calculatedTotalSKS).toFixed(2).replace('.', ',') : "0,00");
 
   return (
-    <table className="w-full text-[9px] border-collapse border border-black mb-2 font-['Cambria']">
+    <table className="w-full text-[9px] border-collapse border border-black mb-2 font-caladea">
       <thead>
         <tr className="bg-[#D9EAF7] text-center font-bold h-5 border-b border-black">
           <th className="border border-black w-6">No</th>

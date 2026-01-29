@@ -126,14 +126,14 @@ export default function PrintableSuratKeterangan({
           ) : (
             <>
               <DocumentHeader title="" />
-              <div className="text-center mt-[-10px] mb-8 font-['Cambria'] text-black leading-snug">
+              <div className="text-center mt-[-10px] mb-8 font-caladea text-black leading-snug">
                 <h2 className="font-bold text-[14px] underline uppercase mb-0">
                   SURAT KETERANGAN
                 </h2>
                 <p className="text-[11px]">Nomor : {fullNomorSurat}</p>
               </div>
 
-              <div className="text-[11px] font-['Cambria'] text-black px-4 min-h-[450px]">
+              <div className="text-[11px] font-caladea text-black px-4 min-h-[450px]">
                 <p className="mb-2">Yang bertanda tangan di bawah ini :</p>
                 <div className="ml-4 mb-4">
                   <table className="w-full" style={{ tableLayout: "fixed" }}>

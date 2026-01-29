@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -11,6 +12,32 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const cambria = localFont({
+  src: [
+    {
+      path: "../public/fonts/Cambria.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/cambriab.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/cambriai.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/cambriaz.ttf",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-cambria",
 });
 
 // --- KONFIGURASI SEO & METADATA ---
@@ -69,7 +96,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-100`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cambria.variable} antialiased bg-slate-100`}
       >
         {children}
         <Toaster />

@@ -34,7 +34,7 @@ const PrintableBiodata = forwardRef<HTMLDivElement, PrintableBiodataProps>(
             <DocumentHeader title="" />
 
             <div className="text-center mt-1 mb-6">
-              <h1 className="font-bold text-lg uppercase tracking-wider font-['Cambria'] underline">
+              <h1 className="font-bold text-lg uppercase tracking-wider font-caladea underline">
                 BIODATA MAHASISWA
               </h1>
             </div>
@@ -53,7 +53,7 @@ const PrintableBiodata = forwardRef<HTMLDivElement, PrintableBiodataProps>(
                     className="w-full h-full object-cover object-top"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center font-['Cambria'] text-gray-800">
+                  <div className="flex flex-col items-center justify-center font-caladea text-gray-800">
                     <span className="text-xs font-bold">PAS FOTO</span>
                     <span className="text-xs font-bold">3x4</span>
                   </div>
@@ -62,7 +62,7 @@ const PrintableBiodata = forwardRef<HTMLDivElement, PrintableBiodataProps>(
 
               {/* TABEL DATA */}
               <div className="flex-1">
-                <table className="w-full text-sm font-['Cambria']">
+                <table className="w-full text-sm font-caladea">
                   <tbody className="align-top leading-[2]">
                     <tr>
                       <td className="w-[200px]">Nama Lengkap</td>
@@ -159,7 +159,7 @@ const PrintableBiodata = forwardRef<HTMLDivElement, PrintableBiodataProps>(
 
             {/* TANDA TANGAN */}
             <div className="flex justify-end mt-12 mb-6 text-sm">
-              <div className="flex flex-col items-center min-w-[200px] font-['Cambria']">
+              <div className="flex flex-col items-center min-w-[200px] font-caladea">
                 <p className="mb-1">Cirebon, {currentDate}</p>
                 <p className="mb-24">Mahasiswa Yang Bersangkutan,</p>
                 <p className="font-bold underline uppercase text-center">

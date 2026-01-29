@@ -80,7 +80,12 @@ export default function StudentKRSView({
   const [isResetOpen, setIsResetOpen] = useState(false);
 
   const studentId = user.student_id;
-  const MAX_SKS = 24; 
+  const MAX_SKS = useMemo(() => {
+    if (mbkmData && mbkmData.jenis_mbkm === 'Pertukaran Mahasiswa Merdeka') return 24;
+    if (studentSemester === 7) return 14;
+    if (studentSemester === 8) return 10;
+    return 20;
+  }, [mbkmData, studentSemester]); 
 
   const toastIdRef = useRef<string | number | null>(null);
 

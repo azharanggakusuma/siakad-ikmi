@@ -11,6 +11,7 @@ import {
   CheckCircle2, Eye, XCircle, GraduationCap, CalendarDays, AlertCircle, ListTodo, BookOpen, Users, Lock, ChevronRight, FileText, LayoutDashboard
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
+import BulkKRSInputModal from "./BulkKRSInputModal"; // Import Modal
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ export default function AdminKRSValidationView({
 
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isApproveAllOpen, setIsApproveAllOpen] = useState(false);
+  const [isBulkInputOpen, setIsBulkInputOpen] = useState(false); // State Modal Bulk Input
 
   // Filter & Fetch when selectedYear changes from initial
   const isFirstRender = useRef(true);
@@ -268,6 +270,14 @@ export default function AdminKRSValidationView({
                             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Validasi KRS Mahasiswa</h2>
                             <p className="text-slate-400 text-sm mt-1">Kelola persetujuan rencana studi mahasiswa untuk semester aktif.</p>
                         </div>
+                        <Button 
+                            variant="secondary" 
+                            className="hidden md:flex bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                            onClick={() => setIsBulkInputOpen(true)}
+                        >
+                            <Users className="w-4 h-4 mr-2" />
+                            Input Kolektif
+                        </Button>
                     </div>
                     <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setCurrentPage(1); }}>
@@ -536,6 +546,16 @@ export default function AdminKRSValidationView({
         description={`Anda akan menyetujui ${pendingCount} pengajuan KRS mahasiswa sekaligus. Tindakan ini tidak dapat dibatalkan.`}
         confirmLabel={isProcessing ? "Memproses..." : "Ya, Setujui Semua"}
         variant="default"
+      />
+
+      <BulkKRSInputModal 
+        isOpen={isBulkInputOpen} 
+        onClose={() => {
+            setIsBulkInputOpen(false);
+            fetchStudents(); // Refresh data setelah input
+        }} 
+        initialAcademicYearId={selectedYear}
+        availableAcademicYears={sortedAcademicYears}
       />
     </div>
   );

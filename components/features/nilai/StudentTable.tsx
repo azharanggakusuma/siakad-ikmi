@@ -23,6 +23,7 @@ interface StudentTableProps {
   onEdit: (student: StudentData) => void;
   actionLabel?: string;
   actionIcon?: React.ReactNode;
+  customActions?: React.ReactNode;
 }
 
 export function StudentTable({
@@ -33,6 +34,7 @@ export function StudentTable({
   onEdit,
   actionLabel = "Kelola Nilai",
   actionIcon, 
+  customActions 
 }: StudentTableProps) {
   
   // Default Icon if not provided
@@ -187,7 +189,7 @@ export function StudentTable({
         setSearchQuery(e.target.value);
         setCurrentPage(1);
       }}
-      searchPlaceholder="Cari Nama Mahasiswa / NIM..."
+      searchPlaceholder="Cari Mahasiswa atau NIM..."
       
       currentPage={currentPage}
       totalPages={totalPages}
@@ -203,6 +205,7 @@ export function StudentTable({
         setSearchQuery("");
         setCurrentPage(1);
       }}
+      customActions={customActions}
     />
   );
 }

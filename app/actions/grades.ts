@@ -1,13 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server"; 
+import { createClient } from "@/lib/supabase/server";
 import { GradeData, GradeFormValues } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 // --- FETCH DATA ---
 
 export async function getGrades(): Promise<GradeData[]> {
-  const supabase = await createClient(); 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("grades")
     .select(`
@@ -23,7 +23,7 @@ export async function getGrades(): Promise<GradeData[]> {
       ),
       course:courses (id, kode, matkul, sks)
     `)
-    .order("hm", { ascending: true }); 
+    .order("hm", { ascending: true });
 
   if (error) throw new Error(error.message);
   return data as unknown as GradeData[];
@@ -72,7 +72,7 @@ export async function getCoursesForSelect() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
-    .select("id, kode, matkul")
+    .select("id, kode, matkul, sks, smt_default")
     .order("matkul", { ascending: true });
   if (error) throw new Error(error.message);
   return data;
@@ -120,7 +120,7 @@ export async function getStudentGradeSummary(studentId: string) {
         semester: g.course.smt_default,
         hm: g.hm,
         am: am,
-        nm: (am * sks) 
+        nm: (am * sks)
       };
     });
 
@@ -129,8 +129,8 @@ export async function getStudentGradeSummary(studentId: string) {
     const ipk = totalSKS > 0 ? (totalNM / totalSKS).toFixed(2) : "0.00";
 
     processedData.sort((a, b) => {
-        if (a.semester !== b.semester) return a.semester - b.semester;
-        return a.matkul.localeCompare(b.matkul);
+      if (a.semester !== b.semester) return a.semester - b.semester;
+      return a.matkul.localeCompare(b.matkul);
     });
 
     return {
@@ -146,8 +146,8 @@ export async function getStudentGradeSummary(studentId: string) {
 
 // --- BATCH SAVE OPERATION ---
 export async function saveStudentGrades(
-  studentId: string, 
-  grades: { course_id: string, hm: string }[] 
+  studentId: string,
+  grades: { course_id: string, hm: string }[]
 ) {
   const supabase = await createClient();
   for (const item of grades) {
@@ -171,6 +171,86 @@ export async function saveStudentGrades(
     }
   }
   revalidatePath("/nilai");
+}
+
+/* NEW: BULK IMPORT FOR EXCEL */
+export async function createBulkGrades(data: { nim: string, kode: string, hm: string }[]) {
+  const supabase = await createClient();
+  try {
+    const uniqueNims = Array.from(new Set(data.map(d => d.nim)));
+    const uniqueKodes = Array.from(new Set(data.map(d => d.kode)));
+
+    // 1. Resolve Students
+    const { data: students, error: studentError } = await supabase
+      .from('students')
+      .select('id, nim')
+      .in('nim', uniqueNims);
+
+    if (studentError) throw new Error("Gagal mengambil data mahasiswa");
+    const studentMap = new Map(students.map((s: any) => [s.nim, s.id]));
+
+    // 2. Resolve Courses
+    const { data: courses, error: courseError } = await supabase
+      .from('courses')
+      .select('id, kode')
+      .in('kode', uniqueKodes);
+
+    if (courseError) throw new Error("Gagal mengambil data mata kuliah");
+    const courseMap = new Map(courses.map((c: any) => [c.kode, c.id]));
+
+    // 3. Prepare Upsert Data
+    const errorList: string[] = [];
+    const upsertData: { student_id: string, course_id: string, hm: string }[] = [];
+
+    for (const item of data) {
+      const studentId = studentMap.get(item.nim);
+      const courseId = courseMap.get(item.kode);
+
+      if (!studentId) {
+        errorList.push(`NIM ${item.nim} tidak ditemukan`);
+        continue;
+      }
+      if (!courseId) {
+        errorList.push(`Kode Matkul ${item.kode} tidak ditemukan`);
+        continue;
+      }
+
+      upsertData.push({
+        student_id: studentId,
+        course_id: courseId,
+        hm: item.hm
+      });
+    }
+
+    if (errorList.length > 0) {
+      return { success: false, message: `Terdapat ${errorList.length} error. Contoh: ${errorList[0]}` };
+    }
+
+    // 4. Perform Upsert (Delete + Insert or smarter conflict handling)
+    // Since Supabase doesn't support complex ON CONFLICT across joined tables easily without constraint keys,
+    // and unique constraint on grades is likely (student_id, course_id).
+    // Let's assume unique constraint exists.
+
+    const { error: upsertError } = await supabase.from('grades').upsert(upsertData, {
+      onConflict: 'student_id, course_id', // Assuming valid unique constraint on DB
+      ignoreDuplicates: false,
+    });
+
+    if (upsertError) {
+      // Fallback if no unique constraint or other error
+      if (upsertError.code === '23505') { // Unique violation
+        throw new Error("Data duplikat terdeteksi.");
+      }
+      throw upsertError;
+    }
+
+    revalidatePath("/nilai");
+    return { success: true };
+
+  } catch (error: any) {
+    console.error("Bulk Grade Import Error:", error);
+    return { success: false, message: error.message };
+  }
 }
 
 // --- CRUD SINGLE ---

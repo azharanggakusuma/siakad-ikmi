@@ -251,7 +251,7 @@ export default function AdminKRSValidationView({
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-indigo-600/20" />
             
-            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+            <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
                     <div className="flex flex-col justify-between h-full gap-6">
                         <div className="space-y-2">
@@ -303,7 +303,7 @@ export default function AdminKRSValidationView({
         {/* Card Summary Stats */}
         <Card className="md:col-span-4 border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-teal-600 to-emerald-600">
             <div className="absolute -bottom-6 -right-6 opacity-5 rotate-12"><ListTodo size={140} /></div>
-            <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
+            <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-center h-full">
                  {isLoading ? (
                     <div className="space-y-4">
                         <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg" /><Skeleton className="h-4 w-24" /></div>
@@ -370,7 +370,7 @@ export default function AdminKRSValidationView({
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-indigo-600/10 to-transparent pointer-events-none" />
 
-                <div className="relative z-10 p-6 sm:p-8">
+                <div className="relative z-10 p-4 sm:p-8">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                         {/* Student Info - Rearranged */}
                         <div className="space-y-2">

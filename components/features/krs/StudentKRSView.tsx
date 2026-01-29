@@ -414,7 +414,7 @@ export default function StudentKRSView({
                 <StatusIcon size={120} />
             </div>
 
-            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+            <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
                     <div className="flex flex-col justify-between h-full gap-6">
                         <div className="flex justify-between items-start">
@@ -481,7 +481,7 @@ export default function StudentKRSView({
         {/* CARD 2: TOTAL SKS */}
         <Card className="border-none shadow-md text-white overflow-hidden relative bg-gradient-to-br from-cyan-600 to-blue-600">
             <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12"><PieChart size={140} /></div>
-            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+            <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-between h-full">
                 {isLoading ? (
                     <div className="space-y-6">
                         <div className="space-y-3">

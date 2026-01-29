@@ -132,7 +132,7 @@ export function DataTable<T>({
       </div>
 
       {/* TABLE AREA */}
-      <div className="rounded-md border min-h-[300px]">
+      <div className="rounded-md border min-h-[300px] overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">

@@ -393,7 +393,7 @@ export default function ProfileForm({
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
         </div>
 
-        <CardContent className="px-6 pb-8 flex-1">
+        <CardContent className="px-4 pb-6 sm:px-6 sm:pb-8 flex-1">
           <form onSubmit={handleProfileUpdate} className="flex flex-col h-full">
             
             {/* PROFILE SECTION */}

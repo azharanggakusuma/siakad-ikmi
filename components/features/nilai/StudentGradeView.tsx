@@ -129,7 +129,7 @@ export default function StudentGradeView({ user, initialGrades, initialSummary }
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Trophy size={120} />
           </div>
-          <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+          <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-between h-full">
             {isLoading ? (
               <div className="flex flex-col justify-between h-full gap-6">
                 <div className="flex justify-between items-start">
@@ -175,7 +175,7 @@ export default function StudentGradeView({ user, initialGrades, initialSummary }
           <div className="absolute -bottom-6 -right-6 opacity-20 rotate-12">
             <BookOpen size={140} />
           </div>
-          <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
+          <CardContent className="p-4 sm:p-6 relative z-10 flex flex-col justify-between h-full">
             {isLoading ? (
                <div className="space-y-6">
                  <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function StudentGradeView({ user, initialGrades, initialSummary }
 
       {/* --- TABEL NILAI --- */}
       <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
             <DataTable
                 data={currentData}
                 columns={columns}

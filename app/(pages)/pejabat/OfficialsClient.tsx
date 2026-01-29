@@ -233,7 +233,7 @@ export default function OfficialsClient({ initialData }: OfficialsClientProps) {
       </div>
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <DataTable
             data={currentData}
             columns={columns}

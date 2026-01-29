@@ -6,14 +6,12 @@ interface DocumentHeaderProps {
 
 export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHeaderProps) {
   const embossedTextStyle = {
-    fontFamily: "Arial, sans-serif",
     fontWeight: 900,
     textShadow:
       "-1px -1px 1px rgba(255,255,255,0.9), 1px 1px 1px rgba(0,0,0,0.4), 2px 2px 3px rgba(0,0,0,0.2)",
   };
 
   const cirebonStyle = {
-    fontFamily: "Arial, sans-serif",
     fontWeight: 800,
     textShadow:
       "-0.5px -0.5px 0.5px rgba(255,255,255,0.8), 1px 1px 1px rgba(0,0,0,0.3)",
@@ -45,26 +43,30 @@ export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHe
 
             <div className="flex items-end leading-none mt-[-2px]">
               <span
-                className="text-[4rem] text-[#EE3A43] tracking-tighter"
-                style={{ ...embossedTextStyle, lineHeight: "0.8" }}
+                className="text-[4rem] text-[#EE3A43] font-sans"
+                style={{ 
+                  ...embossedTextStyle, 
+                  lineHeight: "0.8",
+                  letterSpacing: "-1px"
+                }}
               >
                 STMIK
               </span>
 
               <div className="flex flex-col ml-2 mb-[-1px]">
                 <span
-                  className="text-[2.3rem] text-[#1B3F95]"
+                  className="text-[2.3rem] text-[#1B3F95] font-sans"
                   style={{ 
                     ...embossedTextStyle, 
                     lineHeight: "0.8",
-                    letterSpacing: "0.35em",
-                    marginRight: "-0.35em"
+                    letterSpacing: "0.43em",
+                    marginRight: "-0.43em"
                   }}
                 >
                   IKMI
                 </span>
                 <span
-                  className="text-[1.35rem] text-[#00A651] tracking-[0.18em] mt-[3px]"
+                  className="text-[1.35rem] text-[#00A651] tracking-[0.25em] mt-[3px] font-sans"
                   style={{ ...cirebonStyle, lineHeight: "0.8" }}
                 >
                   CIREBON

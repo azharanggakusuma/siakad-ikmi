@@ -27,9 +27,10 @@ interface DashboardClientProps {
   trendData: { label: string; val: number; height: string }[];
   gradeDistData: { counts: any; totalGrades: number; totalAM: number };
   role: string;
+  studentId?: string;
 }
 
-export default function DashboardClient({ stats, trendData, gradeDistData, role, userName }: DashboardClientProps & { userName: string }) {
+export default function DashboardClient({ stats, trendData, gradeDistData, role, userName, studentId }: DashboardClientProps & { userName: string }) {
   
   const getIcon = (type: string) => {
     switch (type) {
@@ -45,7 +46,7 @@ export default function DashboardClient({ stats, trendData, gradeDistData, role,
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <DashboardHeader name={userName} role={role} />
+      <DashboardHeader name={userName} role={role} studentId={studentId} />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((s, idx) => (

@@ -31,13 +31,15 @@ export default async function DashboardPage() {
   const isMahasiswa = user.role === "mahasiswa";
   const username = user.username; // Assuming username is NIM for students
 
+  let student: StudentData | null = null;
+
   if (isMahasiswa) {
     // --- SERVER SIDE LOGIC FOR MAHASISWA ---
     // Fetch ONLY this student
     // Implement `getStudent(nim)` action or use Supabase directly here.
     
     // FETCH DATA VIA ACTION (Correct Way)
-    const student = await getStudentByNim(username);
+    student = await getStudentByNim(username);
 
     if (student) {
         // Now student is fully populated with transcript, profile, semester etc.
@@ -152,6 +154,7 @@ export default async function DashboardPage() {
         gradeDistData={gradeDistData} 
         role={user.role}
         userName={user.name || "User"} 
+        studentId={isMahasiswa && student ? student.profile.id : undefined}
     />
   );
 }

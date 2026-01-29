@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { StudentData } from "@/lib/types";
 import QRCode from "react-qr-code";
+import DocumentHeader from "@/components/features/document/DocumentHeader";
 
 import { cn } from "@/lib/utils";
 
@@ -32,59 +33,8 @@ export function KtmCard({ student, className }: KtmCardProps) {
       {/* --- TOP SECTION (WHITE) --- */}
       <div className="absolute top-0 left-0 right-0 h-[62%] bg-white px-5 pt-4">
         {/* Header - Recreating DocumentHeader Look */}
-        <div className="flex items-center gap-[5px] mb-2 relative z-10 pl-1">
-          {/* Logo */}
-          <div className="relative w-[34px] h-[34px] shrink-0">
-             <img 
-               src="/img/logo-ikmi.png" 
-               alt="Logo" 
-               className="object-contain w-full h-full"
-             />
-          </div>
-          
-          {/* Text Block */}
-          <div className="flex flex-col justify-center mt-[-1.7px]">
-            <h2 className="text-[4.7px] font-bold text-gray-800 tracking-wide leading-tight mb-0 uppercase font-sans whitespace-nowrap">
-              SEKOLAH TINGGI MANAJEMEN INFORMATIKA DAN KOMPUTER
-            </h2>
-
-            <div className="flex items-end leading-none mt-[-0.8px]">
-              <span
-                className="text-[27.2px] text-[#EE3A43] font-black"
-                style={{ 
-                  textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
-                  lineHeight: "0.8"
-                }}
-              >
-                STMIK
-              </span>
-
-              <div className="flex flex-col ml-[3.4px] mb-[-0.4px]">
-                <span
-                  className="text-[15.6px] text-[#1B3F95] font-black"
-                  style={{ 
-                    textShadow: "-0.4px -0.4px 0.4px rgba(255,255,255,0.9), 0.4px 0.4px 0.4px rgba(0,0,0,0.4), 0.85px 0.85px 1.3px rgba(0,0,0,0.2)",
-                    lineHeight: "0.8",
-                    letterSpacing: "0.43em",
-                    marginRight: "-0.43em"
-                  }}
-                >
-                  IKMI
-                </span>
-                <span
-                  className="text-[9.2px] text-[#00A651] mt-[1.3px] font-extrabold"
-                  style={{ 
-                    textShadow: "-0.2px -0.2px 0.2px rgba(255,255,255,0.8), 0.4px 0.4px 0.4px rgba(0,0,0,0.3)",
-                    lineHeight: "0.8",
-                    letterSpacing: "0.25em",
-                    marginRight: "-0.25em"
-                  }}
-                >
-                  CIREBON
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="mb-[-50px] relative z-10 pl-1 origin-top-left" style={{ transform: "scale(0.42)", width: "240%" }}>
+           <DocumentHeader variant="simple" title="" />
         </div>
 
         {/* Middle Content: QR & Title */}

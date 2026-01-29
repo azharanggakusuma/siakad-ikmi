@@ -2,9 +2,10 @@ import React from "react";
 
 interface DocumentHeaderProps {
   title?: string;
+  variant?: "default" | "simple";
 }
 
-export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHeaderProps) {
+export default function DocumentHeader({ title = "TRANSKRIP NILAI", variant = "default" }: DocumentHeaderProps) {
   const embossedTextStyle = {
     fontWeight: 900,
     textShadow:
@@ -76,51 +77,55 @@ export default function DocumentHeader({ title = "TRANSKRIP NILAI" }: DocumentHe
           </div>
         </div>
 
-        {/* ALAMAT */}
-        <div 
-          className="border-l-2 border-[#EE3A43] pl-4 py-1 h-[78px] flex flex-col justify-center min-w-[250px]"
-          style={forcePrintBackground}
-        >
-          <div className="text-[10px] text-gray-800 leading-[1.25] font-sans">
-            <p className="font-bold text-[11px] mb-[2px] text-black">
-              Alamat Kampus :
-            </p>
-            <p>Jl. Perjuangan No. 10 B Majasem</p>
-            <p>Kec. Kesambi Kota Cirebon</p>
-            <p>Tlp. (0231) 490480 - 490481</p>
-            <p className="mt-[1px]">
-              Website :{" "}
-              <span className="text-[#00ADEE]">https://ikmi.ac.id</span> Email :{" "}
-              <span className="text-[#00ADEE]">info@ikmi.ac.id</span>
-            </p>
-          </div>
-        </div>
+        {variant === "default" && (
+          <>
+            {/* ALAMAT */}
+            <div 
+              className="border-l-2 border-[#EE3A43] pl-4 py-1 h-[78px] flex flex-col justify-center min-w-[250px]"
+              style={forcePrintBackground}
+            >
+              <div className="text-[10px] text-gray-800 leading-[1.25] font-sans">
+                <p className="font-bold text-[11px] mb-[2px] text-black">
+                  Alamat Kampus :
+                </p>
+                <p>Jl. Perjuangan No. 10 B Majasem</p>
+                <p>Kec. Kesambi Kota Cirebon</p>
+                <p>Tlp. (0231) 490480 - 490481</p>
+                <p className="mt-[1px]">
+                  Website :{" "}
+                  <span className="text-[#00ADEE]">https://ikmi.ac.id</span> Email :{" "}
+                  <span className="text-[#00ADEE]">info@ikmi.ac.id</span>
+                </p>
+              </div>
+            </div>
 
-        {/* BAR WARNA */}
-        <div 
-          className="bg-[#F7941D] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
-          style={forcePrintBackground}
-        >
-          <span className="text-white text-[12px] font-bold tracking-[0.3em] leading-none whitespace-nowrap ml-[0.3em]">
-            SK. MENRISTEKDIKTI NO. 1/KPT/I/2015
-          </span>
-        </div>
+            {/* BAR WARNA */}
+            <div 
+              className="bg-[#F7941D] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
+              style={forcePrintBackground}
+            >
+              <span className="text-white text-[12px] font-bold tracking-[0.3em] leading-none whitespace-nowrap ml-[0.3em]">
+                SK. MENRISTEKDIKTI NO. 1/KPT/I/2015
+              </span>
+            </div>
 
-        <div 
-          className="bg-[#009444] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
-          style={forcePrintBackground}
-        >
-          <span className="text-white text-[12px] font-bold uppercase tracking-[0.15em] leading-none whitespace-nowrap ml-[0.15em]">
-            TERAKREDITASI BAN-PT
-          </span>
-        </div>
+            <div 
+              className="bg-[#009444] h-[26px] flex items-center justify-center px-1 mt-[2px] overflow-hidden"
+              style={forcePrintBackground}
+            >
+              <span className="text-white text-[12px] font-bold uppercase tracking-[0.15em] leading-none whitespace-nowrap ml-[0.15em]">
+                TERAKREDITASI BAN-PT
+              </span>
+            </div>
 
-        {/* JUDUL DOKUMEN */}
-        <div className="col-span-2 text-center mt-4 mb-4">
-          <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-caladea text-black">
-            {title}
-          </h2>
-        </div>
+            {/* JUDUL DOKUMEN */}
+            <div className="col-span-2 text-center mt-4 mb-4">
+              <h2 className="font-bold underline text-[14px] uppercase tracking-wide font-caladea text-black">
+                {title}
+              </h2>
+            </div>
+          </>
+        )}
 
       </div>
     </div>

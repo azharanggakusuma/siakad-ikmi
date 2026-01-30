@@ -9,17 +9,20 @@ import { UserSession } from "@/app/actions/auth";
 import { AcademicYear, Menu } from "@/lib/types";
 import { PhotoUpdateDialog } from "@/components/features/mahasiswa/PhotoUpdateDialog";
 import { SwitchAccountBanner } from "@/components/features/users/SwitchAccountBanner";
+import { KrsNotificationBanner } from "@/components/features/krs/KrsNotificationBanner";
 
 function LayoutContent({ 
   children, 
   user,
   academicYear,
-  menus 
+  menus,
+  showKrsBanner
 }: { 
   children: React.ReactNode, 
   user: UserSession | null,
   academicYear: AcademicYear | null,
-  menus: Menu[] 
+  menus: Menu[],
+  showKrsBanner?: boolean
 }) {
   const { sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed } = useLayout();
 
@@ -56,6 +59,13 @@ function LayoutContent({
               currentUserRole={user.role}
             />
           )}
+
+          {/* KRS Notification Banner */}
+          <KrsNotificationBanner 
+            show={!!showKrsBanner} 
+            academicYearName={academicYear?.nama} 
+            semester={academicYear?.semester}
+          />
         </div>
 
         <main className="flex-1 p-4 md:p-8 print:p-0">
@@ -74,16 +84,23 @@ export default function ClientLayout({
   children, 
   user,
   academicYear,
-  menus
+  menus,
+  showKrsBanner
 }: { 
   children: React.ReactNode, 
   user: UserSession | null,
   academicYear: AcademicYear | null,
-  menus: Menu[]
+  menus: Menu[],
+  showKrsBanner?: boolean
 }) {
   return (
     <LayoutProvider user={user}>
-      <LayoutContent user={user} academicYear={academicYear} menus={menus}>
+      <LayoutContent 
+        user={user} 
+        academicYear={academicYear} 
+        menus={menus}
+        showKrsBanner={showKrsBanner}
+      >
         {children}
       </LayoutContent>
     </LayoutProvider>

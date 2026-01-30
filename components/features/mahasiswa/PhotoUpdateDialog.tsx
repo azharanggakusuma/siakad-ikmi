@@ -48,7 +48,8 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
     // Cegah popup muncul di halaman admin/users saat proses switch account
     if (pathname.startsWith("/users")) return;
 
-    const dismissalKey = `photo_update_dismissed_${user.id}`;
+    const uniqueKey = user.id || user.username || "unknown_user";
+    const dismissalKey = `photo_update_dismissed_v2_${uniqueKey}`;
     const isDismissed = sessionStorage.getItem(dismissalKey);
     
     if (user.role === "mahasiswa" && !user.avatar_url && !isDismissed) {
@@ -181,7 +182,8 @@ export function PhotoUpdateDialog({ user }: PhotoUpdateDialogProps) {
   const handleClose = () => {
     // Simpan status bahwa user menutup dialog ini di sesi ini
     if (user) {
-        sessionStorage.setItem(`photo_update_dismissed_${user.id}`, "true");
+        const uniqueKey = user.id || user.username || "unknown_user";
+        sessionStorage.setItem(`photo_update_dismissed_v2_${uniqueKey}`, "true");
     }
     setIsOpen(false);
   };

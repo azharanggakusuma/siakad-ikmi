@@ -13,7 +13,7 @@ interface KtmCardProps {
   className?: string;
 }
 
-export function KtmCard({ student, className }: KtmCardProps) {
+export const KtmCard = React.memo(function KtmCard({ student, className }: KtmCardProps) {
   const { profile } = student;
   const [origin, setOrigin] = useState("");
 
@@ -113,4 +113,4 @@ export function KtmCard({ student, className }: KtmCardProps) {
           The reference shows no separator line, the blue block starts directly. */}
     </div>
   );
-}
+});

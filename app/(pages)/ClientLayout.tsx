@@ -51,7 +51,7 @@ function LayoutContent({
         {user?.isSwitched && (
           <SwitchAccountBanner 
             isSwitched={user.isSwitched}
-            currentUserName={user.name}
+            currentUserName={user.name || ""}
             currentUserRole={user.role}
           />
         )}

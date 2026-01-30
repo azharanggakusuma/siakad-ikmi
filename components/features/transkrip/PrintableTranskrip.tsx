@@ -17,7 +17,7 @@ interface PrintableTranskripProps {
   signatureBase64: string | null;
   official: Official | null;
   isCollapsed: boolean;
-  setTotalPages?: (pages: number) => void;
+  // setTotalPages?: (pages: number) => void; // REMOVED for optimization
 }
 
 const PrintableTranskrip = forwardRef<HTMLDivElement, PrintableTranskripProps>(({
@@ -31,7 +31,7 @@ const PrintableTranskrip = forwardRef<HTMLDivElement, PrintableTranskripProps>((
   signatureBase64,
   official,
   isCollapsed,
-  setTotalPages,
+  // setTotalPages,
 }, ref) => {
   const localRef = useRef<HTMLDivElement>(null);
 
@@ -45,25 +45,25 @@ const PrintableTranskrip = forwardRef<HTMLDivElement, PrintableTranskripProps>((
     }
   }, [ref]);
 
-  // Observer Halaman Kertas
-  useEffect(() => {
-    if (!localRef.current || !setTotalPages) return;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const pages = Math.ceil((entry.target.scrollHeight - 1) / 1122.5);
-        setTotalPages(pages < 1 ? 1 : pages);
-      }
-    });
-    observer.observe(localRef.current);
-    return () => observer.disconnect();
-  }, [currentStudent, transcriptData, setTotalPages]);
+  // Observer Halaman Kertas dihapus untuk optimasi performa
+  // useEffect(() => {
+  //   if (!localRef.current || !setTotalPages) return;
+  //   const observer = new ResizeObserver((entries) => {
+  //     for (const entry of entries) {
+  //       const pages = Math.ceil((entry.target.scrollHeight - 1) / 1122.5);
+  //       setTotalPages(pages < 1 ? 1 : pages);
+  //     }
+  //   });
+  //   observer.observe(localRef.current);
+  //   return () => observer.disconnect();
+  // }, [currentStudent, transcriptData, setTotalPages]);
 
   return (
     <div
       className={`
-        hidden xl:flex print:flex print:w-full print:justify-center
+        flex print:flex print:w-full print:justify-center
         shrink-0 justify-start w-full transition-all duration-300
-        ${isCollapsed ? "xl:w-[210mm]" : "xl:w-[189mm]"}
+        w-[210mm]
         overflow-visible mb-0 
     `}
     >

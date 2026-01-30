@@ -52,7 +52,7 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
   const { isPrinting, printPdf } = usePdfPrint();
   const printRef = useRef<HTMLDivElement>(null);
   const { showLoading, dismiss } = useToastMessage();
-  const [totalPages, setTotalPages] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
   
   // Derive Signature from Official
   const secureImage = useMemo(() => {
@@ -137,7 +137,7 @@ export default function AdminTranskripView({ initialStudents, initialStudyProgra
                 signatureBase64={secureImage}
                 official={official}
                 isCollapsed={true} // Force full width
-                setTotalPages={setTotalPages}
+                // setTotalPages={setTotalPages}
              />
         </div>
       )}

@@ -54,7 +54,7 @@ export default function StudentTranskripView({ initialStudentData, initialOffici
   const { isCollapsed, user } = useLayout();
   const { showLoading, dismiss } = useToastMessage();
 
-  const [totalPages, setTotalPages] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1); // REMOVED for optimization
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState<number>(0);
   const { isPrinting, printPdf } = usePdfPrint();
@@ -133,8 +133,9 @@ export default function StudentTranskripView({ initialStudentData, initialOffici
   return (
     <>
        <div className="absolute top-0 left-[-9999px] w-[210mm]">
+        {(isPrintModalOpen || isPrinting) && (
           <PrintableTranskrip
-             ref={printRef}
+            ref={printRef}
             loading={loading}
             currentStudent={currentStudent}
             transcriptData={transcriptData}
@@ -145,8 +146,9 @@ export default function StudentTranskripView({ initialStudentData, initialOffici
             signatureBase64={secureImage}
             official={official}
             isCollapsed={true} // Force full width
-            setTotalPages={setTotalPages}
+            // setTotalPages={setTotalPages} // REMOVED
           />
+        )}
       </div>
 
     <div className="space-y-6 print:hidden">

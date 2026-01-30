@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,31 +8,171 @@ import { Printer, User, Eye, ShieldCheck } from "lucide-react";
 import { StudentData } from "@/lib/types";
 import { KtmCard } from "@/components/features/mahasiswa/KtmCard";
 import Image from "next/image";
-
 import { usePdfPrint } from "@/hooks/use-pdf-print";
+import JSZip from "jszip";
+import KtmTable from "@/components/features/mahasiswa/KtmTable";
 
 interface KtmClientProps {
-  student: StudentData | null;
+  student?: StudentData | null;
+  students?: StudentData[];
 }
 
-export default function KtmClient({ student }: KtmClientProps) {
-  const ktmRef = useRef<HTMLDivElement>(null);
-  const { isPrinting, printPdf } = usePdfPrint();
+export default function KtmClient({ student, students }: KtmClientProps) {
+  // === ADMIN VIEW STATE ===
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+  const ktmRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  // === STUDENT VIEW STATE ===
+  const singleKtmRef = useRef<HTMLDivElement>(null);
+  
+  const { isPrinting, printPdf, generatePdfBlob } = usePdfPrint();
 
-  const handleDownloadPDF = async () => {
-    if (!student) return;
+  // ==========================================
+  // LOGIC: ADMIN (BULK ACTIONS)
+  // ==========================================
+  
+  // Print individual KTM (Admin context)
+  const handlePrintIndividual = async (targetStudent: StudentData) => {
+    const ref = ktmRefs.current.get(targetStudent.id);
+    if (!ref) return;
 
     await printPdf({
-      elementRef: ktmRef,
-      fileName: `KTM_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
-      pdfFormat: [85.6, 53.98], // ID-1 Card Size
+      elementRef: { current: ref },
+      fileName: `KTM_${targetStudent.profile.nama.replace(/\s+/g, "_")}_${targetStudent.profile.nim}.pdf`,
+      pdfFormat: [85.6, 53.98],
       pdfOrientation: "landscape",
-      pixelRatio: 8, // 8x Res gives extreme sharpness
-      imageType: "image/jpeg", // JPEG compresses better than PNG for photos
-      imageQuality: 1.0 // Lossless JPEG
+      pixelRatio: 8,
+      imageType: "image/jpeg",
+      imageQuality: 1.0
     });
   };
 
+  // Generate ZIP (Admin context)
+  const handlePrintBulk = async () => {
+    if (!students) return;
+    if (selectedStudents.size === 0) {
+      alert("Pilih minimal 1 mahasiswa untuk dicetak");
+      return;
+    }
+
+    setIsGeneratingZip(true);
+
+    try {
+      const zip = new JSZip();
+      const selectedList = Array.from(selectedStudents);
+
+      // Process sequentially
+      for (const studentId of selectedList) {
+        const s = students.find(item => item.id === studentId);
+        const ref = ktmRefs.current.get(studentId);
+        
+        if (!s || !ref) continue;
+
+        const pdfBlob = await generatePdfBlob({
+            elementRef: { current: ref },
+            fileName: "",
+            pdfFormat: [85.6, 53.98],
+            pdfOrientation: "landscape",
+            pixelRatio: 8,
+            imageType: "image/jpeg",
+            imageQuality: 1.0,
+        });
+
+        if (pdfBlob) {
+            const fileName = `KTM_${s.profile.nama.replace(/\s+/g, "_")}_${s.profile.nim}.pdf`;
+            zip.file(fileName, pdfBlob);
+        }
+      }
+
+      // Generate ZIP
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `KTM_${new Date().toISOString().split('T')[0]}.zip`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      setSelectedStudents(new Set());
+    } catch (error) {
+      console.error("Error generating ZIP:", error);
+      alert("Gagal membuat file ZIP. Silakan coba lagi.");
+    } finally {
+      setIsGeneratingZip(false);
+    }
+  };
+
+  const hiddenKtmCards = useMemo(() => {
+    if (!students) return null;
+    return (
+      <div className="absolute top-0 left-[-9999px]">
+        {students.map(s => (
+          <div 
+            key={s.id}
+            ref={(el) => {
+              if (el) ktmRefs.current.set(s.id, el);
+            }}
+            className="w-[85.6mm] h-[53.98mm]"
+          >
+            <KtmCard student={s} className="rounded-none shadow-none border-none" />
+          </div>
+        ))}
+      </div>
+    );
+  }, [students]);
+
+  // ==========================================
+  // LOGIC: STUDENT (SINGLE VIEW)
+  // ==========================================
+  const handleDownloadPDFSelf = async () => {
+    if (!student) return;
+
+    await printPdf({
+      elementRef: singleKtmRef,
+      fileName: `KTM_${student.profile.nama.replace(/\s+/g, "_")}_${student.profile.nim}.pdf`,
+      pdfFormat: [85.6, 53.98],
+      pdfOrientation: "landscape",
+      pixelRatio: 8,
+      imageType: "image/jpeg",
+      imageQuality: 1.0
+    });
+  };
+
+  // ==========================================
+  // RENDER: ADMIN VIEW
+  // ==========================================
+  if (students && students.length >= 0) {
+    return (
+        <>
+        {/* Hidden KTM Cards for PDF Generation */}
+        {hiddenKtmCards}
+  
+        {/* Screen Content */}
+        <div className="flex flex-col gap-6 pb-10 animate-in fade-in duration-500">
+          <PageHeader 
+            title="Kartu Tanda Mahasiswa" 
+            breadcrumb={["Beranda", "KTM"]} 
+          />
+  
+          <KtmTable 
+            data={students}
+            isLoading={false}
+            selectedIds={selectedStudents}
+            onSelectionChange={setSelectedStudents}
+            onPrint={handlePrintIndividual}
+            onPrintBulk={handlePrintBulk}
+            isGeneratingZip={isGeneratingZip}
+            isPrinting={isPrinting}
+          />
+        </div>
+      </>
+    );
+  }
+
+  // ==========================================
+  // RENDER: STUDENT VIEW
+  // ==========================================
   if (!student) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
@@ -43,9 +183,9 @@ export default function KtmClient({ student }: KtmClientProps) {
 
   return (
     <>
-      {/* Hidden Print Area for KTM Capture - Force Sharp Corners */}
+      {/* Hidden Print Area */}
       <div className="absolute top-0 left-[-9999px] w-[85.6mm] h-[53.98mm]">
-          <div ref={ktmRef} className="block w-[85.6mm] h-[53.98mm]">
+          <div ref={singleKtmRef} className="block w-[85.6mm] h-[53.98mm]">
              <KtmCard student={student} className="rounded-none shadow-none border-none" />
           </div>
       </div>
@@ -59,7 +199,7 @@ export default function KtmClient({ student }: KtmClientProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 items-stretch">
              
-             {/* SIDEBAR - Profil Ringkas */}
+             {/* SIDEBAR */}
              <Card className="border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                     <div className="w-32 h-40 bg-slate-100 rounded-lg border border-slate-200 relative overflow-hidden shadow-inner">
@@ -113,7 +253,7 @@ export default function KtmClient({ student }: KtmClientProps) {
                     </div>
 
                     <Button 
-                        onClick={handleDownloadPDF} 
+                        onClick={handleDownloadPDFSelf} 
                         className="w-full mt-2" 
                         disabled={isPrinting}
                     >
@@ -123,7 +263,7 @@ export default function KtmClient({ student }: KtmClientProps) {
                 </CardContent>
              </Card>
 
-             {/* MAIN CONTENT - Card Preview */}
+             {/* MAIN CONTENT */}
              <Card className="border-slate-200 shadow-sm h-full flex flex-col overflow-hidden">
                 <CardContent className="flex-1 p-0 flex flex-col bg-slate-50/50">
                     
@@ -133,7 +273,6 @@ export default function KtmClient({ student }: KtmClientProps) {
                              <h2 className="text-lg font-semibold text-slate-900">Preview KTM Digital</h2>
                              <p className="text-sm text-slate-500">Tampilan kartu identitas mahasiswa.</p>
                         </div>
-                        {/* Download Prompt (Visual only) */}
                         <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                             <Eye className="w-3 h-3" />
                             Mode Pratinjau
@@ -142,14 +281,10 @@ export default function KtmClient({ student }: KtmClientProps) {
 
                     {/* Canvas Area */}
                     <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50 opacity-100 overflow-hidden">
-                         {/* Card Container - Screen Only */}
                          <div className="relative shadow-md rounded-xl overflow-hidden bg-white mobile-card-wrapper transform scale-105 md:scale-125 origin-center">
                              <KtmCard student={student} />
                          </div>
                     </div>
-
-                    {/* Footer Info */}
-
 
                 </CardContent>
              </Card>

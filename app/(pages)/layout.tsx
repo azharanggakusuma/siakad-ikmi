@@ -28,6 +28,9 @@ export default async function PagesLayout({
     // Cek apakah menu aktif
     if (!menu.is_active) return false;
     
+    // Superuser bisa melihat semua menu aktif
+    if (user.role === "superuser") return true;
+
     // Tambahkan fallback '|| ""' untuk memastikan nilainya string
     return menu.allowed_roles.includes(user.role || "");
   });

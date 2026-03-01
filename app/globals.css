@@ -138,3 +138,222 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================
+   Chatbot UI
+   ============================================ */
+
+.chatbot-container {
+  animation: chatbot-open 0.25s ease-out;
+}
+
+@keyframes chatbot-open {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chatbot-message {
+  animation: chatbot-msg 0.2s ease-out;
+}
+
+@keyframes chatbot-msg {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing dots bounce animation */
+.chatbot-dot {
+  animation: chatbot-dot-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes chatbot-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Custom scrollbar pada area pesan */
+.chatbot-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chatbot-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ============================================
+   Chatbot Markdown Typography
+   ============================================ */
+
+.chatbot-markdown {
+  line-height: 1.6;
+}
+
+.chatbot-markdown h1,
+.chatbot-markdown h2,
+.chatbot-markdown h3 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.chatbot-markdown h1 { font-size: 1rem; }
+.chatbot-markdown h2 { font-size: 0.9rem; }
+.chatbot-markdown h3 { font-size: 0.85rem; }
+
+.chatbot-markdown p {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.chatbot-markdown ul,
+.chatbot-markdown ol {
+  margin-top: 0.4rem !important;
+  margin-bottom: 0.4rem !important;
+  padding-left: 1.5rem !important;
+  display: block !important;
+}
+
+.chatbot-markdown ul {
+  list-style-type: disc !important;
+}
+
+.chatbot-markdown ol {
+  list-style-type: decimal !important;
+}
+
+.chatbot-markdown li {
+  display: list-item !important;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  padding-left: 0.2rem;
+}
+
+.chatbot-markdown li::marker {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.chatbot-markdown ul ul {
+  list-style-type: circle !important;
+  margin-top: 0.15rem !important;
+  margin-bottom: 0.15rem !important;
+}
+
+.chatbot-markdown ul ul ul {
+  list-style-type: square !important;
+}
+
+.chatbot-markdown ol ol {
+  list-style-type: lower-alpha !important;
+}
+
+.chatbot-markdown li > p {
+  margin: 0;
+  display: inline;
+}
+
+.chatbot-markdown strong {
+  font-weight: 600;
+}
+
+.chatbot-markdown em {
+  font-style: italic;
+}
+
+.chatbot-markdown code {
+  font-size: 0.8em;
+  padding: 0.15rem 0.35rem;
+  background: var(--muted);
+  border-radius: 0.25rem;
+  font-family: var(--font-mono), monospace;
+}
+
+.chatbot-markdown pre {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  padding: 0.6rem;
+  background: var(--muted);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.8em;
+  border: 1px solid var(--border);
+}
+
+.chatbot-markdown pre code {
+  padding: 0;
+  background: transparent;
+}
+
+/* Tabel dengan desain rounded dan stripe */
+.chatbot-markdown table {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.78em;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.chatbot-markdown th {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.chatbot-markdown td {
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.chatbot-markdown tr:last-child td {
+  border-bottom: none;
+}
+
+.chatbot-markdown tr:nth-child(even) td {
+  background: var(--muted);
+}
+
+.chatbot-markdown blockquote {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--primary);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.chatbot-markdown hr {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-color: var(--border);
+}
+
+.chatbot-markdown a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chatbot-markdown a:hover {
+  opacity: 0.8;
+}

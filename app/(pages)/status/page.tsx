@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { checkSystemHealth } from "@/app/actions/system";
-import { Activity, Database, HardDrive, RefreshCw, Server, Wifi, WifiOff } from "lucide-react";
+import { Activity, Bot, Database, HardDrive, RefreshCw, Server, Wifi, WifiOff, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/layout/PageHeader";
 
@@ -181,6 +181,9 @@ export default function StatusPage() {
 
          {/* Resources Usage Card */}
          <ResourceUsageCard loading={loading} lastTrigger={lastChecked} />
+
+         {/* AI Service Status */}
+         <AIStatusCard loading={loading} lastTrigger={lastChecked} />
       </div>
     </div>
   );
@@ -290,4 +293,129 @@ function ResourceUsageCard({ loading, lastTrigger }: { loading: boolean, lastTri
             </CardContent>
         </Card>
     );
+}
+
+function AIStatusCard({ loading, lastTrigger }: { loading: boolean; lastTrigger: Date | null }) {
+  const [aiStatus, setAiStatus] = useState<{
+    status: "checking" | "online" | "offline";
+    model: string;
+    latency: number;
+  }>({ status: "checking", model: "-", latency: 0 });
+
+  useEffect(() => {
+    const checkAI = async () => {
+      setAiStatus((prev) => ({ ...prev, status: "checking" }));
+      try {
+        const start = Date.now();
+        const res = await fetch("/api/chat", { method: "GET", signal: AbortSignal.timeout(8000) });
+        const latency = Date.now() - start;
+        const data = await res.json();
+        setAiStatus({
+          status: data.status === "ok" ? "online" : "offline",
+          model: "Gemini 3 Flash",
+          latency,
+        });
+      } catch {
+        setAiStatus({ status: "offline", model: "-", latency: 0 });
+      }
+    };
+    checkAI();
+  }, [lastTrigger]);
+
+  const isOnline = aiStatus.status === "online";
+  const isChecking = aiStatus.status === "checking";
+
+  return (
+    <Card className="md:col-span-3 lg:col-span-3 overflow-hidden border-slate-200 shadow-sm">
+      <CardHeader className="mt-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Bot className="w-5 h-5 text-blue-500" />
+          SIAKAD Bot (AI)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="mb-5">
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Status Koneksi */}
+          <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-2 rounded-md shadow-sm border",
+                  isOnline ? "bg-emerald-50 border-emerald-100 text-emerald-600" :
+                  isChecking ? "bg-yellow-50 border-yellow-100 text-yellow-600" :
+                  "bg-rose-50 border-rose-100 text-rose-600"
+                )}>
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Status Layanan</p>
+                  <p className="text-xs text-slate-500">Koneksi ke AI</p>
+                </div>
+              </div>
+              <Badge className={cn(
+                "text-[10px]",
+                isOnline ? "bg-emerald-600 hover:bg-emerald-700" :
+                isChecking ? "bg-yellow-500 hover:bg-yellow-600" :
+                "bg-rose-600 hover:bg-rose-700"
+              )}>
+                {isOnline ? "Aktif" : isChecking ? "Memeriksa" : "Offline"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "w-2 h-2 rounded-full",
+                isOnline ? "bg-emerald-500" : isChecking ? "bg-yellow-500 animate-pulse" : "bg-rose-500"
+              )} />
+              <span className="text-xs text-slate-500">
+                {isOnline ? "AI siap menerima permintaan" :
+                 isChecking ? "Sedang memeriksa..." :
+                 "Layanan tidak tersedia"}
+              </span>
+            </div>
+          </div>
+
+          {/* Model */}
+          <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-white rounded-md shadow-sm border border-slate-100 text-slate-500">
+                <Bot className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Model AI</p>
+                <p className="text-xs text-slate-500">Large Language Model</p>
+              </div>
+            </div>
+            <p className="text-sm font-mono font-semibold text-slate-700">{aiStatus.model}</p>
+            <p className="text-xs text-slate-400 mt-1">Google Generative AI</p>
+          </div>
+
+          {/* Latency */}
+          <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-white rounded-md shadow-sm border border-slate-100 text-slate-500">
+                <Activity className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Response Time</p>
+                <p className="text-xs text-slate-500">Latency ke AI</p>
+              </div>
+            </div>
+            <p className={cn(
+              "text-lg font-mono font-bold",
+              aiStatus.latency < 500 ? "text-emerald-600" :
+              aiStatus.latency < 1000 ? "text-amber-600" : "text-rose-600"
+            )}>
+              {aiStatus.latency > 0 ? `${aiStatus.latency}ms` : "-"}
+            </p>
+          </div>
+        </div>
+
+        {!isOnline && !isChecking && (
+          <div className="mt-4 px-4 py-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700">
+            <strong>Perhatian:</strong> Layanan AI sedang tidak tersedia. Kemungkinan penyebab: kuota API harian telah habis, gangguan pada layanan Google AI, atau masalah koneksi internet server.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

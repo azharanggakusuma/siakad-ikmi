@@ -15,6 +15,35 @@ function getAM(hm: string): number {
   return map[hm?.toUpperCase()] ?? 0;
 }
 
+// Health check — verifikasi session dan ketersediaan layanan AI
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return Response.json({ status: 'unauthorized' });
+    }
+
+    // Ping Gemini API (ambil info model, tidak pakai kuota generasi)
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) {
+      return Response.json({ status: 'error' });
+    }
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash?key=${apiKey}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+
+    if (!res.ok) {
+      return Response.json({ status: 'ai_unavailable' });
+    }
+
+    return Response.json({ status: 'ok' });
+  } catch {
+    return Response.json({ status: 'error' }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     // Ambil session user yang sedang login
@@ -28,6 +57,15 @@ export async function POST(req: Request) {
 
     const user = session.user;
     const { messages } = await req.json();
+
+    // Validasi: minimal harus ada 1 pesan
+    if (!messages || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "Pesan tidak boleh kosong" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
     const modelMessages = await convertToModelMessages(messages);
 
     // System prompt dan tools yang disesuaikan berdasarkan role user

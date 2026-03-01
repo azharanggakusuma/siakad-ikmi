@@ -31,12 +31,28 @@ export function Chatbot() {
   const [inputValue, setInputValue] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "online" | "offline">("connecting");
-  const { messages, sendMessage, status, setMessages } = useChat();
+  const { messages, sendMessage, status, setMessages } = useChat({
+    onError: () => setConnectionStatus("offline"),
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pathname = usePathname();
 
   const isLoading = status !== "ready" && status !== "error";
+
+  // Jika chat error (kuota habis, server down), set status offline
+  useEffect(() => {
+    if (status === "error") {
+      setConnectionStatus("offline");
+      // Jika pesan terakhir dari user dan belum ada balasan, tambahkan pesan error
+      if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+        setMessages((prev) => [
+          ...prev,
+          { id: `err-${Date.now()}`, role: "assistant" as const, parts: [{ type: "text" as const, text: "Mohon maaf, saat ini terjadi **gangguan layanan** atau **masalah koneksi internet**. Silakan periksa koneksi Anda dan coba beberapa saat lagi." }] },
+        ]);
+      }
+    }
+  }, [status]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,12 +78,11 @@ export function Chatbot() {
           return;
         }
         const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [] }),
-          signal: AbortSignal.timeout(8000),
+          method: "GET",
+          signal: AbortSignal.timeout(6000),
         });
-        setConnectionStatus(res.ok ? "online" : "offline");
+        const data = await res.json();
+        setConnectionStatus(data.status === "ok" ? "online" : "offline");
       } catch {
         setConnectionStatus("offline");
       }
@@ -88,8 +103,18 @@ export function Chatbot() {
   const handleSend = useCallback((text: string) => {
     if (!text.trim() || isLoading) return;
     setInputValue("");
+
+    if (connectionStatus === "offline") {
+      setMessages((prev) => [
+        ...prev,
+        { id: `user-${Date.now()}`, role: "user" as const, parts: [{ type: "text" as const, text }] },
+        { id: `err-${Date.now()}`, role: "assistant" as const, parts: [{ type: "text" as const, text: "Mohon maaf, saat ini terjadi **gangguan layanan** atau **masalah koneksi internet**. Silakan periksa koneksi Anda dan coba beberapa saat lagi." }] },
+      ]);
+      return;
+    }
+
     sendMessage({ text });
-  }, [isLoading, sendMessage]);
+  }, [isLoading, sendMessage, connectionStatus, setMessages]);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -150,16 +175,19 @@ export function Chatbot() {
           <div className="leading-tight">
             <h3 className="font-semibold text-[13px]">SIAKAD Bot</h3>
             <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium ${
+              isLoading ? "bg-blue-400/15 text-blue-300" :
               connectionStatus === "online" ? "bg-emerald-400/15 text-emerald-300" :
               connectionStatus === "offline" ? "bg-red-400/15 text-red-300" :
               "bg-yellow-400/15 text-yellow-300"
             }`}>
               <span className={`w-1 h-1 rounded-full ${
+                isLoading ? "bg-blue-400 animate-pulse" :
                 connectionStatus === "online" ? "bg-emerald-400" :
                 connectionStatus === "offline" ? "bg-red-400" :
                 "bg-yellow-400 animate-pulse"
               }`} />
-              {connectionStatus === "online" ? "Online" :
+              {isLoading ? "Mengetik..." :
+               connectionStatus === "online" ? "Online" :
                connectionStatus === "offline" ? "Offline" :
                "Menghubungkan..."}
             </div>

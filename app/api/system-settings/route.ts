@@ -25,8 +25,8 @@ export async function PATCH(request: Request) {
   try {
     const session = await auth();
 
-    // Pastikan user sudah login dan role-nya admin
-    if (!session?.user || session.user.role !== "admin") {
+    // Pastikan user sudah login dan role-nya admin atau superuser
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superuser")) {
       return NextResponse.json({ error: "Akses ditolak" }, { status: 403 });
     }
 

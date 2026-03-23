@@ -18,11 +18,12 @@ function getAM(hm: string): number {
 async function getActiveApiKey() {
   let activeKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   let activeId = null;
+  let model = 'gemini-3-flash-preview';
 
   try {
     const { data: dbKey } = await supabase
       .from('api_keys')
-      .select('id, key_data')
+      .select('id, key_data, model')
       .eq('is_active', true)
       .eq('is_limited', false)
       .limit(1)
@@ -33,13 +34,14 @@ async function getActiveApiKey() {
       if (decrypted) {
         activeKey = decrypted;
         activeId = dbKey.id;
+        model = dbKey.model || 'gemini-3-flash-preview';
       }
     }
   } catch (e) {
     console.error("Gagal mengambil API key kustom dari DB, menggunakan default:", e);
   }
 
-  return { activeKey, activeId };
+  return { activeKey, activeId, model };
 }
 
 export async function GET() {
@@ -50,8 +52,9 @@ export async function GET() {
     const keyInfo = await getActiveApiKey();
     if (!keyInfo.activeKey) return Response.json({ status: 'error' });
 
+    const modelName = keyInfo.model || 'gemini-3-flash-preview';
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash?key=${keyInfo.activeKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}?key=${keyInfo.activeKey}`,
       { signal: AbortSignal.timeout(5000) }
     );
 
@@ -91,7 +94,7 @@ export async function POST(req: Request) {
     const availableTools = buildTools(session.user);
 
     const result = streamText({
-      model: googleAI('gemini-3-flash-preview'),
+      model: googleAI(keyInfo.model || 'gemini-3-flash-preview'),
       system: systemPrompt,
       messages: modelMessages,
       tools: availableTools,

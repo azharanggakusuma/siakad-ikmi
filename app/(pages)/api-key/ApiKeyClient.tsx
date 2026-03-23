@@ -26,6 +26,7 @@ interface ApiKey {
   id: string;
   name: string;
   key_data?: string;
+  model?: string;
   is_active: boolean;
   is_limited: boolean;
   created_at: string;
@@ -53,7 +54,7 @@ export default function ApiKeyClient() {
   const itemsPerPage = 10;
 
   // Form values
-  const [formData, setFormData] = useState({ name: '', key_data: '' });
+  const [formData, setFormData] = useState({ name: '', key_data: '', model: 'gemini-3-flash-preview' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Visibilitas key per baris
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
@@ -106,13 +107,13 @@ export default function ApiKeyClient() {
 
   const openAddModal = () => {
     setEditingId(null);
-    setFormData({ name: '', key_data: '' });
+    setFormData({ name: '', key_data: '', model: 'gemini-3-flash-preview' });
     setModalOpen(true);
   };
 
   const openEditModal = (key: ApiKey) => {
     setEditingId(key.id);
-    setFormData({ name: key.name, key_data: key.key_data || '' });
+    setFormData({ name: key.name, key_data: key.key_data || '', model: key.model || 'gemini-3-flash-preview' });
     setModalOpen(true);
   };
 
@@ -298,6 +299,15 @@ export default function ApiKeyClient() {
       }
     },
     {
+      header: "Model AI",
+      className: "w-[150px]",
+      render: (row) => (
+        <Badge variant="outline" className="font-mono text-xs bg-slate-50 text-slate-700">
+          {row.model || 'gemini-3-flash-preview'}
+        </Badge>
+      )
+    },
+    {
       header: "Status",
       className: "w-[150px]",
       render: (row) => (
@@ -330,15 +340,6 @@ export default function ApiKeyClient() {
       render: (row) => (
         <div className="flex flex-col text-xs text-muted-foreground">
           <span>{new Date(row.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-        </div>
-      )
-    },
-    {
-      header: "Tgl. Diperbarui",
-      className: "hidden lg:table-cell w-[140px]",
-      render: (row) => (
-        <div className="flex flex-col text-xs text-muted-foreground">
-          <span>{new Date(row.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
       )
     },
@@ -458,9 +459,31 @@ export default function ApiKeyClient() {
                 placeholder="AIzaSy..."
                 value={formData.key_data}
                 onChange={(e) => setFormData({...formData, key_data: e.target.value})}
-                required
+                required={!editingId}
                 className="font-mono text-sm"
               />
+              {editingId && <p className="text-xs text-muted-foreground mt-1">Biarkan kosong jika tidak ingin mengubah key.</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="model">Model AI</Label>
+              <div className="relative">
+                <select
+                  id="model"
+                  value={formData.model}
+                  onChange={(e) => setFormData({...formData, model: e.target.value})}
+                  className="flex h-10 w-full appearance-none items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                >
+                  <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                  <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                  <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
             </div>
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>

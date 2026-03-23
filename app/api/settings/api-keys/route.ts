@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabase
     .from('api_keys')
-    .select('id, name, is_active, is_limited, key_data, created_at, updated_at')
+    .select('id, name, is_active, is_limited, key_data, model, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -41,8 +41,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, key_data } = await req.json();
-    if (!name || !key_data) {
+    const { name, key_data, model } = await req.json();
+    if (!name || !key_data || !model) {
       return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 });
     }
 
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     const { error } = await supabase
       .from('api_keys')
-      .insert({ name, key_data: encryptedKey });
+      .insert({ name, key_data: encryptedKey, model });
 
     if (error) throw error;
     return NextResponse.json({ message: 'API key berhasil ditambahkan' });
@@ -68,7 +68,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { action, id, name, key_data } = await req.json();
+    const { action, id, name, key_data, model } = await req.json();
 
     if (action === 'set_active') {
       // 1. Matikan semua key terlebih dahulu
@@ -86,7 +86,7 @@ export async function PATCH(req: Request) {
     }
 
     if (action === 'edit') {
-      const payload: any = { name, updated_at: new Date().toISOString() };
+      const payload: any = { name, model, updated_at: new Date().toISOString() };
       if (key_data) {
         payload.key_data = encrypt(key_data);
         payload.is_limited = false; // Jika diubah key-nya, asumsikan bukan limit lagi

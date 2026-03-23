@@ -29,6 +29,21 @@ export async function GET(req: Request) {
     key_data: item.key_data ? decrypt(item.key_data) : ''
   }));
 
+  const envKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (envKey) {
+    const hasActiveCustomKey = decryptedData.some(k => k.is_active && !k.is_limited);
+    decryptedData.unshift({
+      id: 'env-default',
+      name: 'Default',
+      is_active: !hasActiveCustomKey,
+      is_limited: false,
+      key_data: envKey,
+      model: 'gemini-3-flash-preview',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  }
+
   return NextResponse.json(decryptedData);
 }
 

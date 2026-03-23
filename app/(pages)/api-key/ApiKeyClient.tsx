@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DataTable, type Column } from '@/components/ui/data-table';
-import { DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import Tooltip from '@/components/shared/Tooltip';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
-import { Key, Plus, Trash2, Edit, CheckCircle2, AlertTriangle, RefreshCw, XCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { Key, Plus, Trash2, Edit, CheckCircle2, AlertTriangle, RefreshCw, XCircle, Eye, EyeOff, Copy, Check, Lock, MoreHorizontal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface ApiKey {
@@ -239,7 +239,7 @@ export default function ApiKeyClient() {
     }
   };
 
-  const isUsingDefault = dataList.length === 0 || !dataList.some(k => k.is_active);
+  const isUsingDefault = dataList.filter(k => k.id !== 'env-default').length === 0 || !dataList.some(k => k.id !== 'env-default' && k.is_active);
 
   const filterContent = (
     <>
@@ -358,45 +358,52 @@ export default function ApiKeyClient() {
     },
     {
       header: "Aksi",
-      className: "text-center w-[140px]",
-      render: (row) => (
-        <div className="flex justify-center gap-1">
-          {!row.is_active && (
-            <Tooltip content="Jadikan Aktif" position="top">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => openActivateModal(row)}
-                className="text-green-600 hover:bg-green-50 h-8 w-8"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-              </Button>
-            </Tooltip>
-          )}
+      className: "text-center w-[50px]",
+      render: (row) => {
+        if (row.id === 'env-default') {
+          return (
+            <div className="flex justify-center items-center">
+              <Tooltip content="Tidak dapat diubah" position="top">
+                <div className="flex h-8 w-8 items-center justify-center text-slate-400 cursor-not-allowed">
+                  <Lock className="h-4 w-4" />
+                </div>
+              </Tooltip>
+            </div>
+          );
+        }
 
-          <Tooltip content="Edit Data" position="top">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openEditModal(row)}
-              className="text-yellow-600 hover:bg-yellow-50 h-8 w-8"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Tooltip>
-
-          <Tooltip content="Hapus" position="top">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openDeleteModal(row)}
-              className="text-red-600 hover:bg-red-50 h-8 w-8"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </Tooltip>
-        </div>
-      )
+        return (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {!row.is_active && (
+                  <DropdownMenuItem onClick={() => openActivateModal(row)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Jadikan Aktif
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => openEditModal(row)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Data
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => openDeleteModal(row)} className="text-red-600 focus:text-red-600">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Hapus Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      }
     }
   ];
 

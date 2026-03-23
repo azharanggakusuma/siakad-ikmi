@@ -58,7 +58,13 @@ export async function GET() {
       { signal: AbortSignal.timeout(5000) }
     );
 
-    if (!res.ok) return Response.json({ status: 'ai_unavailable' });
+    if (!res.ok) {
+      if (keyInfo.activeId) {
+        console.log(`[Ping Offline] Menandai key ${keyInfo.activeId} sebagai limit karena LLM offline.`);
+        await supabase.from('api_keys').update({ is_limited: true, is_active: false }).eq('id', keyInfo.activeId);
+      }
+      return Response.json({ status: 'ai_unavailable' });
+    }
 
     return Response.json({ status: 'ok' });
   } catch {

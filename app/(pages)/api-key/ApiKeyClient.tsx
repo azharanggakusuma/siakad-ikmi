@@ -21,6 +21,7 @@ import {
 import Tooltip from '@/components/shared/Tooltip';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { Key, Plus, Trash2, Edit, CheckCircle2, AlertTriangle, RefreshCw, XCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface ApiKey {
   id: string;
@@ -72,6 +73,17 @@ export default function ApiKeyClient() {
 
   useEffect(() => {
     fetchApiKeys();
+
+    const supabase = createClient();
+    const channel = supabase.channel('api_keys_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'api_keys' }, () => {
+        fetchApiKeys();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchApiKeys = async () => {
@@ -252,7 +264,16 @@ export default function ApiKeyClient() {
       header: "Identitas / Nama",
       className: "min-w-[160px]",
       render: (row) => (
-        <span className="font-semibold text-gray-800 text-sm">{row.name}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-800 text-sm whitespace-nowrap">{row.name}</span>
+          {row.is_limited && (
+            <Tooltip content="Mencapai batasan kuota layanan API" position="top">
+               <Badge variant="destructive" className="flex items-center gap-1 font-normal cursor-help h-5 px-1.5 text-[10px]">
+                 <AlertTriangle className="w-2.5 h-2.5" /> Limit
+               </Badge>
+            </Tooltip>
+          )}
+        </div>
       )
     },
     {
@@ -322,14 +343,6 @@ export default function ApiKeyClient() {
               <XCircle className="w-3.5 h-3.5" />
               Non-Aktif
             </Badge>
-          )}
-          
-          {row.is_limited && (
-            <Tooltip content="Mencapai batasan kuota layanan GEMINI API" position="top">
-               <Badge variant="destructive" className="flex items-center gap-1 font-normal cursor-help">
-                 <AlertTriangle className="w-3 h-3" /> Limit
-               </Badge>
-            </Tooltip>
           )}
         </div>
       )

@@ -18,7 +18,7 @@ function getAM(hm: string): number {
 async function getActiveApiKey() {
   let activeKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   let activeId = null;
-  let model = 'gemini-3-flash-preview';
+  let model: string | null = null;
 
   try {
     const { data: dbKey } = await supabase
@@ -34,7 +34,7 @@ async function getActiveApiKey() {
       if (decrypted) {
         activeKey = decrypted;
         activeId = dbKey.id;
-        model = dbKey.model || 'gemini-3-flash-preview';
+        model = dbKey.model;
       }
     }
   } catch (e) {
@@ -52,7 +52,7 @@ export async function GET() {
     const keyInfo = await getActiveApiKey();
     if (!keyInfo.activeKey) return Response.json({ status: 'error' });
 
-    const modelName = keyInfo.model || 'gemini-3-flash-preview';
+    const modelName = keyInfo.model as string;
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}?key=${keyInfo.activeKey}`,
       { signal: AbortSignal.timeout(5000) }
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
     const availableTools = buildTools(session.user);
 
     const result = streamText({
-      model: googleAI(keyInfo.model || 'gemini-3-flash-preview'),
+      model: googleAI(keyInfo.model as string),
       system: systemPrompt,
       messages: modelMessages,
       tools: availableTools,

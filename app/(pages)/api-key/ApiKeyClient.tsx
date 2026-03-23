@@ -54,7 +54,7 @@ export default function ApiKeyClient() {
   const itemsPerPage = 10;
 
   // Form values
-  const [formData, setFormData] = useState({ name: '', key_data: '', model: 'gemini-3-flash-preview' });
+  const [formData, setFormData] = useState({ name: '', key_data: '', model: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Visibilitas key per baris
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
@@ -107,13 +107,13 @@ export default function ApiKeyClient() {
 
   const openAddModal = () => {
     setEditingId(null);
-    setFormData({ name: '', key_data: '', model: 'gemini-3-flash-preview' });
+    setFormData({ name: '', key_data: '', model: '' });
     setModalOpen(true);
   };
 
   const openEditModal = (key: ApiKey) => {
     setEditingId(key.id);
-    setFormData({ name: key.name, key_data: key.key_data || '', model: key.model || 'gemini-3-flash-preview' });
+    setFormData({ name: key.name, key_data: key.key_data || '', model: key.model || '' });
     setModalOpen(true);
   };
 
@@ -302,8 +302,8 @@ export default function ApiKeyClient() {
       header: "Model AI",
       className: "w-[150px]",
       render: (row) => (
-        <Badge variant="outline" className="font-mono text-xs bg-slate-50 text-slate-700">
-          {row.model || 'gemini-3-flash-preview'}
+        <Badge variant={row.model ? "outline" : "destructive"} className={row.model ? "font-mono text-xs bg-slate-50 text-slate-700" : "font-mono text-xs"}>
+          {row.model || 'Belum Diatur'}
         </Badge>
       )
     },
@@ -474,11 +474,13 @@ export default function ApiKeyClient() {
                   className="flex h-10 w-full appearance-none items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
+                  <option value="" disabled>-- Pilih Model AI --</option>
                   <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                  <option value="gemini-3.1-flash-lite-preview">gemini-3.1-flash-lite-preview</option>
+                  <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
+                  <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
                   <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-2.5-pro">gemini-2.5-pro</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
                   <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     // Ambil API Key Kustom / Default
     const keyInfo = await getActiveApiKey();
     activeApiKeyId = keyInfo.activeId;
-    
+
     // Inisialisasi provider Google Generative AI secara dinamis
     const googleAI = createGoogleGenerativeAI({
       apiKey: keyInfo.activeKey as string,
@@ -97,12 +97,45 @@ export async function POST(req: Request) {
       tools: availableTools,
       stopWhen: stepCountIs(5),
       onError: async ({ error }) => {
-        console.error("AI Stream Error:", error);
-        const errMessage = String(error).toLowerCase();
-        // Deteksi Error 429: update DB agar key ditandai limit
-        if (activeApiKeyId && (errMessage.includes('429') || errMessage.includes('too many') || errMessage.includes('quota'))) {
-           console.log(`[Limit Detection] Menandai key ${activeApiKeyId} sebagai limit.`);
-           await supabase.from('api_keys').update({ is_limited: true, is_active: false }).eq('id', activeApiKeyId);
+        const errStatus = (error as any)?.status;
+        const errMessage = String(
+          (error as any)?.message || (error as any)?.statusText || error
+        ).toLowerCase();
+
+        // Deteksi error limit kuota (429)
+        const isLimit =
+          errStatus === 429 ||
+          errMessage.includes('429') ||
+          errMessage.includes('too many') ||
+          errMessage.includes('quota') ||
+          errMessage.includes('rate limit') ||
+          errMessage.includes('resource_exhausted');
+
+        // Deteksi error API Key tidak valid / salah
+        const isInvalid =
+          errStatus === 400 ||
+          errStatus === 401 ||
+          errStatus === 403 ||
+          errMessage.includes('api_key_invalid') ||
+          errMessage.includes('invalid api key') ||
+          errMessage.includes('api key not valid') ||
+          errMessage.includes('permission_denied') ||
+          errMessage.includes('invalid_argument');
+
+        if (activeApiKeyId && isLimit) {
+          console.log(`[Limit] Menandai key ${activeApiKeyId} sebagai limit.`);
+          await supabase
+            .from('api_keys')
+            .update({ is_limited: true, is_active: false })
+            .eq('id', activeApiKeyId);
+        } else if (activeApiKeyId && isInvalid) {
+          console.log(`[Invalid Key] Menonaktifkan key ${activeApiKeyId} karena API key tidak valid.`);
+          await supabase
+            .from('api_keys')
+            .update({ is_active: false })
+            .eq('id', activeApiKeyId);
+        } else {
+          console.error("AI Stream Error:", error);
         }
       }
     });
@@ -110,13 +143,23 @@ export async function POST(req: Request) {
     return result.toUIMessageStreamResponse();
   } catch (error: any) {
     console.error("Chat API Error:", error);
-    const errString = String(error).toLowerCase();
-    
-    // Fallback sync error detection
-    if (activeApiKeyId && (error?.status === 429 || errString.includes('429') || errString.includes('quota'))) {
-       console.log(`[Limit Detection Sync] Menandai key ${activeApiKeyId} sebagai limit.`);
-       await supabase.from('api_keys').update({ is_limited: true, is_active: false }).eq('id', activeApiKeyId);
-       return new Response(JSON.stringify({ error: "API Key mencapai limit. Sistem otomatis beralih. Silakan coba kirim ulang pesan Anda." }), { status: 429 });
+    const errString = String(error?.message || error).toLowerCase();
+
+    // Deteksi error limit kuota
+    const isLimit = error?.status === 429 || errString.includes('429') || errString.includes('quota') || errString.includes('resource_exhausted');
+    // Deteksi API Key tidak valid/salah
+    const isInvalid = [400, 401, 403].includes(error?.status) || errString.includes('api_key_invalid') || errString.includes('invalid api key') || errString.includes('permission_denied');
+
+    if (activeApiKeyId && isLimit) {
+      console.log(`[Limit Sync] Menandai key ${activeApiKeyId} sebagai limit.`);
+      await supabase.from('api_keys').update({ is_limited: true, is_active: false }).eq('id', activeApiKeyId);
+      return new Response(JSON.stringify({ error: "API Key mencapai limit. Silakan coba kirim ulang pesan Anda." }), { status: 429 });
+    }
+
+    if (activeApiKeyId && isInvalid) {
+      console.log(`[Invalid Key Sync] Menonaktifkan key ${activeApiKeyId} karena tidak valid.`);
+      await supabase.from('api_keys').update({ is_active: false }).eq('id', activeApiKeyId);
+      return new Response(JSON.stringify({ error: "API Key tidak valid atau tidak memiliki akses. Silakan periksa konfigurasi key di halaman Manajemen API Key." }), { status: 401 });
     }
 
     return new Response(JSON.stringify({ error: "Terjadi kesalahan server" }), { status: 500 });
@@ -198,10 +241,10 @@ function buildTools(user: any) {
           const sGrds = (grds || []).filter((g: any) => g.courses?.smt_default === tgt);
 
           // Hemat return object format
-          const res = sGrds.map((g: any) => ({ 
-            mk: g.courses?.matkul, 
-            sks: g.courses?.sks, 
-            hm: g.hm 
+          const res = sGrds.map((g: any) => ({
+            mk: g.courses?.matkul,
+            sks: g.courses?.sks,
+            hm: g.hm
           }));
           return { smt: tgt, mk: res };
         },
@@ -214,29 +257,29 @@ function buildTools(user: any) {
           const { data: std } = await supabase.from('students').select('id').eq('nim', user.username).single();
           if (!std) return { err: 'Err' };
           const { data: grds } = await supabase.from('grades').select('hm,courses:course_id(matkul,sks)').eq('student_id', std.id);
-          
+
           let ts = 0, tn = 0;
           const list = (grds || []).map((g: any) => {
-             const m = g.courses; const amu = getAM(g.hm);
-             if(amu >= 2) ts += m.sks;
-             tn += amu * m.sks;
-             return { mk: m.matkul, sks: m.sks, nilai: g.hm };
+            const m = g.courses; const amu = getAM(g.hm);
+            if (amu >= 2) ts += m.sks;
+            tn += amu * m.sks;
+            return { mk: m.matkul, sks: m.sks, nilai: g.hm };
           });
-          const allSks = (grds || []).reduce((a:any, c:any) => a + c.courses.sks, 0);
-          return { ipk: allSks ? (tn/allSks).toFixed(2) : 0, sks: ts, ls: list.slice(0, 15) }; // Limit list 15 max jk terlalu besar
+          const allSks = (grds || []).reduce((a: any, c: any) => a + c.courses.sks, 0);
+          return { ipk: allSks ? (tn / allSks).toFixed(2) : 0, sks: ts, ls: list.slice(0, 15) }; // Limit list 15 max jk terlalu besar
         },
       }),
-      
+
       getKRSSaya: tool({
-         description: 'KRS aktif',
-         inputSchema: z.object({}),
-         execute: async () => {
-            const { data: std } = await supabase.from('students').select('id').eq('nim', user.username).single();
-            const { data: y } = await supabase.from('academic_years').select('id,nama').eq('is_active', true).single();
-            if(!y || !std) return { err: 'Err' };
-            const { data: k } = await supabase.from('krs').select('courses:course_id(matkul,sks)').eq('student_id', std.id).eq('academic_year_id', y.id);
-            return { thn: y.nama, mk: k?.map((x:any) => x.courses) };
-         }
+        description: 'KRS aktif',
+        inputSchema: z.object({}),
+        execute: async () => {
+          const { data: std } = await supabase.from('students').select('id').eq('nim', user.username).single();
+          const { data: y } = await supabase.from('academic_years').select('id,nama').eq('is_active', true).single();
+          if (!y || !std) return { err: 'Err' };
+          const { data: k } = await supabase.from('krs').select('courses:course_id(matkul,sks)').eq('student_id', std.id).eq('academic_year_id', y.id);
+          return { thn: y.nama, mk: k?.map((x: any) => x.courses) };
+        }
       })
     };
   }
@@ -248,20 +291,20 @@ function buildTools(user: any) {
       description: 'Statistik SIAKAD',
       inputSchema: z.object({}),
       execute: async () => {
-          const [m, d, c] = await Promise.all([
-             supabase.from('students').select('id', { count: 'exact', head: true }),
-             supabase.from('lecturers').select('id', { count: 'exact', head: true }).eq('is_active', true),
-             supabase.from('courses').select('id', { count: 'exact', head: true }),
-          ]);
-          return { mhs: m.count, dsn: d.count, mk: c.count };
+        const [m, d, c] = await Promise.all([
+          supabase.from('students').select('id', { count: 'exact', head: true }),
+          supabase.from('lecturers').select('id', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('courses').select('id', { count: 'exact', head: true }),
+        ]);
+        return { mhs: m.count, dsn: d.count, mk: c.count };
       }
     }),
     cariMahasiswa: tool({
       description: 'Cari mhs',
       inputSchema: z.object({ kw: z.string() }),
       execute: async ({ kw }: { kw: string }) => {
-          const { data } = await supabase.from('students').select('nim,nama').ilike( /^\d+$/.test(kw)?'nim':'nama', `%${kw}%`).limit(3); // Batasi max 3 biar hemat token
-          return data;
+        const { data } = await supabase.from('students').select('nim,nama').ilike(/^\d+$/.test(kw) ? 'nim' : 'nama', `%${kw}%`).limit(3); // Batasi max 3 biar hemat token
+        return data;
       }
     })
   };

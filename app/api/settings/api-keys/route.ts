@@ -5,8 +5,10 @@ import { encrypt, decrypt } from '@/lib/encryption';
 
 const supabase = createAdminClient();
 
-// Ambil semua API Key (tanpa memberikan key aslinya ke frontend)
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+// Ambil semua API Key
+export async function GET(req: Request) {
   const session = await auth();
   const isAdmin = session?.user && !['mahasiswa', 'dosen'].includes(session.user.role as any);
   if (!isAdmin) {
@@ -116,7 +118,7 @@ export async function DELETE(req: Request) {
 
     const { error } = await supabase.from('api_keys').delete().eq('id', id);
     if (error) throw error;
-    
+
     return NextResponse.json({ message: 'API key berhasil dihapus' });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Error' }, { status: 500 });

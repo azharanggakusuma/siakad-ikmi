@@ -89,7 +89,7 @@ export default function ApiKeyClient() {
   const fetchApiKeys = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/settings/api-keys');
+      const res = await fetch(`/api/settings/api-keys?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setDataList(data || []);
